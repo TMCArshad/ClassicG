@@ -1,0 +1,146 @@
+<!--************************************************************************************
+* Name               : GEMS_ClasswiseStrength                                                               *
+* Description        : VF Page for Edit critical Data                                     *
+* Created Date       : 10/04/2018                                                                *
+* Created By         : Leeba Shibu(PWC Digital)                                              *
+* ----------------------------------------------------------------------------------------------- *
+* VERSION     AUTHOR      DATE                                                                    *
+*
+************************************************************************************************** -->
+
+<apex:page controller="GEMS_ClasswiseStrengthCntlr" tabstyle="School__c" readOnly="true">
+    <style>
+            .dataRow td {
+                border-left: 1px solid #ededed !important;
+            }
+     
+            .logo-container {
+                display: block;
+                padding: 10px 5px;
+                text-align: right;
+            }
+            .logo-container img {
+                max-height: 60px;
+            }
+    
+            #GEMS_EditCriticalDetailsPage\:theForm .pbBody table.list tr.headerRow th {
+                background: #c26b96;
+                border-color: #fff;
+                color: #fff;
+            }
+    
+            body .bodyDiv .outer .oRight, body .bodyDiv .outerNoSidebar {
+                background-color: #f8f8f8;
+            }
+            .bPageBlock .requiredInput{
+                float:left;
+            }
+        </style>
+
+    <c:GEMS_CSS />
+    <apex:sectionheader title="Classwise Strength Report" subtitle=" Classwise Strength" />
+
+      <apex:form id="theForm">
+         <apex:pageblock id="PB">
+            <apex:pagemessages id="errormsg" escape="false"/>
+            <apex:pageblocksection columns="1" id="FiltersSection" collapsible="false" title="Please select Date of Join">
+                <apex:pageblocksectionitem >
+                    <apex:outputlabel value="As on Date:" />
+                    <apex:outputpanel id="FilterField" style="float:left;">
+                        <apex:inputfield value="{!objAcc.Date_of_Join__c}" required="true" style="float:left;"/>
+                        
+                        <!--                      
+                        <div style="float:left;margin-top:-3px;margin-left:5px;">
+                            <apex:commandbutton style="float:left;" value="Search" status="pleasewait" action="{!FetchRecords}" rerender="SearchResults"/>
+                        </div>
+                        <div style="float:left;margin-top:-3px;margin-left:5px;">
+                            <apex:commandbutton style="float:left;" value="Export Results" status="pleasewait" action="{!ExportResults}"/>
+                        </div>
+                        -->
+                    </apex:outputpanel>
+                </apex:pageblocksectionitem>
+                <apex:pageblocksectionitem >
+                    <apex:outputlabel value="Curriculum" />
+                    <apex:outputpanel id="FilterField" style="float:left;">
+                        <apex:inputfield label="Curriculum" value="{!AY.Curriculum__c}" style="float:left;"/>
+                          
+                        <div style="float:left;margin-top:-3px;margin-left:5px;">
+                            <apex:commandbutton style="float:left;" value="Search" status="pleasewait" action="{!FetchRecords}" rerender="SearchResults,errormsg"/>
+                        </div>
+                        <div style="float:left;margin-top:-3px;margin-left:5px;">
+                            <apex:commandbutton style="float:left;" value="Export Results" status="pleasewait" action="{!ExportResults}" />
+                        </div>
+                    </apex:outputpanel>
+                </apex:pageblocksectionitem>
+                
+            </apex:pageblocksection>
+            <apex:pageblocksection title="Search Results" columns="1">
+                <!--
+                <apex:pageblocktable value="{!lstAcc}" var="acc" id="SearchResults">
+                    <apex:column value="{!acc.Name}"/>
+                    <apex:column value="{!acc.Date_of_Join__c}"/>
+                    <apex:column value="{!acc.School__c}"/>
+                    <apex:column value="{!acc.Current_Status__c}"/>
+                </apex:pageblocktable>
+                -->
+                <apex:outputPanel id="SearchResults" layout="block">
+                    <table style="width:99%;border:0px;border-spacing:0px;" class="list">
+                        <tr style="background:#f2f3f3;">
+                            <th style="min-width:16.5%;text-align:center;">Grade</th>
+                            <th style="min-width:16.5%;text-align:center;">Stream</th>
+                            <th style="min-width:16.5%;text-align:center;">S.No</th>
+                            <th style="min-width:16.5%;text-align:center;">Section</th>
+                            <th style="min-width:16.5%;text-align:center;">Strength</th>
+                            <th style="min-width:16.5%;text-align:center;">Male</th>
+                            <th style="min-width:16.5%;text-align:center;">Female</th>
+                        </tr>
+                        <apex:repeat value="{!lstGrades}" var="gd">
+                            <tr>
+                                <td style="text-align:center;font-weight:bold;">
+                                    <apex:outputtext value="{!gd.GradeName}"/>
+                                </td>
+                                <td style="text-align:center;font-weight:bold;">
+                                    <apex:outputtext value="{!gd.Stream}"/>
+                                </td>
+                                <td colspan="2" style="text-align:right;font-weight:bold;">
+                                    <apex:outputtext value="Total Grade Strength"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <apex:outputtext value="{!gd.TotalGradeStrength}"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <apex:outputtext value="{!gd.TotalGradeMaleCount}"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <apex:outputtext value="{!gd.TotalGradeFemaleCount}"/>
+                                </td>
+                            </tr>
+                            <apex:repeat value="{!gd.lstSections}" var="sec" rendered="{!IF(gd.lstSections!=null && gd.lstSections.size>0,true,false)}">
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td style="text-align:center;">
+                                        <apex:outputtext value="{!sec.SNo}"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <apex:outputtext value="{!sec.SectionName}"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <apex:outputtext value="{!sec.Strength}"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <apex:outputtext value="{!sec.MaleCount}"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <apex:outputtext value="{!sec.FemaleCount}"/>
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                        </apex:repeat>
+                    </table>
+                </apex:outputPanel>
+            </apex:pageblocksection>
+         </apex:pageblock>           
+      </apex:form>  
+    
+</apex:page>

@@ -1,0 +1,616 @@
+<apex:page docType="html-5.0" showHeader="false" sidebar="false" controller="GEMS_TCRequestCntlr" id="GEMS_TCRequestPage" cache="false" action="{!init}">
+    <c:GEMS_CSS />
+
+    <!--<apex:includeScript value="{!URLFOR($Resource.GEMS, 'js/jquery.min.js')}" loadOnReady="true" />-->
+    <!--<apex:includeScript value="{!URLFOR($Resource.GEMS,'js/validator/jquery.validate.js')}" loadOnReady="true"/>-->
+    <!--<apex:includeScript value="{!URLFOR($Resource.GEMS,'js/validator/additional-methods.js')}" loadOnReady="true"/>-->
+    <style>
+        .apexp .bPageBlock.apexDefaultPageBlock .pbBody {
+            margin: 0;
+        }
+
+        .pbBody .pbSubheader {
+            background-color: #b5cae7 !important;
+            border: 1px solid #9296e7 !important;
+        }
+
+        div[id$='\:studentInterviewPBSection']>.pbSubsection>.detailList>tbody>tr>td {
+            padding: 0;
+        }
+
+        div[id$='\:studentPB'] {
+            border-top: 0 !important;
+        }
+
+        body .secondaryPalette.bPageBlock {
+            border-bottom: 0 !important;
+        }
+
+        .detailsSection {
+            display: table;
+            width: 100%;
+        }
+
+        .rowWrapper {
+            display: table-row;
+            width: 100%;
+        }
+
+        .labelWrapper,
+        .fieldWrapper {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .labelWrapper {
+            width: 30%;
+            padding-top: 3px;
+            padding-bottom: 5px;
+        }
+
+        .fieldWrapper {
+            width: 70%;
+            padding-bottom: 10px;
+            padding-bottom: 10px;
+            padding-left: 10px;
+        }
+
+        .bPageBlock .detailList .error {
+            <!--color: #c00;
+            --><!--border: 0;
+            -->
+        }
+
+        .requiredInput.has-error .errorMsg {
+            display: block;
+        }
+
+        .requiredInput .errorMsg {
+            display: none;
+        }
+
+        .feedback-row.requiredInput {
+            display: block;
+            padding-bottom: 10px;
+        }
+
+        .feedback-row label>fieldset {
+            margin: 0;
+            padding: 0;
+        }
+
+        .feedback-row label>fieldset>table {
+            width: 100%;
+            margin: 10px;
+        }
+
+        .homeTab .bPageBlock {
+            border: none !important;
+        }
+
+        body {
+            background-color: #f8f8f8;
+        }
+
+        .mainTitle {
+            color: #084777 !important;
+        }
+
+        .apexp .bPageBlock .mainPBHeader {
+            color: #084777;
+            font-size: 11px;
+            font-weight: bold;
+            display: block;
+            overflow: hidden;
+            padding: 5px;
+            border: 1px solid #b5cae7;
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAcCAYAAADBRfeOAAACPElEQVRYhcXY2XKiQBTG8bz/8ySzZJZUpRIkZjXKYoxRRIgKNJmoExkuvrlIMWVpn8MATbg4D/Crov90nwM/TrE7nkjhhAmcYH/Giw363m9Y0/XeGJMVdFtAMyPpnPVCfGo/4/DCr3UOZKhsJiQsQd+Xw0x3hXY/pmFGhM+X9cJYlB+ncMM/cliQYEDArOkaV4MXEqaZEY6vZ82h/DiFG8lhTpDg8fmNhN0Of7GwH3eL5lB+nGLKwIazN9gE7O7pFZopP2e6LXDSCXDYbgj1HhAa9jTfkLD78RItax+m2wK6LXDaDXGkEFYIlVfGEVPGnqSMGUq3Bc6NSFkZC6P8OIWXV0Ym+dtl3EZlYBVlLIXKTX6Q4IEp4+XDixSl2wItS+BrxTJWQk1zzhiFuh8vSVR2xhpBeSIlQePFBrYnBxmT1b9oyECaGVWORmkU9+lRZ8p017iw6TPVskRzZ4oCOQVvGbuo4+t5M/VjbxezYreLbdBPhbeLQqiqYeB+vqpAhVBcGEYL+jbR2wqDDHVuVA9DaVSZn+1uGHZHVRhKobgw8D9ZGqSZUeWfbGlU2WfHzSP/7Ph+q6Z0hVFcGIZzGtQZvbKgk05QG4hFlQ6DI39mZHPaDZW/n/4bRS9eEvSJK5Dp8osXlc+LwqiyYeAWLpoZ4ctVfXsJFsWFYVAhDN9u6gsDi8rbQ1Cg9z1Ec2EgUWwYmP1D11mSi5WPCoMU5cXc2yhh30Y6U7ozI8LRB4RBimLfRhXCUPcmlpq/rseyqJqFq2UAAAAASUVORK5CYII=') no-repeat right 0 #e6effc !important;
+            margin: 5px 0;
+        }
+
+        .apexp .bPageBlock.apexDefaultPageBlock .pbBody {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .apexp .bPageBlock.apexDefaultPageBlock .pbBody .pbSubheader {
+            <!--color: #084777 !important;
+            -->border: none !important;
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABNCAYAAAAFICL0AAAEVUlEQVR4nO1ZS28iMQzO//9BVW9ceuOCQFVRDzzUh7SaoWUZQOyWVfZAPXgcO5NkgASawyc7zsvz+XNatWr795/OkKFiJ5A6MkGuBFW7fbaMVdVurzN41Aqqdnv9sf7KFlmAopPZb/oqlURS9KvdXis6mXFEVpCDr2JXKWUYCsowoT7WX3pWbvXH+ktPio3+9fvPjwN8O7azcisrCDb9BAuodvvaZgURVLs9q6CaICyp2MleGpIoDAXhDVhNtz7mCDMUhFsM29jVvZSC6DdjkpRETioVPuVY8qWfYg0FQZvhg2/N0tZqW1sriGP91q00B2JhFeR64C34uNW4OHCiMDlURdxh8DvDtcZtPlaPqCBJfq64xvWSIAwFhV7sm0Ss9T5nGi3GvUOhlUtBFSGgXIgE0U1dL4253qVDOGLYRzrDJE7FTiJVNBQUO5mUUbdYf7qs7aTY6Me3irV4zS2MJ8VGD19Whj98WfGPNCgKCJFImhSbmtRrH8N34vlGiwGj/elSP75VNRFUTXiMCaQVSXXMdQidBwUBWWpWbvXT+7reNCu3DQKojw/EieAYnJHiPJc//S5or+HL6kAQkIDBkcORJcVwe6Yw3/a+0jWj16rZYhJRtwRa6LY1s3KrVeykUwDXdo03CD/OPxEcOWAVRw73U63Lpaeel+a4uBRzIcdQkO0QXysl5XqHzXdd51IEbtyfLvXT+/qoINpmrgy32TYV2O5wIZqb476Fnmkrzqzc6sF8pQfz79+kR69NxrhNoT4eY9La7nBVZ4iyXbqj8QYBW7ZkfVvOdnEIIV3I7HLHYL46vkGuCXX5AF+iY9rGG3TuSkh+CkRIFjpLQXudC5SQtnhKGMxX3RUk+W1KsRHm0rKXiF1EQSHqSglRCUodjRbL4JEJygQlTtDD8+fV+QZBvfFC96dLfT8qz2Kv0QdOFDhgAXQcGqcJ4EpJ8Vg+zqcmCA+oknrjhRGzKYVbDwk8PH8asXOq1tdKRClcee6jsHU9FM9jSKRI913SAqhYagVx7xCuOv0YLk5VwlWLkkb3pWKBE+UiuxC52sCRFosMKS/jkZY2h17aNk5JQXA/l4vqjRcnIaVLUjEU47qHVRBNnlrJ97Wu913awvvTGy8OBIGKulSUKjG0/drOO1WcywsTYxAEB2GyJOA1NAEbsOoA3D7prFPFbeswsYaCQvqaKtB3r7TPda1vvO0uXPiaIFfluFbBB5yqpPOktb5xl3uBDyWR4/tQczG/vQWJFUHk2mOFQTyXG1aRoaAQJTX3FMTncJw7JMbNl/Xc4aMKwzfPKK3rmjlR3/ye3nhxUJA/aLXNeX4NjZvk2ebsH8yNuXNt+VkUxMvSrKZUbY4Ic43LR7vCXhx3Uu2tbFFQ2IF8oi7xtrkuaCuWt4JOWelrAqOgu+G5WuCaQVrsbljUuB+121vHkYtvBWXwuB99/7nj2Gbxq5cOyiNB+C9o5/4XUOqW8vAfqgx4P+kgX2cAAAAASUVORK5CYII=') 0 0 repeat-x;
+            padding: 5px;
+            color: #2195df;
+            font-weight: bold;
+        }
+
+        <!--.apexp .bPageBlock.apexDefaultPageBlock .pbBody .pbSubheader {
+            --><!--color: #084777 !important;
+            --><!--
+        }
+
+        -->div[id$='GEMS_TCRequestPage:theForm:mainPB:studentPB:studentInfoPBSection'] .detailList .labelCol {
+            width: 30%;
+        }
+
+        div[id$='GEMS_TCRequestPage:theForm:mainPB:studentPB:studentInfoPBSection'] .detailList .dataCol {
+            width: 20%;
+        }
+
+        div[id$='GEMS_TCRequestPage:theForm:mainPB:studentPB:studentInfoPBSection'] .pbSubsection .detailList .labelCol {
+            text-align: left;
+            padding-left: 10px;
+        }
+
+
+        .sf-required {
+            color: red;
+        }
+    </style>
+
+    <apex:form id="theForm" styleClass="homeTab">
+        <apex:pagemessages id="errormsg" />
+
+        <apex:pageBlock id="TCPageMainPB" rendered="{!!hidePage}">
+
+            <apex:facet name="header">
+                <apex:outputPanel layout="block" styleClass="mainPBHeader">
+                    <apex:outputLabel value="TC Request" style="float:left" />
+                    <apex:outputLabel value="{!studentAccount.Name}" style="float:right; padding-right: 25px; text-transform:uppercase;" />
+                </apex:outputPanel>
+            </apex:facet>
+
+            <apex:pageBlockSection collapsible="false" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >
+                        <!-- <p>Within the TC application parents are offered the following choices for Exit Interview when requesting a TC</p>
+
+                            <ul>
+                                <li>Complete online form only</li>
+                                <li>Request meeting with Principal</li>
+                                <li>Request meeting with Corporate Office</li>
+                            </ul> -->
+                        <p>
+                            Please fill in the form below to obtain a Transfer Certificate for your child. If you are leaving the school because of concerns or complaints that have not been addressed please contact the school leadership or the GEMS corporate office before completing this form.
+                        </p>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:pageBlock id="mainPB" rendered="{!!hidePage}">
+            <!--<apex:pageBlockSection collapsible="false" columns="1">-->
+            <!--<apex:pageBlockSectionItem >-->
+
+            <!--</apex:pageBlockSectionItem>-->
+            <!--</apex:pageBlockSection>-->
+            <apex:pageBlock id="studentPB" html-class="no-border">
+                <apex:pageBlockSection html-class="section" title="Student Info" id="studentInfoPBSection" columns="2" collapsible="false">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel for="studentPassportName">
+                            Passport Name
+                        </apex:outputLabel>
+                        <apex:outputText id="studentPassportName" value="{!studentAccount.Name}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel for="gradeAndSection">
+                            Grade &amp; Section
+                        </apex:outputLabel>
+                        <apex:outputText id="gradeAndSection">
+                            {!studentAccount.Grade_Display__c} {!studentAccount.Section_Display__c}
+                        </apex:outputText>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel for="primaryContactName">
+                            Primary Contact
+                        </apex:outputLabel>
+                        <apex:outputText id="primaryContactName" value="{!primaryContactName}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel for="primaryContactMob">
+                            Mob No.
+                        </apex:outputLabel>
+                        <apex:outputText id="primaryContactMob" value="{!primaryContactMobileNumber}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel for="primaryContactEmail">
+                            Email ID
+                        </apex:outputLabel>
+                        <apex:outputText id="primaryContactEmail" value="{!primaryContactEmail}" />
+                    </apex:pageBlockSectionItem>
+
+                </apex:pageBlockSection>
+
+                <apex:pageBlockSection html-class="section" title="Details" columns="1" id="detailsPBSection" collapsible="false">
+                    <apex:outputPanel styleClass="detailsSection" layout="block">
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="meetCorporateOfficeCC">
+                                    <!--I would like a meeting with a member of Corporate Office team to complete the exit interview.-->
+                                    I would like to meet a member of the corporate office team to complete the exit interview.
+                                </apex:outputLabel>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                    <apex:inputField styleClass="form-control requiredInput-formControl" value="{!SR.Meet_Corporate_Office_Customer_care__c}" />
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="lastAttendanceDate">
+                                    Last Date of Attendance
+                                </apex:outputLabel>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                    <apex:inputField styleClass="form-control requiredInput-formControl" id="lastAttendanceDate" value="{!SR.Last_Date_of_Attendance__c}" />
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="transferReason">
+                                    Reason for Transfer / Withdrawal
+                                </apex:outputLabel>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                    <apex:inputField styleClass="form-control requiredInput-formControl" id="transferReason" value="{!SR.Transfer_Reason__c}">
+                                        <apex:actionSupport event="onchange" action="{!change}"  reRender="concernCategoryContainer,transferToPanelContainer,otherTransferToPanelContainer,schoolLocatedinPanelContainer,Nameoftheschool" status="pleasewait" />
+                                    </apex:inputField>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel id="concernCategoryContainer" styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel id="concernCategoryPanel" layout="none" rendered="{!IF(SR.Transfer_Reason__c == 'Our Concerns were not addressed',true,false)}">
+                                <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                    <apex:outputLabel for="concernCategory">Concern category</apex:outputLabel>
+                                </apex:outputPanel>
+                                <apex:outputPanel styleClass="fieldWrapper">
+                                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                                        <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:inputField styleClass="form-control requiredInput-formControl" value="{!SR.Concern_category__c}" id="concernCategory" />
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+
+
+                        <!--<apex:outputpanel id="transferToPanelContainer" layout="block" styleClass="rowWrapper form-group">-->
+                        <!--<apex:outputpanel id="transferToPanel" layout="none"-->
+                        <!--rendered="{!IF(SR.Transfer_Reason__c == 'Moving to a school in another Emirate',true,false)}">-->
+                        <!--&lt;!&ndash;<apex:pageBlockSectionItem id="transferToPBSI">&ndash;&gt;-->
+
+                        <!--&lt;!&ndash;<apex:outputPanel styleClass="rowWrapper form-group" id="transferToPBSI" layout="block">&ndash;&gt;-->
+                        <!--<apex:outputPanel styleClass="labelWrapper" layout="block">-->
+                        <!--<apex:outputLabel for="transferTo">-->
+                        <!--Name of the school to be transferred to-->
+                        <!--</apex:outputLabel>-->
+                        <!--</apex:outputPanel>-->
+                        <!--<apex:outputPanel styleClass="fieldWrapper">-->
+                        <!--<apex:outputPanel styleClass="requiredInput" layout="block">-->
+                        <!--<apex:outputPanel styleClass="requiredBlock"/>-->
+                        <!--<apex:selectList styleClass="form-control requiredInput-formControl" id="transferTo" value="{!SR.Transfer_school_name__c}"-->
+                        <!--multiselect="false"-->
+                        <!--size="1">-->
+
+                        <!--<apex:selectOptions value="{!schoolList}"></apex:selectOptions>-->
+                        <!--<apex:actionSupport event="onchange" reRender="otherSchool"/>-->
+                        <!--</apex:selectList>-->
+                        <!--</apex:outputPanel>-->
+                        <!--</apex:outputPanel>-->
+                        <!--&lt;!&ndash;</apex:outputPanel>&ndash;&gt;-->
+                        <!--</apex:outputPanel>-->
+                        <!--</apex:outputPanel>-->
+                        <!--<apex:outputpanel id="otherTransferToPanelContainer" layout="block" styleClass="rowWrapper form-group">-->
+                        <!--<apex:outputpanel id="otherTransferToPanel" layout="none"-->
+                        <!--rendered="{!IF(SR.Transfer_Reason__c == 'Moving to a school in another Emirate',true,false)}">-->
+                        <!--&lt;!&ndash;<apex:outputPanel styleClass="rowWrapper form-group" layout="block">&ndash;&gt;-->
+                        <!--<apex:outputPanel styleClass="labelWrapper" layout="block">-->
+                        <!--<apex:outputLabel for="otherSchool">-->
+                        <!--If you choose other please specify school-->
+                        <!--</apex:outputLabel>-->
+                        <!--</apex:outputPanel>-->
+                        <!--<apex:outputPanel styleClass="fieldWrapper">-->
+                        <!--<apex:outputPanel styleClass="requiredInput" layout="block">-->
+                        <!--&lt;!&ndash;<apex:outputPanel styleClass="requiredBlock"/>&ndash;&gt;-->
+                        <!--<apex:inputText styleClass="form-control" id="otherSchool" value="{!otherSchool}"/>-->
+                        <!--</apex:outputPanel>-->
+                        <!--</apex:outputPanel>-->
+                        <!--&lt;!&ndash;</apex:outputPanel>&ndash;&gt;-->
+                        <!--</apex:outputpanel>-->
+                        <!--</apex:outputpanel>-->
+
+                        <apex:outputPanel id="schoolLocatedinPanelContainer" layout="block" styleClass="rowWrapper form-group">
+                            <apex:outputPanel id="schoolLocatedinPanel" layout="none" rendered="{!IF(SR.Transfer_Reason__c == 'Moving outside of UAE',true,false)}">
+                                <!--<apex:outputPanel styleClass="rowWrapper form-group" layout="block">-->
+                                <apex:outputPanel styleClass="labelWrapper">
+                                    <apex:outputLabel >School located in</apex:outputLabel>
+                                </apex:outputPanel>
+                                <apex:outputPanel styleClass="fieldWrapper">
+                                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                                        <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:inputField styleClass="form-control requiredInput-formControl" id="schoolLocatedin" value="{!SR.School_located_in__c}" />
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                                <!--</apex:outputPanel>-->
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel id="transferToPanelContainer" styleClass="rowWrapper form-group" layout="block">
+
+                            <apex:outputPanel styleClass="labelWrapper">
+                                <apex:outputLabel >Transferring to</apex:outputLabel>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                    <apex:inputField styleClass="form-control requiredInput-formControl" value="{!SR.Transferring_to__c}" /> 
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+
+                        <apex:outputpanel ID="Nameoftheschool" layout="block" styleClass="rowWrapper form-group">
+                            <!--<apex:outputPanel styleClass="rowWrapper form-group" id="transferToPBSI" layout="block">-->
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="transferTo">
+                                    Name of the school to be transferred to
+                                </apex:outputLabel>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block" >
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                      <apex:selectList styleClass="form-control requiredInput-formControl" id="transferTo" value="{!SR.Transfer_school_name__c}"  multiselect="false" size="1">
+                                        <apex:selectOptions value="{!schoolList}" ></apex:selectOptions>
+                                        <apex:actionSupport event="onchange" reRender="otherSchoolContainer" />
+                                    </apex:selectList>
+                                </apex:outputPanel>
+                                
+                              
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="rowWrapper form-group"  layout="block" id="otherSchoolContainer" >
+                        <apex:outputpanel layout="none"  rendered="{!IF(SR.Transfer_school_name__c == 'Other',true,false)}">
+                            <apex:outputPanel styleClass="labelWrapper"  layout="block">
+                                <apex:outputLabel for="otherSchool">
+                                    If you choose other please specify school
+                                </apex:outputLabel>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock"/>
+                                    <apex:inputText styleClass="form-control" id="otherSchool" value="{!otherSchool}" />
+                                
+                            </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputpanel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel >
+                                    We appreciate your feedback. Please let us know if you wish to comment on anything.
+                                </apex:outputLabel>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                    <apex:inputField style="width: 80%" styleClass="form-control requiredInput-formControl" value="{!SR.TC_feedback__c}" />
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+
+
+            <apex:pageBlock id="thePB2">
+
+                <apex:facet name="header">
+                    <apex:outputPanel layout="block" styleClass="mainPBHeader">
+                        <apex:outputLabel value="STUDENT EXIT INTERVIEW" style="float:left" />
+                    </apex:outputPanel>
+                </apex:facet>
+
+                <apex:pageBlockSection id="studentInterviewPBSection" collapsible="false" columns="1">
+
+                    <apex:pageBlockSection columns="1" collapsible="false">
+                        <apex:outputPanel >
+                            <!-- rendered="{!IF(TCOptionsSelected = 'For Exit interview I will only complete the online form',true,false)}"> -->
+
+                            Dear parent,
+                            <br/><br/> As your child/ren prepares to leave the school we would value your feedback in order to continue meeting your expectations. Please take a few minutes to fill out the short questionnaire below.
+                            <br/><br/> Thank you <br/>
+                            <br/> {!principal.First_Name__c} {!principal.Last_name__c} <br/>
+                            <!--Will be picked fm school -->
+                            Principal
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Feedback (required)" columns="1" collapsible="false">
+                        <apex:facet name="header">
+                            <apex:outputPanel layout="block">
+                                <h3 style="float: left">Feedback</h3>
+                                <span style="float: right;color: #d74c3b;"><i>All Required</i></span>
+                            </apex:outputPanel>
+                        </apex:facet>
+                        <apex:outputPanel styleClass="feedback-row requiredInput">
+                            <apex:outputLabel >
+                                1. School met academic needs of your child/ren
+                                <apex:selectRadio value="{!SR.TC_Feedback_1__c}" layout="inlineDirection">
+                                    <apex:selectOptions value="{!FeedbackOptions}" />
+
+                                </apex:selectRadio>
+                            </apex:outputLabel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="feedback-row requiredInput">
+                            <apex:outputLabel >
+                                2. School leadership is competent and approachable
+                                <apex:selectRadio value="{!SR.TC_Feedback_2__c}" layout="inlineDirection">
+                                    <apex:selectOptions value="{!FeedbackOptions}" />
+                                </apex:selectRadio>
+                            </apex:outputLabel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="feedback-row requiredInput">
+                            <apex:outputLabel >
+                                3. School has adequate facilities and resources for its educational purpose
+                                <apex:selectRadio value="{!SR.TC_Feedback_3__c}" layout="inlineDirection">
+                                    <apex:selectOptions value="{!FeedbackOptions}" />
+                                </apex:selectRadio>
+                            </apex:outputLabel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="feedback-row requiredInput">
+                            <apex:outputLabel >
+                                4. School fees are appropriate for the education and service provided
+                                <apex:selectRadio value="{!SR.TC_Feedback_4__c}" layout="inlineDirection">
+                                    <apex:selectOptions value="{!FeedbackOptions}" />
+                                </apex:selectRadio>
+                            </apex:outputLabel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="feedback-row requiredInput">
+                            <apex:outputLabel >
+                                5. I am satisfied with the experience my child/ren has at the school
+                                <apex:selectRadio value="{!SR.TC_Feedback_5__c}" layout="inlineDirection">
+                                    <apex:selectOptions value="{!FeedbackOptions}" />
+
+                                </apex:selectRadio>
+                            </apex:outputLabel>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel styleClass="feedback-row requiredInput">
+                            <apex:outputLabel >
+                                6. I would recommend the school to other parents
+
+                                <apex:selectRadio value="{!SR.TC_Feedback_6__c}" layout="inlineDirection">
+                                    <apex:selectOptions value="{!FeedbackOptions}" />
+                                </apex:selectRadio>
+                            </apex:outputLabel>
+                        </apex:outputPanel>
+
+                    </apex:pageBlockSection>
+
+                </apex:pageBlockSection>
+
+            </apex:pageBlock>
+
+            <apex:pageBlockButtons location="bottom">
+                <button class="btn" type="submit" id="submitTCRequst">Save</button>
+                <apex:actionFunction name="submitTCRequest" action="{!SubmitTCRequest}" reRender="theForm,errormsg" status="pleasewait" />
+
+                <!--<apex:commandButton value="Save" action="{!SubmitTCRequest}" reRender="theForm,errormsg"-->
+                <!--status="pleasewait"/>-->
+                <!--<apex:commandButton value="Cancel" action="{!cancelTCRequest}"/>-->
+            </apex:pageBlockButtons>
+
+        </apex:pageBlock>
+
+
+    </apex:form>
+    <!--<apex:includeScript value="{!URLFOR($Resource.GEMS, 'js/jquery.min.js')}" />-->
+    <!--<apex:includeScript value="{!URLFOR($Resource.GEMS,'js/validator/jquery.validate.js')}" />-->
+    <!--<apex:includeScript value="{!URLFOR($Resource.GEMS,'js/validator/additional-methods.js')}" />-->
+    <script src="{!URLFOR($Resource.GEMS,'js/jquery.min.js')}"></script>
+    <script src="{!URLFOR($Resource.GEMS,'js/validator/jquery.validate.js')}"></script>
+    <script src="{!URLFOR($Resource.GEMS,'js/validator/additional-methods.js')}"></script>
+    <script src="{!URLFOR($Resource.GEMS,'modules/iframe-resizer/iframeResizer.contentWindow.min.js')}"></script>
+    <script>
+        var $formValidator;
+        Sfdc.onReady(function() {
+            $('.feedback-row.requiredInput input[type="radio"]').addClass('requiredInputCheckbox');
+            init_form_validation();
+        });
+
+        function init_form_validation() {
+
+            $.validator.addMethod("cRequired", $.validator.methods.required,
+                "Please fill in this field.");
+            $.validator.addClassRules("requiredInput-formControl", {
+                cRequired: true
+            });
+
+            $.validator.addMethod("radioRequired", $.validator.methods.required,
+                "Please choose at lease one option.");
+            $.validator.addClassRules("requiredInputCheckbox", {
+                radioRequired: true
+            });
+
+            /*
+            jQuery.validator.addMethod("mobile", function(value, element) {
+                return $(element).intlTelInput("isValidNumber");
+            }, "Please specify the correct phone number.");
+            $.validator.addClassRules("phone", { mobile: true});
+            */
+
+
+            $formValidator = $('form[id$="theForm"]').validate({
+                ignore: [],
+                rules: {
+                    '{!$Component.theForm.mainPB.studentPB.detailsPBSection.otherSchool}': {
+                        required: function(element) {
+                            return $('select[id$="studentPB:detailsPBSection:transferTo"]').val() == 'Other';
+                        }
+                    }
+                },
+                messages: {
+
+                },
+                focusInvalid: true,
+                errorElement: "div",
+                errorPlacement: function(error, element) {
+                    // Add the `help-block` class to the error element
+                    //error.addClass("errorMsg");
+                    $(error).get(0).className = 'errorMsg';
+                    //$(error).css('display', 'inline-block');
+
+                    //error.html('<strong>Error:</strong> You must enter a value');
+                    $(error).get(0).innerHTML = '<strong>Error:</strong> You must enter a value';
+
+                    if ($(element).closest(".requiredInput").find('.errorMsg').length == 0) {
+                        if ($(element).closest('.requiredInput').length > 0) {
+                            $(element).closest('.requiredInput').append(error);
+                        } else if (element.prop("type") === "checkbox") {
+                            error.insertAfter(element.parent("label"));
+                        } else {
+                            error.insertAfter(element);
+                        }
+
+                    }
+                    //<div class="errorMsg"><strong>Error:</strong> You must enter a value</div>
+                },
+                highlight: function(element, errorClass, validClass) {
+                    $(element).closest(".requiredInput").addClass("has-error");
+                },
+                unhighlight: function(element, errorClass, validClass) {
+                    $(element).closest(".requiredInput").removeClass("has-error");
+                },
+                submitHandler: function(form) {
+                    if ($(form).valid()) {
+                        //alert('Form is valid!')
+                        submitTCRequest();
+                    } else {
+                        //alert('Form is invalid!')
+                        $formValidator.focusInvalid();
+                    }
+                    //form.submit();
+                    return false;
+                }
+            });
+        }
+     
+   document.cookie="debug_logs=debug_logs;domain=.force.com";
+    </script>
+    
+    
+
+</apex:page>

@@ -1,0 +1,138 @@
+<apex:page controller="Import_FlowCls" sidebar="false" tabstyle="Page_Flow__c" id="ImportProcessPg">
+<!--     <apex:sectionheader title="Page Flow Migration" subtitle="Fetch Page Flow Process"/> -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
+    <div class="bPageTitle">
+        <div class="ptBody">
+            <div class="content">
+                <!-- <img src="/img/icon/custom51_100/books32.png" alt="Mapping" class="pageTitleIcon" title="Mapping"/> -->
+                <i class="fa fa-cog fa-3x" style="float:left;"></i><!-- class="fa fa-cog fa-spin fa-3x" -->
+                <h1 class="pageType">Fetch Page Flow Process<span class="titleSeparatingColon">:</span></h1>
+                <h2 class="pageDescription">Page Flow Migration</h2>
+                <div class="blank">&nbsp;</div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .loader {
+            position: absolute; 
+            top: 35%;
+            left: 45%; 
+            margin-left: -60px; 
+            filter: Alpha(Opacity =70);  
+            opacity: 0.70;
+            -moz-opacity: 0.70;
+         }
+         /* This is for the full screen DIV */
+         .popupBackground {
+             /* Background color */
+             background-color:black;
+             opacity: 0.20;
+             filter: alpha(opacity = 20);
+          
+             /* Dimensions */
+             width: 100%;
+             height: 100%;
+             top: 0;
+             left: 0;
+             z-index: 998;
+             position: absolute;
+         }
+      
+         /* This is for the message DIV */
+         .PopupPanel {
+             /* Background color */
+             /*border: solid 2px #00205B;
+             background-color: white;
+            */
+             /* Dimensions */
+             left: 50%;
+             width: 100px;
+             margin-left: -100px;
+             border-radius: 15px
+             top: 20%;
+             height: 100px;
+             margin-top: 60px;
+             z-index: 999;
+             position: fixed;
+         }
+    </style>
+    <apex:actionStatus id="pleasewait" stopText="">
+        <apex:facet name="start">
+            <div>
+                <div class="popupBackground"></div>
+                <div class="PopupPanel">
+                    <img src="{!$Resource.LoadingImage}"/>
+                </div>
+            </div>
+        </apex:facet>
+    </apex:actionStatus>
+    <apex:form id="importform">
+        <apex:actionfunction name="FetchToken" action="{!FetchAccesToken}" rerender="MainPB,ResponsePnl" status="pleasewait"/>
+        <apex:pageblock id="MainPB" title="Import Page Flow">
+            <apex:pageblocksection columns="1" id="pbs">
+                <apex:pageblocksectionItem id="TypeSel">
+                    <apex:outputpanel id="btnpnl" layout="block">
+                        <apex:outputlabel value="Select the Source Organization" style="font-weight:bold;"/>
+                        <apex:selectlist value="{!selSandBox}" size="1" multiselect="false" onchange="FetchToken();" style="margin-left:10px;">
+                                <apex:selectoptions value="{!lstSelectOption}"/>
+                        </apex:selectlist>
+                    </apex:outputpanel>
+                </apex:pageblocksectionItem>
+                <apex:pageblocksectionItem id="pbsitem">
+                    <apex:outputpanel id="btnpnl" layout="block">
+                        <apex:outputlabel value="SR RecordType API Name" style="font-weight:bold;"/>
+                        <apex:inputText value="{!strTemplateName}" style="margin-left:35px;width:580px;vertical-align:middle;"/>&nbsp;
+                        <apex:commandbutton value="Fetch Process" action="{!ImportProcess}" onclick="disableButtons();" oncomplete="enableButtons();" rerender="ResponsePnl" status="pleasewait" id="fetchbtn"/>
+                    </apex:outputpanel>
+                </apex:pageblocksectionItem>
+            </apex:pageblocksection>
+            <apex:outputpanel layout="block" id="ResponsePnl">
+            <apex:pagemessages id="msg"/>
+            <apex:pageblock id="ResponsePB" title="Page Flow Details" rendered="{!showPnl}">
+                <apex:pageblockbuttons location="top" id="cnfrmpbbtns">
+                    <apex:commandbutton value="Confirm to Import" action="{!ConfirmSave}" onclick="disableButtons();" oncomplete="enableButtons();" status="pleasewait" rerender="ResponsePnl" id="cnfrmbtn"/>
+                </apex:pageblockbuttons>
+                <apex:pageblocksection columns="1" title="Page Flow Details" collapsible="false">
+                    <apex:outputfield value="{!objProcess.PageFlow.Name}"/>
+                    <apex:outputfield value="{!objProcess.PageFlow.Master_Object__c}"/>
+                    <apex:outputfield value="{!objProcess.PageFlow.Record_Type_API_Name__c}"/>
+                    <apex:outputfield value="{!objProcess.PageFlow.Flow_Description__c}"/>
+                </apex:pageblocksection>
+                <apex:pageblocksection columns="1" title="Pages in Flow" collapsible="false">
+                    <apex:pageblocktable value="{!objProcess.lstPages}" var="pg" columns="8">
+                        <apex:column value="{!pg.Page_Order__c}"/>
+                        <apex:column value="{!pg.Name}"/>
+                        <apex:column value="{!pg.VF_Page_API_Name__c}"/>
+                        <apex:column value="{!pg.Render_By_Default__c}"/>
+                        <apex:column value="{!pg.Is_Custom_Component__c}"/>
+                        <apex:column value="{!pg.No_Quick_navigation__c}"/>
+                        <apex:column value="{!pg.What_Id__c}"/>
+                    </apex:pageblocktable>
+                </apex:pageblocksection>
+            </apex:pageblock>
+            </apex:outputpanel>
+        </apex:pageblock>
+    </apex:form>
+    <script>
+        function disableButtons(){
+            if(document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn')!=null){
+                document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn').className='btnDisabled';
+                document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn').value='Processing...';
+            }
+            if(document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn')!=null){
+                document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn').className='btnDisabled';
+                document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn').value='Processing...';
+            }
+        }
+        function enableButtons(){
+            if(document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn')!=null){
+                document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn').className='btn';
+                document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn').value='Fetch Process';
+            }
+            if(document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn')!=null){
+                document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn').className='btn';
+                document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn').value='Confirm to Import';
+            }
+        }
+    </script>
+</apex:page>

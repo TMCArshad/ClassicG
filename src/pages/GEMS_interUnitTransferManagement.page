@@ -1,0 +1,319 @@
+<apex:page controller="GEMS_interUnitTransferManagementCtlr"  docType="html-5.0" cache="false" tabstyle="School__c" id="transferManage" sidebar="true" showHeader="true">
+<style>
+        .columnWidtd{
+            widtd : 80px;
+        }
+        
+        .loader {
+            position: absolute; 
+            top: 35%;
+            left: 45%;
+            margin-left: -60px; 
+            filter: Alpha(Opacity =70);  
+            opacity: 0.70; 
+            -moz-opacity: 0.70;
+         }
+         /* This is for the full screen DIV */
+	    .popupBackground {
+	        /* Background color */
+	        background-color:black;
+	        opacity: 0.20;
+	        filter: alpha(opacity = 20);
+	     
+	        /* Dimensions */
+	        width: 100%;
+	        height: 100%;
+	        top: 0;
+	        left: 0;
+	        z-index: 998;
+	        position: absolute;
+	    }
+	 
+	    /* This is for the message DIV */
+	    .PopupPanel {
+	        /* Background color */
+	        /*border: solid 2px #00205B;
+	        background-color: white;
+	       */
+	        /* Dimensions */
+	        left: 50%;
+	        width: 100px;
+	        //margin-left: -100px;
+	        border-radius: 15px
+	        top: 50%;
+	        height: 100px;
+	        margin-top: 200px;
+	        z-index: 999;
+	        position: fixed;
+	    }
+         
+         .logo-container {
+            display: block;
+            padding: 10px 5px;
+            text-align: right;
+        }
+        .logo-container img {
+            max-height: 60px;
+        }
+        body .bodyDiv .outer .oRight, body .bodyDiv .outerNoSidebar {
+            background-color: #f8f8f8;
+        }
+
+        input[type="submit"] {
+            min-width: 80px;
+            margin-left: -40px;
+        }
+    </style>
+    
+    <apex:form id="transferForm">
+		<apex:outputLink styleClass="logo-container" id="schoolLogo" value="/{!objSchoolCurrent.id}" >
+			<apex:outputText value="{!objSchoolCurrent.Logo__c}" escape="false"/>
+		</apex:outputLink>
+        <apex:pagemessages id="Msg"/>
+        <apex:actionStatus id="pleasewait" stopText="">
+            <apex:facet name="start">
+                <div>
+                    <div class="popupBackground"></div>
+                    <div class="PopupPanel">
+                        <img src="{!$Resource.LoadingImage}"/>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+		<apex:pageBlock title="Transfer Students" id="transferTable">
+			<apex:pageBlockSection title="Provide current and transfer school details">
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="School current"/>	
+					<apex:outputText value="{!objSchoolCurrent.name}"/>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="School transfer"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList required="false" value="{!selectedSchool}" multiselect="false"  size="1">
+	                       <apex:selectOptions value="{!schoolList}" />
+	                       <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getTransferSchoolSelected}" />
+	                   </apex:selectList>
+                   </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Academic Year current"/>
+					<apex:selectList id="AYCurrent" required="false" value="{!selectedAYCurrent}" multiselect="false"  size="1">
+                        <apex:selectOptions value="{!academicYearListCurrent}" />
+                        <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getCurriculumCurrent}" />
+                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Academic Year transfer"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="AYTransfer" required="false" value="{!selectedAYTransfer}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!academicYearListTransfer}" />
+	                        <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getCurriculumTransfer}" />
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!showCurriculum}">
+					<apex:outputLabel value="Curriculum current"/>
+					<apex:selectList id="CurriculumCurrent" required="false" value="{!selectedCurriculumCurrent}" multiselect="false"  size="1">
+                       <apex:selectOptions value="{!curriculumListCurrent}" />
+                       <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getGradesCurrent}" />
+                   	</apex:selectList>
+               	</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!showCurriculum}">
+					<apex:outputLabel value="Curriculum transfer"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="curriculumTransfer" required="false" value="{!selectedcurriculumTransfer}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!curriculumListTransfer}" />
+	                        <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getgradesTransfer}" />
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+					
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Grade current"/>
+					<apex:selectList id="gradeCurrent" required="false" value="{!selectedGradeCurrent}" multiselect="false"  size="1">
+                        <apex:selectOptions value="{!gradeListCurrent}" />
+                        <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getStreamsCurrent}" />
+                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Grade transfer"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="gradeTransfer" required="false" value="{!selectedGradeTransfer}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!gradeListTransfer}" />
+	                        <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getStreamsTransfer}" />
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!showStream}">
+					<apex:outputLabel value="Stream current"/>
+					<apex:selectList id="streamCurrent" required="false" value="{!selectedStreamCurrent}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!streamListCurrent}" />
+	                        <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getSectionsCurrent}" />
+	                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!showStream}">
+					<apex:outputLabel value="Stream transfer" />
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="streamTransfer" required="false" value="{!selectedStreamTransfer}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!streamListTransfer}" />
+	                        <apex:actionSupport event="onchange" rerender="Msg,transferTable" status="pleasewait"  action="{!getSectionsTransfer}" />
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Section current"/>
+					<apex:selectList id="sectionCurrent" required="false" value="{!selectedSectionCurrent}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!sectionListCurrent}" />
+	                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Section transfer"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="sectionTransfer" required="false" value="{!selectedSectionTransfer}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!sectionListTransfer}" />
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Gender"/>
+					<apex:selectList required="false" value="{!selectedGender}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!genderList}" />
+	                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Date"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<!--<apex:input type="date" value="{!transferDate}" styleClass="Date"/>-->
+						<apex:inputField value="{!objSR.Transfer_date__c}" />
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+			</apex:pageBlockSection>
+			<!--<apex:pageBlockButtons location="Bottom">-->
+				<!--<apex:commandButton action="{!getExistingStudents}" status="pleasewait" value="Get Students" rerender="Msg,studentTable"/>-->
+			<!--</apex:pageBlockButtons>-->
+            <apex:pageBlockSection >
+                <apex:pageBlockSectionItem />
+                <apex:pageBlockSectionItem labelStyle="text-align:left;padding-top:10px;">
+                    <apex:commandButton action="{!getExistingStudents}" status="pleasewait" value="Get Students" rerender="Msg,studentTable"/>
+                    <apex:outputLabel />
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+		</apex:pageBlock>
+		<apex:outputPanel id="studentTable">
+			<apex:pageBlock title="List of Students" rendered="{!(studentWrapperList!=NULL && studentWrapperList.size>0) || performedSearch==true}">
+				<!--<apex:pageBlockSection title="Search Student" id="searchStudent">-->
+	    			<!--<apex:pageBlockSectionItem >-->
+						<!--<apex:outputLabel value="Search Student"/>-->
+						<!--<apex:inputText value="{!searchStudentValue}" style="float: left;" styleClass="searchStudent">-->
+	                       	<!--<img id="lkpimg"  class="lookupIcon" src="/s.gif" onclick="checkValidationForStudent();"/>-->
+	                   	<!--</apex:inputText>-->
+				    <!--</apex:pageBlockSectionItem>-->
+				    <!--<apex:actionfunction name="checkValidationStudent" action="{!searchStudents}" status="pleasewait" rerender="studentTable,Msg,searchStudent"/>-->
+					<!--<apex:commandButton id="ReEnrolled" value="Clear Search" status="pleasewait" rendered="{!searchStudentValue!=''}" action="{!clearSearch}" style="float:left; margin-left: 36.5%"/>-->
+				<!--</apex:pageBlockSection>-->
+                <apex:actionfunction name="checkValidationStudent" action="{!searchStudents}" status="pleasewait" rerender="studentTable,Msg,searchStudent"/>
+                <apex:pageBlockSection title="Search Student" id="searchStudent">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Search Student"/>
+                        <apex:outputPanel style="display: inline-block;">
+							<apex:inputText value="{!searchStudentValue}" style="float: left;" styleClass="searchStudent">
+								<img id="lkpimg"  class="lookupIcon" src="/s.gif" onclick="checkValidationForStudent();"/>
+							</apex:inputText>
+						</apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem labelStyle="text-align:left;">
+                        <apex:commandButton id="ReEnrolled" value="Clear Search" status="pleasewait" rendered="{!searchStudentValue!=''}" action="{!clearSearch}" style="float:left;"/>
+                        <apex:outputLabel />
+					</apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+
+				
+				<apex:pageBlockSection title="Select Students for transfer" >
+				<apex:pageBlockTable value="{!studentWrapperList}" var="obj" style="width:260%;">
+					<apex:column >
+                       <apex:facet name="header"> 
+                       	<apex:inputCheckbox value="{!selectAll}" id="checkAllBox" onchange="toggleCheckAll(this)" styleClass="selectInput"/>
+                       </apex:facet>
+                       <apex:inputCheckBox value="{!obj.selectRecord}" styleClass="selectInput"/>
+                   	</apex:column>
+			        <apex:column value="{!obj.objAccount.Student_Id__c}" headerValue="Student No" />
+			        <apex:column value="{!obj.objAccount.FirstName} {!obj.objAccount.LastName}" headerValue="Student Name" />
+				</apex:pageBlockTable>
+				</apex:pageBlockSection>
+				<!--<apex:pageBlockButtons location="Bottom" rendered="{!studentWrapperList!=NULL && studentWrapperList.size>0}">-->
+					<!--<apex:commandButton value="Raise Transfers" onclick="checkValidations(); return false;"/>-->
+					<!--<apex:actionfunction name="allowUpdate" action="{!transferRequest}" status="pleasewait" rerender="Msg,studentTable,transferForm" oncomplete="window.scrollTo(0, 0);"/>-->
+				<!--</apex:pageBlockButtons>-->
+                <apex:pageBlockSection rendered="{!studentWrapperList!=NULL && studentWrapperList.size>0}">
+                    <apex:pageBlockSectionItem />
+                    <apex:pageBlockSectionItem labelStyle="text-align:left;">
+                        <apex:commandButton value="Raise Transfers" onclick="checkValidations(); return false;"/>
+                        <apex:outputLabel />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:actionfunction name="allowUpdate" action="{!transferRequest}" status="pleasewait" rerender="Msg,studentTable,transferForm" oncomplete="window.scrollTo(0, 0);"/>
+			</apex:pageBlock>
+		</apex:outputPanel>
+		
+		<script>
+			window.setFocusOnLoad = function(){}
+			
+			function checkValidations(){
+				var isChecked = 'No';
+				var inputList = document.getElementsByClassName('selectInput');
+            	
+            	for(var i=0;i<inputList.length;i++)
+                	if(document.getElementsByClassName('selectInput')[i].checked == true)
+                		isChecked = 'Yes';
+                
+                if(isChecked=='No')
+                	alert('Please select any one student');
+                else
+                	allowUpdate();
+                
+			}
+			
+			function checkValidationForStudent(){
+                var studentId = document.getElementsByClassName('searchStudent')[0].value;
+                //var searchCriteria = document.getElementsByClassName('searchCriteria')[0].value;
+                
+                //if(searchCriteria==''){
+                	//alert('Please provide search criteria');
+                //}else 
+                
+                if(studentId==''){
+                    alert('Please provide value for search');
+                }
+                else{
+                    checkValidationStudent(studentId);
+                }
+            }
+            
+            
+			function toggleCheckAll(id) {
+	            var inputList = document.getElementsByClassName('selectInput');
+	            for(var i=0;i<inputList.length;i++)
+	                document.getElementsByClassName('selectInput')[i].checked = id.checked;
+	        } 
+		</script>
+	</apex:form>
+</apex:page>

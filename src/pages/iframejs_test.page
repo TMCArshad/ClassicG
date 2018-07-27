@@ -1,0 +1,26 @@
+<!--
+ - Created by bilalnazir on 4/29/17.
+ -->
+
+<apex:page id="iframejs_test" docType="html-5.0">
+
+<div id="gems-enrolment-frame" style="font-size: 0px;" data-bsu="125030">{https://dev-gemseducationdev.cs88.force.com/GEMS}</div>
+
+        <!--<script src="/apex/gems_longjs" type="text/javascript" />-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <!--<script src="/apex/gems_iframeScrollJS" type="text/javascript" />-->
+    
+    
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/iframe-resizer/3.5.13/iframeResizer.min.js"></script>
+<script>
+var regex = new RegExp("\\{(.{0,}?)\\}", "g"),baseUrl;
+var input_siteUrl = document.getElementById('gems-enrolment-frame').innerText,
+sfResURL = '/resource/'+Date.now()+'/GEMS/js/gems_shortform.min.js',
+gemsjsConScript = document.createElement('script');
+if((baseUrl = regex.exec(input_siteUrl)) != null){
+gemsjsConScript.setAttribute('src', baseUrl[1] + sfResURL);
+    document.getElementsByTagName('head')[0].appendChild(gemsjsConScript);
+}else document.getElementById('gems-enrolment-frame').innerHTML='<h4>Invalid URL.</h4>';
+</script>
+
+    </apex:page>

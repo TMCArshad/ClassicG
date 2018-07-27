@@ -1,0 +1,19 @@
+<apex:page controller="MaheshtestClass" sidebar="false" tabStyle="Account">
+    <apex:form >
+  <apex:page title="Testing Page">
+  <apex:pageBlock title="Testing PageBlock">
+
+          <apex:pageblockSection title="Testing pageblock section" >
+          <apex:outputText >
+          {'mymsg}
+          </apex:outputText>
+  
+  <apex:pageblockSectionItem >
+  </apex:pageblockSectionItem>
+          </apex:pageblockSection>
+  </apex:pageBlock>
+  </apex:page>
+
+  
+  </apex:form>
+</apex:page>

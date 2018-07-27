@@ -1,0 +1,120 @@
+<apex:component controller="GEMS_PaymentComponentCntlr" allowDML="true"  access="global">
+   <apex:attribute name="leadReferenceNumberVal" assignTo="{!leadReferenceNumber}" type="String" description="Lead Reference Number" id="leadReferenceNumber" />
+   <apex:attribute name="BSUIDVal" type="String" description="School Code"  assignTo="{!BSUID}"/>
+
+             <apex:variable var="currentPage" value="payment"/>
+            <title>Payment Details</title>
+            <style>
+                table > thead > tr > td,
+                table > tbody > tr > td {
+                    <!--border: none !important;-->
+                    vertical-align: middle;
+                }
+                table > tfoot > tr > td{
+                    border-top: 1px solid #ddd;
+                    border-bottom: 1px solid #ddd;
+                }
+                table.table td {
+                    vertical-align: middle !important;
+                }
+            </style>
+        
+            <body class="payment">
+            <c:GEMS_CSS />
+
+            
+
+            <!-- Page Body -->
+            <apex:form id="GEMS_PaymentPage_Form">
+            
+            <apex:outputPanel id="PaymentPagePanel" rendered="{!paymentWrappers.Size >0}">
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><apex:outputtext value="{!IF(enablePayment,'Payment Details','Applicant Details')}"/></h3>
+                    </div>
+                    <div class="panel-body" style="padding: 15px 0;">
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12">
+                                <apex:outputpanel id="PaymnetDetailsInstructions" layout="block" >
+                                        <p>{!$Label.GEMS_paymentDetailsInstruction}</p>
+                                </apex:outputpanel>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12">
+                                <div class="table-responsive">
+                                <apex:dataTable footerClass="payment-footer" styleClass="table table-bordered grey-headed-bg" value="{!paymentWrappers}" var="wrp">
+                                    <apex:column styleClass="action" headerValue="Select" style="width: 50px">
+                                        <div class="form-group checkbox" style="margin: 0;">
+                                            <apex:inputCheckbox styleClass="form-control" id="selectRow" value="{!wrp.isSelected}" disabled="{!IF(OR(wrp.SR.Payment_Status__c == 'Paid',wrp.SR_PriceItem.Open_Online_Payment__c != 'Yes'),true,false)}">
+                                                <apex:actionSupport event="onclick" action="{!calculateTotalPrice}" reRender="PaymentPagePanel" onComplete="reloadFooter();" status="pleasewait" />
+                                            </apex:inputCheckbox>
+
+                                            <apex:outputLabel for="selectRow">
+                                                <span class="icon-checkbox-selected"><span class="path1"></span><span class="path2"></span></span>
+                                                <span class="icon-checkbox-unselected"></span>
+                                            </apex:outputLabel>
+                                        </div>
+                                    </apex:column>
+
+                                    <apex:column value="{!wrp.SR.Name}" headerValue="Registration"/>
+                                    <apex:column value="{!wrp.SR.First_Name__c}" headerValue="First Name"/>
+                                    <apex:column value="{!wrp.SR.Last_Name__c}" headerValue="Last Name"/>
+                                    <apex:column headerValue="Status" rendered="{!enablePayment}" >
+                                       {!IF(wrp.SR_PriceItem.Open_Online_Payment__c == 'Yes',wrp.SR.Payment_Status__c,'No Online Payment')}
+                                    </apex:column>
+                                    <apex:column value="{!wrp.SR_PriceItem.HexaBPM__Product__r.Name}" headerValue="Fee Type" rendered="{!enablePayment}"/>
+                                    <apex:column headerValue="Link to File">
+                                        <apex:outputLink disabled="{!IF(AND(wrp.SR.Payment_Status__c == 'Pending',wrp.SR_PriceItem.Open_Online_Payment__c == 'Yes'),true,false)}" value="{!wrp.completeFileURL}" >Complete file </apex:outputLink>
+                                    </apex:column>
+                                    <apex:column headerValue="Price" rendered="{!enablePayment}" >
+                                    <apex:outputText value="{0, number,###,###,##0} AED">
+                                    <apex:param value="{!wrp.SR_PriceItem.HexaBPM__Price__c}" />
+                                    </apex:outputText>
+                                    
+                                    </apex:column>
+
+                                    <apex:facet name="footer">
+
+                                        <apex:outputPanel layout="block" styleClass="pull-right" rendered="{!OR(enablePayment,!paymentComplete)}">
+                                            Total Price : <span style="font-weight: 500;">{!totalPrice}&nbsp;AED</span>
+                                        </apex:outputPanel>
+                                        
+                                    </apex:facet>
+                                </apex:dataTable>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                           
+                                <!--<apex:commandButton styleClass="btn" value="Back" action="{!goToEnquiryDetailsPage}" style="float:left" status="pleasewait" rerender="nothing"/>-->
+                                <apex:commandButton styleClass="btn next-step" value="Pay Now" action="{!payNow}" style="float:right;margin-left:10px;" disabled="{!IF(OR(totalPrice =='0',paymentComplete),true,false)}" rendered="{!enablePayment}"/>
+                               <!--  <apex:commandButton rendered="{!!bNoPay}" styleClass="btn" value="Pay Later" action="{!payLater}" rerender="PaymentPagePanel" status="pleasewait" disabled="{!IF(totalPrice =='0',true,false)}" style="float:right;"/> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </apex:outputPanel>
+            </apex:form>
+            
+            <!-- Page Body -->
+            </body>
+                 
+     <script>
+
+         function reloadFooter(){
+             if('{!enablePayment}' == 'false'){
+                 $('td.payment-footer').css('display', 'none');
+             }else{
+                 $('td.payment-footer').attr('colspan', '1');
+                 $('<td colspan="7"></td>').insertBefore($('td.payment-footer'));
+             }
+         }
+         reloadFooter();
+     
+     </script>  
+</apex:component>

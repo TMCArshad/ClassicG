@@ -1,0 +1,95 @@
+<apex:page id="DocumentUploadPage" sidebar="false" showheader="false"
+           tabStyle="Account" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0" controller="GEMS_CompleteFileCntlr" >
+
+    <!--  <script src="{!URLFOR($Resource.ProcessFlow_resource, 'ProcessFlow/ProcessFlow.js')}"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.ProcessFlow_resource, 'ProcessFlow/ProcessFlow.css')}"/> -->
+    <apex:composition template="GEMS_PageTemplate">
+        <apex:define name="header">
+            <title>Complete File</title>
+            <apex:variable var="currentPage" value="profile"/>
+            <style>
+                .pageBlockSectionWrapper .detailList tr > td:first-child {
+                    padding-left: 0;
+                }
+                .pageBlockSectionWrapper .detailList tr > td:last-child {
+                    padding-right: 0;
+                }
+
+                .Declaration .fieldWrapper select,
+                .Health-Restrictions .fieldWrapper select,
+                .Additional-Applicant-Details .fieldWrapper select {
+                    width: auto;
+                }
+
+                .Health-Restrictions .fieldWrapper textarea,
+                .Additional-Applicant-Details .fieldWrapper textarea,
+                .Declaration .fieldWrapper textarea {
+                    height: 80px !important;
+                }
+
+                /*
+                .Declaration .fieldWrapper input[type="checkbox"] {
+                    margin: -7px 10px 0 0;
+                }
+
+
+                .Additional-Applicant-Details div.rowWrapper {
+                    display: table;
+                }
+
+                .Additional-Applicant-Details div.rowWrapper.type-BOOLEAN .fieldWrapper,
+                .Health-Restrictions div.rowWrapper.type-BOOLEAN .fieldWrapper,
+                .Declaration div.rowWrapper.type-BOOLEAN .fieldWrapper{
+                    display: table-cell;
+                    vertical-align: top;
+                }
+
+                .Additional-Applicant-Details div.rowWrapper.type-BOOLEAN .labelWrapper,
+                .Health-Restrictions div.rowWrapper.type-BOOLEAN .labelWrapper,
+                .Declaration div.rowWrapper.type-BOOLEAN .labelWrapper {
+                    display: table-cell;
+                    vertical-align: top;
+                      text-align: left;
+                }
+                  */
+                .descWrapper {
+                    display: none;
+                }
+            </style>
+        </apex:define>
+        <!-- Body -->
+        <apex:define name="body">
+            <body>
+            <c:GEMS_CSS />
+
+            <div class="row page-info">
+                <div class="col-lg-12 col-md-12">
+                    <h2>GEMS Online Registration Form</h2>
+                    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s</p>
+                </div>
+            </div>
+            <apex:form id="frm">
+                <!-- <apex:actionfunction name="NavigatePage" action="{!goTopage}" status="pleasewait" rerender="hdnCurrentPageId,MenuComp,MainPnl">
+				<apex:param name="NextPageId" value="" assignTo="{!strNavigatePageId}"/>
+			 </apex:actionfunction> -->
+            </apex:form>
+
+            <div id="MainCompDiv" class="row">
+                <div class="col-lg-12">
+                    <c:GEMS_UploadDocumentsVC id="DocUploadComp" ObjectName="HexaBPM__Service_Request__c"/>
+                </div>
+            </div>
+            <div class="form-panel">
+                <apex:form >
+                    <apex:dynamicComponent componentValue="{!DyncPgMainPB}"/>
+                    <apex:commandButton action="{!submitSR}" value="Submit" styleClass="btn next-step" style="float:right;"/>
+                </apex:form>
+            </div>
+
+            <script>
+                $('.rowWrapper.type-BOOLEAN').css('float', 'left').parent().css('direction', 'rtl');
+            </script>
+            </body>
+        </apex:define>
+    </apex:composition>
+</apex:page>

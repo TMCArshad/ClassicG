@@ -1,0 +1,141 @@
+<!--
+ - Created by bilalnazir on 4/28/17.
+ -->
+
+<apex:page id="gems_longjs" contentType="text/javascript" cache="false">
+
+    // ie console, polyfill
+    window.console = window.console || {log: function () {}};
+
+    window.GEMS = (function(){
+
+        var iframe_location = 'gems-enrolment-frame',
+            last_scrollPos,iframeResizer
+
+        function load_frame_script(frame_script,src,insert_location, callback) {
+
+            var frame_script_elem,
+                loaded;
+
+            if(frame_script == 'script')
+                frame_script_elem = document.createElement('script');
+            else{
+                frame_script_elem = document.createElement('iframe');
+                frame_script_elem.id = iframe_location +'_form';
+                frame_script_elem.width = '100%';
+                frame_script_elem.height = '100%';
+                frame_script_elem.setAttribute('frameborder', '0');
+            }
+            frame_script_elem.setAttribute('src', src);
+
+            if (callback) {
+                frame_script_elem.onreadystatechange = frame_script_elem.onload = function() {
+                if (!loaded) {
+                    //scroll(0,0);
+                    callback();
+                }
+                loaded = true;
+              };
+            }
+            if(frame_script == 'script')
+                document.getElementsByTagName('head')[0].appendChild(frame_script_elem);
+            else
+                document.getElementById(insert_location).appendChild(frame_script_elem);
+        }
+
+        function load_registration_page(){
+
+            var enrolmentFrameHolder = document.getElementById(iframe_location);
+            if(enrolmentFrameHolder !== undefined ){
+
+                var school_id = document.getElementById(iframe_location).getAttribute('data-bsu'),
+                    sfPageUrl = '{!$Site.BaseSecureUrl}/apex/Gems_SelectSchoolLongForm?BSU='+ school_id +
+                                '{!JSENCODE('&')}FlowId=a0R9E000000BpTEUA0{!JSENCODE('&')}PageId=a0m9E0000009cImQAI';
+
+                var enrolment_iFrame_src,
+                    params;
+                try{
+                    params = window.atob(window.location.search.substr(1));
+                }catch(e){
+                    console.log('Invalid parameters' + e);
+                }
+
+                //decode base64 page params
+                // parameter doesn't have apex page name, open default landing page
+                if(params == undefined || params.split('apex')[0].length === params.length)
+                    enrolment_iFrame_src = sfPageUrl;
+                else{
+                    enrolment_iFrame_src = '{!$Site.BaseSecureUrl}/' + ( (/^\//g).test(params) ? params.substr(1) : params);
+                }
+
+                load_frame_script('iframe', enrolment_iFrame_src,iframe_location, resize_frame);
+            }
+        }
+
+        function resize_frame(){
+            if(typeof iFrameResize === 'undefined')
+                load_frame_script('script', '//{!$Site.Domain}{!URLFOR($Resource.GEMS, "modules/iframe-resizer/iframeResizer.min.js")}',null, resize);
+            else{
+                console.log('iFrameResize script already loaded...');
+                resize();
+            }
+        }
+
+        function resize(){
+            console.log('iframe loaded fully');
+            //iFrameResize({log:false}, document.getElementById(iframe_location+'_form'));
+            iframeResizer = iFrameResize({
+                log:false,
+                enablePublicMethods: true,
+                scrollCallback: function (coords) {
+                    console.log("[OVERRIDE] overrode scrollCallback x: " + coords.x + " y: " + coords.y);
+                    //window.scrollTo(coords.x, coords.y-50);
+                    $('html, body').animate({
+                        scrollTop: $(document.getElementById(iframe_location+'_form')).offset().top
+                    }, 1000,null);
+                    return false;
+                },
+                initCallback: function(){
+                    console.log('initCallback setup == Scroll');
+
+                    var iframe = iframeResizer[0],
+                    messageData = {'referer': window.location.href};
+
+                    iframe.contentWindow.postMessage( JSON.stringify(messageData), '{!$Site.BaseSecureUrl}');
+
+                    if(last_scrollPos !== undefined){
+                        $('html, body').animate({
+                            scrollTop: $(document.getElementById(iframe_location+'_form')).offset().top
+                        }, 1000,null);
+                    }
+                    last_scrollPos = $(document.getElementById(iframe_location+'_form')).offset().top;
+                    return false;
+                },
+                messageCallback: function(message){
+                    try {
+
+                        console.log('Message Received ==> ' + JSON.stringify(message));
+                        //if(message.hasOwnProperty('message') {!'&&'} typeof dataLayer != 'undefined'){
+                        //    dataLayer.push(message.message);
+                        //}
+                    }catch(e){
+                        console.log("Message Received : exception" + e);
+                    }
+                }
+            },
+            document.getElementById(iframe_location+'_form'));
+        }
+
+        load_registration_page();
+        function calculate_height_ie(){
+            var iFrameId = document.getElementById(iframe_location+'_form');
+            var contentHeight = iFrameId.contentWindow.document.body.scrollHeight + 'px';
+        }
+
+        window.onbeforeunload = function(){
+            return "You'll lose all the form data. Do you really want to close?";
+        }
+
+    }());
+    
+</apex:page>

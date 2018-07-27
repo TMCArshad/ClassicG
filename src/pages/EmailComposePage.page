@@ -1,0 +1,51 @@
+<apex:page standardController="Email_Activities__c" extensions="EmailComposePageController" sidebar="true" showHeader="true">
+<script>
+function CancelJS(){
+   Cancel();
+   window.opener.location.href = "/{!CaseID}";
+   self.close(); //window.top.close();
+} 
+        
+function sendEmailJS(){
+    alert('Before-->');
+    sendMailJS();
+    alert('After-->');
+    window.opener.location.href = "/{!CaseID}";
+    self.close(); 
+
+}
+</script>
+<apex:form style="width: 100%;height:100%">
+<apex:actionFunction name="sendMailJS" action="{!sendMail}"/>
+<apex:actionFunction name="Cancel" action="{!Cancel}"/>
+
+      <apex:pageMessages ></apex:pageMessages>
+      <apex:pageBlock title="Send Email">
+          <b>To:</b><apex:inputText style="width:100%" value="{!emailVal}"/><br/><br/>
+          
+          <b>CC:</b><apex:inputText style="width:100%" value="{!cc}"/> <br/><br/>
+          <b>Subject:</b><apex:inputText style="width:100%" value="{!emailSubject}"/><br><BR/>
+          <b>Attach File:</b><br/><apex:inputFile value="{!att.body}" fileName="{!att.name}"/>
+          
+          <apex:commandButton title="Upload" action="{!upload}" value="Upload" />        
+          <br/>
+          <apex:outputpanel >
+          <apex:variable value="{!1}" var="rowNum"/>
+          <apex:repeat value="{!attList}" var="att" >
+             {!rowNum}. {!att.Name}<br/>
+             <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+          </apex:repeat>
+          </apex:outputpanel>
+          
+          </br><br/>
+          
+           <apex:inputTextarea rows="25" value="{!body}" cols="200" richText="true"/><br/>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <apex:pageBlockButtons >
+          <apex:commandButton value="Send Mail" action="{!sendMail}">
+          </apex:commandButton>
+          <apex:commandButton value="Cancel" onclick="CancelJS()"/>
+          </apex:pageBlockButtons>
+      </apex:pageBlock>
+</apex:form>
+</apex:page>

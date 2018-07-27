@@ -1,0 +1,417 @@
+<apex:page controller="GEMS_siblingRelationsManagementCtlr" cache="false" tabstyle="School__c" id="linkSiblings" sidebar="true" showHeader="true">
+    
+    <style>
+        .columnWidth{
+            width : 80px;
+        }
+        
+        .loader {
+            position: absolute; 
+            top: 35%;
+            left: 45%; 
+            margin-left: -60px; 
+            filter: Alpha(Opacity =70);  
+            opacity: 0.70;
+            -moz-opacity: 0.70;
+         }
+         /* This is for the full screen DIV */
+         .popupBackground {
+             /* Background color */
+             background-color:black;
+             opacity: 0.20;
+             filter: alpha(opacity = 20);
+          
+             /* Dimensions */
+             width: 100%;
+             height: 100%;
+             top: 0;
+             left: 0;
+             z-index: 998;
+             position: absolute;
+         }
+      
+         /* This is for the message DIV */
+         .PopupPanel {
+             /* Background color */
+             /*border: solid 2px #00205B;
+             background-color: white;
+            */
+             /* Dimensions */
+             left: 50%;
+             width: 100px;
+             margin-left: -100px;
+             border-radius: 15px
+             top: 20%;
+             height: 100px;
+             margin-top: 60px;
+             z-index: 999;
+             position: fixed;
+         }
+         
+         .lookupIcon {
+            background-image: url(/img/func_icons/util/lookup20.gif);
+            background-position: 0 0;
+            width: 20px;
+            height: 20px;
+            background-position: top left;
+        }
+        
+        .overlay {
+        	background-color: black;
+           
+           	opacity: 0.6;
+           	/* Generic for Major browsers */
+           	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+           	/* IE 5-7 */
+           	filter: alpha(opacity = 60);
+           	/* Netscape */
+           	-moz-opacity: 0.6;
+           	/* Safari 1.x */
+           	-khtml-opacity: 0.6;
+           	position: fixed;
+           	width: 100%; 
+           	height: 100%;
+           	top: 0;
+           	left: 0;
+           	z-index: 101;
+           	zIndex: 101;
+		}
+		.closeButton {
+    		float: right;
+		}
+       .customPopup {
+     	   position: absolute; 
+           right: 15%;   
+           left: 15%;
+           
+           background-color: white;
+		   border-style: solid;
+		   padding: 10px;
+	       z-index: 9999;
+		   top: 20%;
+		}
+		
+		
+		.logo-container {
+            display: block;
+            padding: 10px 5px;
+            text-align: right;
+        }
+        .logo-container img {
+            max-height: 60px;
+        }
+		
+    </style>
+    <apex:form id="linkSiblingsForm">
+        <apex:outputLink styleClass="logo-container" id="schoolLogo" value="/{!objSchool.id}" >
+			<apex:outputText value="{!objSchool.Logo__c}" escape="false"/>
+		</apex:outputLink>
+        <apex:pagemessages id="Msg"/>
+        <apex:actionStatus id="pleasewait" stopText="">
+            <apex:facet name="start">
+                <div>
+                    <div class="popupBackground"></div>
+                    <div class="PopupPanel">
+                        <img src="{!$Resource.LoadingImage}"/>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        
+        <apex:pageBlock id="actionBlock" title="Link or Delink Student Relation with Siblings">
+        	<apex:pageBlockSection >
+        		<apex:pageBlockSectionItem id="actionItem">
+                    <apex:outPutLabel value="Select Action to Perform"/>
+                    <apex:selectList id="selectedAction" value="{!selectedAction}" multiselect="false"  size="1">
+	                	<apex:selectOption itemLabel="--None--" itemValue="" />
+	                	<apex:selectOption itemLabel="Link Sibling" itemValue="Link" />
+	                	<apex:selectOption itemLabel="Delink Sibling" itemValue="Delink" />
+	                	<apex:actionSupport event="onchange" reRender="linkSiblingsForm,Msg" status="pleasewait" action="{!clearValuesFromPage}"/>
+	               	</apex:selectList>
+                </apex:pageBlockSectionItem>
+        	</apex:pageBlockSection>
+        </apex:pageBlock>
+        
+        <apex:pageBlock id="linkSiblingsBlock" title="{!IF(selectedAction=='Link','Link student with their siblings','Delink student with their siblings')}" 
+        				rendered="{!selectedAction=='Link' || selectedAction=='Delink'}">
+        
+            <apex:pageBlockSection id="MasterStudenSection" title="Please provide below details" columns="1" collapsible="false">
+                <apex:pageBlockSectionItem id="MasterStudentItem">
+                    <apex:outPutLabel value="Student No"/>
+                    <apex:inputText value="{!searchStudentId}" style="float: left;" id="MasterStudentId">
+                        <img id="lkpimg"  class="lookupIcon" src="/s.gif" onclick="checkValidationForStudent();"/>
+                    </apex:inputText>
+                </apex:pageBlockSectionItem>
+                <apex:actionfunction name="checkValidationStudent" action="{!showSearchPopUp}" status="pleasewait" rerender="popupSearch,MsgSearch">
+	                <apex:param name="searchRecord" assignTo="{!searchRecord}" value="" />
+	            </apex:actionfunction>
+	            
+                <apex:pageBlockSectionItem id="siblingStudentItem" rendered="{!selectedAction=='Link'}">
+                    <apex:outPutLabel value="Sibling No"/>
+                    <apex:inputText value="{!searchSiblingId}" style="float: left;" id="siblingStudentId">
+                        <img id="lkpimg"  class="lookupIcon" src="/s.gif" onclick="checkValidationForSibling();"/>
+                    </apex:inputText>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:actionfunction name="checkValidationSibling" action="{!showSearchPopUp}" status="pleasewait" rerender="popupSearch,MsgSearch,savePanel">
+                <apex:param name="searchRecord" assignTo="{!searchRecord}" value="" />
+            </apex:actionfunction>
+        </apex:pageBlock>
+        
+        
+        <apex:outPutPanel layout="none" id="studentPanel">
+            <apex:pageBlock id="StudentDetailsBlock" title="Details of Student No: {!studentRecord.Student_Id__c}" rendered="{!studentRecord!=NULL && studentRecord.id!=NULL}">
+                <apex:pageBlockSection id="studentDetailSection" collapsible="false" columns="2">
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Student Name"/>
+                        <apex:outputText value="{!studentRecord.firstName} {!studentRecord.lastName}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Business Unit"/>
+                        <apex:outputText value="{!studentRecord.school__r.name}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Grade"/>
+                        <apex:outputText value="{!studentRecord.GradeLookup__r.Grade_Display__c}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Class/Section"/>
+                        <apex:outputText value="{!studentRecord.Section_Display__c}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Stream"/>
+                        <apex:outputText value="{!studentRecord.Stream__c}"/>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="Existing Siblings" id="studentSiblingSection" collapsible="false" columns="1" rendered="{!studentRelations!=NULL && studentRelations.size>0}">
+                    <apex:pageBlockTable value="{!studentRelations}" var="objStudent">
+                        <apex:column value="{!objStudent.firstName} {!objStudent.lastName}" headerValue="Student Name" />
+                        <apex:column value="{!objStudent.school__r.name}" headerValue="Business Unit" />
+                        <apex:column value="{!objStudent.GradeLookup__r.Grade_Display__c}" headerValue="Grade" />
+                        <apex:column value="{!objStudent.Section_Display__c}" headerValue="Class/Section" />
+                        <apex:column value="{!objStudent.Stream__c}" headerValue="Stream" />
+                    </apex:pageBlockTable>
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+        </apex:outPutPanel>
+        
+        <apex:outPutPanel layout="none" id="siblingPanel">
+            <apex:pageBlock id="siblingDetailsBlock" title="Details of sibling No: {!siblingRecord.Student_Id__c}" rendered="{!siblingRecord!=NULL && selectedAction=='Link' && siblingRecord.id!=NULL}">
+                <apex:pageBlockSection id="siblingDetailSection" collapsible="false" columns="2">
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Student Name"/>
+                        <apex:outputText value="{!siblingRecord.firstName} {!siblingRecord.lastName}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Business Unit"/>
+                        <apex:outputText value="{!siblingRecord.school__r.name}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Grade"/>
+                        <apex:outputText value="{!siblingRecord.GradeLookup__r.Grade_Display__c}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Class/Section"/>
+                        <apex:outputText value="{!siblingRecord.Section_Display__c}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outPutLabel value="Stream"/>
+                        <apex:outputText value="{!siblingRecord.Stream__c}"/>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="Existing Siblings" id="siblingSiblingSection" collapsible="false" columns="1" rendered="{!siblingRelations!=NULL && siblingRelations.size>0}">
+                    <apex:pageBlockTable value="{!siblingRelations}" var="objsibling">
+                        <apex:column value="{!objsibling.firstName} {!objsibling.lastName}" headerValue="Student Name" />
+                        <apex:column value="{!objsibling.school__r.name}" headerValue="Business Unit" />
+                        <apex:column value="{!objsibling.GradeLookup__r.Grade_Display__c}" headerValue="Grade" />
+                        <apex:column value="{!objsibling.Section_Display__c}" headerValue="Class/Section" />
+                        <apex:column value="{!objsibling.Stream__c}" headerValue="Stream" />
+                    </apex:pageBlockTable>
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+        </apex:outPutPanel>
+
+        <apex:outPutPanel layout="none" id="savePanel">
+            <apex:pageBlock id="saveBlockLink" rendered="{!studentRecord!=NULL && siblingRecord!=NULL && studentRecord.id!=NULL && siblingRecord.id!=NULL && hideLinkButton==false && selectedAction=='Link' && studentrecord.Sibling_ID__c!=siblingrecord.Sibling_ID__c}">
+                <apex:pageBlockButtons location="Bottom">
+                	<apex:commandButton action="{!showPopUp}" rerender="popup,Msg" status="status" value="Link" rendered="{!siblingRelations!=NULL && siblingRelations.size>0}"/>
+                    <apex:commandButton value="Link students" action="{!linkStudents}" status="pleasewait" rerender="studentPanel,siblingPanel,savePanel,Msg" rendered="{!siblingRelations==NULL || siblingRelations.size<=0}"/>
+                </apex:pageBlockButtons>
+            </apex:pageBlock>
+            
+            <apex:pageBlock id="saveBlockDelink" rendered="{!studentRecord!=NULL && studentRecord.id!=NULL && selectedAction=='Delink' && hideDelinkButton == false}">
+                <apex:pageBlockButtons location="Bottom">
+                   <!-- <apex:commandButton value="Delink students" action="{!delinkStudent}" status="pleasewait" rerender="studentPanel,siblingPanel,savePanel,Msg"/>-->
+                    <apex:commandButton action="{!showPopUp}" rerender="popup,Msg" status="status" value="Delink"/>
+                </apex:pageBlockButtons>
+            </apex:pageBlock>
+        </apex:outPutPanel>
+        
+        
+        <apex:outputPanel id="popup">
+        <apex:outputPanel rendered="{!displayPopUp}">
+			<div class="overlay"></div>
+			<apex:outputPanel styleClass="customPopup">
+				<apex:commandButton value="X" title="Close the popup" action="{!closePopup}" styleClass="closeButton" rerender="popup"/>
+                     <apex:pageBlock title="Delinking of student" rendered="{!relationsExist==true && selectedAction=='Delink'}">
+					  	<apex:pagemessages id="MsgPopUp"/>
+					  	<apex:pageBlockSection columns="1" title="After Delinking, student will get linked to following parents">
+					  		<apex:pageBlockTable value="{!inactiveParents}" var="par">
+					  			<apex:column value="{!par.object_account__r.name}" headerValue="Parent Name" />	
+					  			<apex:column value="{!par.Type__c}" headerValue="Relation" />
+					  		</apex:pageBlockTable>
+					  	</apex:pageBlockSection>
+					  	<apex:pageBlockButtons location="Bottom">
+					  		<apex:commandButton value="Confirm" action="{!activateOldRelationAndDelink}" status="pleasewait" rerender="studentPanel,siblingPanel,savePanel,MsgPopUp,Msg,popup"/>
+					  	</apex:pageBlockButtons>
+				  	</apex:pageBlock>
+				  	
+				  	<apex:pageBlock title="Delinking of student" rendered="{!relationsExist==false && selectedAction=='Delink'}">
+					  	<!-- <apex:pageBlockSection columns="1">
+				  			<apex:pageBlockSectionItem >
+					  			<apex:outputLabel value="Do you wish to create new primary contact?"/>
+					  			<apex:selectList value="{!yesOrNoForParent}" multiselect="false"  size="1">
+				                	<apex:selectOption itemLabel="Yes" itemValue="Yes" />
+				                	<apex:selectOption itemLabel="No" itemValue="No" />
+				                	<apex:actionSupport event="onchange" reRender="popup" status="pleasewait"/>
+			                	</apex:selectList>
+					  		</apex:pageBlockSectionItem>
+				  		</apex:pageBlockSection>-->
+					  	
+					  	<apex:pageBlockSection columns="2" title="Please provide details of new Primary Contact" >
+					  		<apex:pageBlockSectionItem >
+					  			<apex:outputLabel value="Role"/>
+					  			<apex:outputPanel styleClass="requiredInput" layout="block">
+	                    			<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						  			<apex:selectList value="{!primaryContact.Role__c}" multiselect="false"  size="1">
+					                	<apex:selectOption itemLabel="Father" itemValue="Father" />
+					                	<apex:selectOption itemLabel="Mother" itemValue="Mother" />
+					                	<apex:selectOption itemLabel="Guardian" itemValue="Guardian" />
+			                		</apex:selectList>
+					  			</apex:outputPanel>
+					  		</apex:pageBlockSectionItem>	
+					  		<apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+					  		<apex:pageBlockSectionItem >
+					  			<apex:outputLabel value="First Name"/>
+					  			<apex:outputPanel styleClass="requiredInput" layout="block">
+	                    			<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						  			<apex:inputText value="{!primaryContact.firstName}"/>
+					  			</apex:outputPanel>
+					  		</apex:pageBlockSectionItem>
+					  		
+					  		<apex:pageBlockSectionItem >
+					  			<apex:outputLabel value="Last Name"/>
+					  			<apex:outputPanel styleClass="requiredInput" layout="block">
+	                    			<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						  			<apex:inputText value="{!primaryContact.lastName}"/>
+					  			</apex:outputPanel>
+					  		</apex:pageBlockSectionItem>
+					  		
+					  		<apex:pageBlockSectionItem >
+					  			<apex:outputLabel value="Email"/>
+					  			<apex:outputPanel styleClass="requiredInput" layout="block">
+	                    			<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						  			<apex:inputField value="{!primaryContact.PersonEmail}"/>
+					  			</apex:outputPanel>
+					  		</apex:pageBlockSectionItem>
+					  		
+					  		<apex:pageBlockSectionItem >
+					  			<apex:outputLabel value="Mobile"/>
+					  			<apex:outputPanel styleClass="requiredInput" layout="block">
+	                    			<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						  			<apex:inputField value="{!primaryContact.PersonMobilePhone}"/>
+					  			</apex:outputPanel>
+					  		</apex:pageBlockSectionItem>
+					  	</apex:pageBlockSection>
+					  	<apex:pageBlockButtons location="Bottom">
+					  		<apex:commandButton value="Confirm" action="{!createParentAndDelink}" status="pleasewait" rerender="studentPanel,siblingPanel,savePanel,Msg,MsgPopUp,popup" />
+					  		<!-- <apex:commandButton value="Confirm" action="{!delinkIndividual}" status="pleasewait" rerender="popup,studentPanel,msg" rendered="{!yesOrNoForParent=='No'}"/>-->
+					  	</apex:pageBlockButtons>
+				  	</apex:pageBlock>
+				  	
+				  	<apex:pageBlock title="Linking of Student" rendered="{!selectedAction=='Link'}">
+				  		<apex:pageBlockSection columns="1">
+				  			<apex:pageBlockSectionItem >
+					  			<apex:outputLabel value="Child has sibling. Do you wish to continue?"/>
+					  			<apex:selectList value="{!yesOrNoForLinking}" multiselect="false"  size="1">
+				                	<apex:selectOption itemLabel="Yes" itemValue="Yes" />
+				                	<apex:selectOption itemLabel="No" itemValue="No" />
+				                	<apex:actionSupport event="onchange" reRender="popup" status="pleasewait"/>
+			                	</apex:selectList>
+					  		</apex:pageBlockSectionItem>
+				  		</apex:pageBlockSection>
+				  		<apex:pageBlockButtons location="Bottom" id="buttonSection">
+				  			<apex:commandButton value="Cancel Link" action="{!closePopUp}" status="pleasewait" rerender="studentPanel,siblingPanel,savePanel,MsgPopUp,Msg,popup" rendered="{!yesOrNoForLinking=='No'}"/>
+				  			<apex:commandButton value="Link students" action="{!linkStudents}" status="pleasewait" rerender="studentPanel,siblingPanel,savePanel,MsgPopUp,Msg,popup" rendered="{!yesOrNoForLinking=='Yes'}"/>
+				  		</apex:pageBlockButtons>
+				  	</apex:pageBlock>
+			</apex:outputPanel>
+		</apex:outputPanel>
+		</apex:outputPanel>
+		
+		<apex:outputPanel id="popupSearch">
+        <apex:outputPanel rendered="{!displayPopupSearch}">
+			<div class="overlay"></div>
+			<apex:outputPanel styleClass="customPopup">
+			<apex:commandButton value="X" title="Close the popup" action="{!closePopup}" styleClass="closeButton" rerender="popupSearch"/>
+				<apex:pageBlock > 
+				<apex:pagemessages id="MsgSearch"/>
+				<apex:pageBlockTable value="{!studentList}"	var="acc">
+					<apex:column headerValue="Student Id">
+						<apex:commandLink value="{!acc.Student_Id__c}" action="{!getSelectedStudentFromSearch}" rerender="msgSearch,msg,siblingPanel,studentPanel,popupSearch,savePanel">
+							<apex:param name="selectedStudentId" assignTo="{!selectedStudentId}" value="{!acc.Student_Id__c}" />	
+						</apex:commandLink>
+					</apex:column>
+					<apex:column value="{!acc.firstName} {!acc.lastName}" headerValue="Student Name"/>
+					<apex:column value="{!acc.Academic_Year__c}" headerValue="Academic Year"/>
+					<apex:column value="{!acc.GradeLookup__c}" headerValue="Grade"/>
+				</apex:pageBlockTable>	
+				</apex:pageBlock>		  	
+			</apex:outputPanel>
+		</apex:outputPanel>
+		</apex:outputPanel>
+        
+        
+        
+        
+        <script>
+            function checkValidationForStudent(){
+                var studentId = document.getElementById('linkSiblings:linkSiblingsForm:linkSiblingsBlock:MasterStudenSection:MasterStudentItem:MasterStudentId').value;
+                if(studentId==''){
+                    alert('Please provide student details to search');
+                }
+                else{
+                    checkValidationStudent('Student');
+                }
+            }
+            
+            
+            function checkValidationForSibling(){
+                var siblingId = document.getElementById('linkSiblings:linkSiblingsForm:linkSiblingsBlock:MasterStudenSection:siblingStudentItem:siblingStudentId').value;
+                var studentId = document.getElementById('linkSiblings:linkSiblingsForm:linkSiblingsBlock:MasterStudenSection:MasterStudentItem:MasterStudentId').value;
+                if(siblingId==''){
+                    alert('Please provide sibling details to search');
+                }
+                //else if(siblingId!='' && studentId!='' && studentId==siblingId){
+                //	alert('Student No and Sibling No cannot be same');
+                //}
+                else{
+                    checkValidationSibling('Sibling');
+                }
+            }
+            
+        </script>
+    </apex:form>
+</apex:page>

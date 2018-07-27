@@ -1,0 +1,77 @@
+<apex:component Controller="GEMS_ThankYouCntlrExt" allowDML="true">
+    <apex:pageBlock id="mainBlock" rendered="{!objSR.Service_Type__c=='Enrollment Long Form'  && stage=='Registration'}">
+    
+    <div class="row page-info">
+        <div class="col-lg-12 col-md-12">
+            <p>Thank you for completing an application to {!objSR.school__r.name}, following the {!curriculum} for the {!academicYear} academic year.</p>
+        </div>
+    </div>
+    
+    
+    <apex:pageBlockButtons location="bottom" dir="RTL">
+        <apex:commandButton rerender="mainBlock" value="Pay Now" styleClass="btn btn pull-right next-step" action="{!PayNow}" rendered="{!priceItem[0].Open_Online_Payment__c == 'Yes' && priceItem[0].Status__c!='Paid'}"/>
+       <!-- <apex:commandButton rerender="mainBlock" value="Pay Later" styleClass="btn pull-left" action="{!payLater}" rendered="{!enableOnlinePayment == true && priceItem[0].Status__c!='Pay Later' && priceItem[0].Status__c!='Paid'}"/>-->
+    </apex:pageBlockButtons>
+    
+    <apex:pageBlockSection id="registrationSection" title="Student Details" columns="1" collapsible="false">
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Application Number"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Name}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Name"></apex:outputLabel>
+            <apex:outputText value="{!studentName}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Grade"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Grade_Display__c}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Date of Birth"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Date_Of_Birth__c}" />
+        </apex:pageBlockSectionItem>
+        
+         <apex:pageBlockSectionItem rendered="{!objSR.Siblings_studying_in_a_GEMS_school__c == true}"
+                                    labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Sibling Name and Student Id:"></apex:outputLabel>
+            <apex:outputText value="{!siblingDetails}" /> 
+        </apex:pageBlockSectionItem>
+        
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection columns="1" id="paymentSection" title="Payment Details (Please note this fee is non-refundable and non-transferable.)" collapsible="false" rendered="{!priceItem!=null && priceItem.size>0}">
+    
+        <apex:pageBlockTable styleClass="table table-bordered grey-headed-bg" value="{!priceItem}" var="objPrice">
+            <apex:column value="{!objPrice.name}"/>
+            <apex:column value="{!objPrice.HexaBPM__Product__r.name}"/>
+            <apex:column value="{!objPrice.Status__c}"/>
+            <apex:column headerValue="Price" >
+	            <apex:outputText value="{0, number,###,###,##0} AED">
+	            <apex:param value="{!objPrice.HexaBPM__Price__c}" />
+	            </apex:outputText>
+            </apex:column>
+        </apex:pageBlockTable>
+    </apex:pageBlockSection>
+    <apex:pageBlockSection id="applicant_information">
+            <apex:outputPanel >
+                <p style="font-weight: 500">
+                    This acknowledgement has been emailed to you for your reference, and contains an application number
+                    that will be referenced in all future communications with the school. Kindly retain this important
+                    information for your records.
+                </p>
+
+    
+                <p style="font-weight: 500">
+                    Our Registrar will contact you to schedule an assessment and complete your file with any outstanding documents
+                </p> 
+                <p style="color: red">
+                    Please note: a submitted application does not automatically guarantee school admission.
+                </p>
+                </apex:outputPanel>
+    
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+</apex:component>

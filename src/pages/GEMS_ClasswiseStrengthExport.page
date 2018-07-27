@@ -1,0 +1,87 @@
+<!--************************************************************************************
+* Name               : GEMS_ClasswiseStrengthExport                                                               *
+* Description        : VF Page for Edit critical Data                                     *
+* Created Date       : 10/04/2018                                                                *
+* Created By         : Leeba Shibu(PWC Digital)                                              *
+* ----------------------------------------------------------------------------------------------- *
+* VERSION     AUTHOR      DATE                                                                    *
+*
+************************************************************************************************** -->
+
+<apex:page controller="GEMS_ClasswiseStrengthCntlr" standardStylesheets="false" showHeader="false" readOnly="true" cache="true" contentType="application/vnd.ms-excel#StudentsExport.xls">
+    <!--contentType="text/csv#StudentsExport.csv"-->
+    <style>
+        tr {
+            page-break-inside: avoid !important;
+        }
+
+        .tableStyle td {
+            text-align: center;
+            border: solid 1px;
+            border-left: 0;
+            margin-top: -1px;
+        }
+
+        .tableStyle th {
+            border: solid 1px;
+            text-align: center;
+        }
+
+        .tableStyle td:first-child {
+            border-left: 1px solid;
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Grade</th>
+            <th>Stream</th>
+            <th>S.No</th>
+            <th>Section</th>
+            <th>Strength</th>
+            <th>Male</th>
+            <th>Female</th>
+        </tr>
+        <apex:repeat value="{!lstGrades}" var="gd">
+            <tr>
+                <td>
+                    <apex:outputtext value="{!gd.GradeName}" />
+                </td>
+                <td>
+                    <apex:outputtext value="{!gd.Stream}" />
+                </td>
+                <td></td>
+                <td></td>
+                <td>
+                    <apex:outputtext value="{!gd.TotalGradeStrength}" />
+                </td>
+                <td>
+                    <apex:outputtext value="{!gd.TotalGradeMaleCount}" />
+                </td>
+                <td>
+                    <apex:outputtext value="{!gd.TotalGradeFemaleCount}" />
+                </td>
+            </tr>
+            <apex:repeat value="{!gd.lstSections}" var="sec">
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <apex:outputtext value="{!sec.SNo}" />
+                    </td>
+                    <td>
+                        <apex:outputtext value="{!sec.SectionName}" />
+                    </td>
+                    <td>
+                        <apex:outputtext value="{!sec.Strength}" />
+                    </td>
+                    <td>
+                        <apex:outputtext value="{!sec.MaleCount}" />
+                    </td>
+                    <td>
+                        <apex:outputtext value="{!sec.FemaleCount}" />
+                    </td>
+                </tr>
+            </apex:repeat>
+        </apex:repeat>
+    </table>
+</apex:page>

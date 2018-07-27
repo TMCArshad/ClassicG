@@ -1,0 +1,417 @@
+<!--**************************************************************************************************
+* Name               : GEMS_Refer                                                 
+* Description        : An apex page to create leads in salesforce/Adding Refer in salesforce                                            
+* Created Date       : PWC-Sandeep                                                                        
+* Created By         : 24/SEP/2017                                                                 
+* Last Modified Date :                                                                            
+* Last Modified By   :                                                                            
+* ----------------------------------------------------------------------------------------------- 
+* VERSION     AUTHOR                    DATE                                                                    
+* 1.0         PWC-Sandeep               24/SEP/2017                                                              
+**************************************************************************************************-->
+<apex:page cache="false" docType="html-5.0" showHeader="false" sidebar="false" id="refer_Gems" controller="GEMS_ReferCls" applyHtmlTag="false" applyBodyTag="false">
+    <html>
+        <head>
+            <meta charset="utf-8" />
+            <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+                     
+            <c:GEMS_CSS />
+            <script src="{!URLFOR($Resource.GEMS,'js/jquery.min.js')}"></script>
+            <script src="{!URLFOR($Resource.GEMS,'js/validator/jquery.validate.js')}"></script>
+            <script src="{!URLFOR($Resource.GEMS,'js/validator/additional-methods.js')}"></script>
+            <script src="{!URLFOR($Resource.GEMS,'modules/iframe-resizer/iframeResizer.contentWindow.min.js')}"></script>
+            <script src="{!URLFOR($Resource.GEMS, 'lib/intl-tel-input/js/intlTelInput.js')}"></script>
+            <link rel="stylesheet" href="{!URLFOR($Resource.GEMS, 'lib/intl-tel-input/css/intlTelInput.css')}"/>
+            <style>
+                .apexp .bPageBlock .mainPBHeader {
+                    color: #084777;
+                    font-size: 11px;
+                    font-weight: bold;
+                    display: block;
+                    overflow: hidden;
+                    padding: 5px;
+                    border: 1px solid #b5cae7;
+                    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAcCAYAAADBRfeOAAACPElEQVRYhcXY2XKiQBTG8bz/8ySzZJZUpRIkZjXKYoxRRIgKNJmoExkuvrlIMWVpn8MATbg4D/Crov90nwM/TrE7nkjhhAmcYH/Giw363m9Y0/XeGJMVdFtAMyPpnPVCfGo/4/DCr3UOZKhsJiQsQd+Xw0x3hXY/pmFGhM+X9cJYlB+ncMM/cliQYEDArOkaV4MXEqaZEY6vZ82h/DiFG8lhTpDg8fmNhN0Of7GwH3eL5lB+nGLKwIazN9gE7O7pFZopP2e6LXDSCXDYbgj1HhAa9jTfkLD78RItax+m2wK6LXDaDXGkEFYIlVfGEVPGnqSMGUq3Bc6NSFkZC6P8OIWXV0Ym+dtl3EZlYBVlLIXKTX6Q4IEp4+XDixSl2wItS+BrxTJWQk1zzhiFuh8vSVR2xhpBeSIlQePFBrYnBxmT1b9oyECaGVWORmkU9+lRZ8p017iw6TPVskRzZ4oCOQVvGbuo4+t5M/VjbxezYreLbdBPhbeLQqiqYeB+vqpAhVBcGEYL+jbR2wqDDHVuVA9DaVSZn+1uGHZHVRhKobgw8D9ZGqSZUeWfbGlU2WfHzSP/7Ph+q6Z0hVFcGIZzGtQZvbKgk05QG4hFlQ6DI39mZHPaDZW/n/4bRS9eEvSJK5Dp8osXlc+LwqiyYeAWLpoZ4ctVfXsJFsWFYVAhDN9u6gsDi8rbQ1Cg9z1Ec2EgUWwYmP1D11mSi5WPCoMU5cXc2yhh30Y6U7ozI8LRB4RBimLfRhXCUPcmlpq/rseyqJqFq2UAAAAASUVORK5CYII=') no-repeat right 0 #e6effc !important;
+                    margin: 5px 0;
+                }
+                .apexp .bPageBlock.apexDefaultPageBlock .pbBody {
+                    margin: 0;
+                }
+                body .secondaryPalette.bPageBlock {
+                    border: 0 !important;
+                    margin: 0;
+                }
+                .apexp .bPageBlock.apexDefaultPageBlock .pbBody .pbSubheader {
+                    <!--color: #084777 !important;
+                    -->border: none !important;
+                    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABNCAYAAAAFICL0AAAEVUlEQVR4nO1ZS28iMQzO//9BVW9ceuOCQFVRDzzUh7SaoWUZQOyWVfZAPXgcO5NkgASawyc7zsvz+XNatWr795/OkKFiJ5A6MkGuBFW7fbaMVdVurzN41Aqqdnv9sf7KFlmAopPZb/oqlURS9KvdXis6mXFEVpCDr2JXKWUYCsowoT7WX3pWbvXH+ktPio3+9fvPjwN8O7azcisrCDb9BAuodvvaZgURVLs9q6CaICyp2MleGpIoDAXhDVhNtz7mCDMUhFsM29jVvZSC6DdjkpRETioVPuVY8qWfYg0FQZvhg2/N0tZqW1sriGP91q00B2JhFeR64C34uNW4OHCiMDlURdxh8DvDtcZtPlaPqCBJfq64xvWSIAwFhV7sm0Ss9T5nGi3GvUOhlUtBFSGgXIgE0U1dL4253qVDOGLYRzrDJE7FTiJVNBQUO5mUUbdYf7qs7aTY6Me3irV4zS2MJ8VGD19Whj98WfGPNCgKCJFImhSbmtRrH8N34vlGiwGj/elSP75VNRFUTXiMCaQVSXXMdQidBwUBWWpWbvXT+7reNCu3DQKojw/EieAYnJHiPJc//S5or+HL6kAQkIDBkcORJcVwe6Yw3/a+0jWj16rZYhJRtwRa6LY1s3KrVeykUwDXdo03CD/OPxEcOWAVRw73U63Lpaeel+a4uBRzIcdQkO0QXysl5XqHzXdd51IEbtyfLvXT+/qoINpmrgy32TYV2O5wIZqb476Fnmkrzqzc6sF8pQfz79+kR69NxrhNoT4eY9La7nBVZ4iyXbqj8QYBW7ZkfVvOdnEIIV3I7HLHYL46vkGuCXX5AF+iY9rGG3TuSkh+CkRIFjpLQXudC5SQtnhKGMxX3RUk+W1KsRHm0rKXiF1EQSHqSglRCUodjRbL4JEJygQlTtDD8+fV+QZBvfFC96dLfT8qz2Kv0QdOFDhgAXQcGqcJ4EpJ8Vg+zqcmCA+oknrjhRGzKYVbDwk8PH8asXOq1tdKRClcee6jsHU9FM9jSKRI913SAqhYagVx7xCuOv0YLk5VwlWLkkb3pWKBE+UiuxC52sCRFosMKS/jkZY2h17aNk5JQXA/l4vqjRcnIaVLUjEU47qHVRBNnlrJ97Wu913awvvTGy8OBIGKulSUKjG0/drOO1WcywsTYxAEB2GyJOA1NAEbsOoA3D7prFPFbeswsYaCQvqaKtB3r7TPda1vvO0uXPiaIFfluFbBB5yqpPOktb5xl3uBDyWR4/tQczG/vQWJFUHk2mOFQTyXG1aRoaAQJTX3FMTncJw7JMbNl/Xc4aMKwzfPKK3rmjlR3/ye3nhxUJA/aLXNeX4NjZvk2ebsH8yNuXNt+VkUxMvSrKZUbY4Ic43LR7vCXhx3Uu2tbFFQ2IF8oi7xtrkuaCuWt4JOWelrAqOgu+G5WuCaQVrsbljUuB+121vHkYtvBWXwuB99/7nj2Gbxq5cOyiNB+C9o5/4XUOqW8vAfqgx4P+kgX2cAAAAASUVORK5CYII=') 0 0 repeat-x;
+                    padding: 5px;
+                    color: #2195df;
+                    font-weight: bold;
+                }
+                .detailsSection {
+                    display: table;
+                    width: 100%;
+                }
+        
+                .rowWrapper {
+                    display: table-row;
+                    width: 100%;
+                }
+        
+                .labelWrapper,
+                .fieldWrapper {
+                    display: table-cell;
+                    vertical-align: top;
+                }
+        
+                .labelWrapper {
+                    width: 30%;
+                    padding-top: 3px;
+                    padding-bottom: 5px;
+                }
+        
+                .fieldWrapper {
+                    width: 70%;
+                    padding-bottom: 10px;
+                    padding-bottom: 10px;
+                    padding-left: 10px;
+                }
+                .display-center{
+                    text-align: center;
+                }
+                .empty{
+                    display: none;
+                }
+                .requiredInput.has-error .errorMsg {
+                    display: block;
+                }
+        
+                .requiredInput .errorMsg {
+                    display: none;
+                }
+                .errorMsgcus{
+                    color: #d74c3b;
+                }
+            </style>            
+        </head>
+    <body>
+<apex:form id="theForm" >
+    <apex:pagemessages id="errormsg" />
+
+    <apex:pageBlock id="ReferMainBlock" rendered="{!!hidePage}">
+        <apex:facet name="header">
+            <apex:outputPanel layout="block" styleClass="mainPBHeader">
+                <apex:outputLabel value="GEMS Ambassador Program – Refer a Friend" style="float:left" />
+            </apex:outputPanel>
+        </apex:facet>
+        <apex:pageBlockSection collapsible="false" columns="1">
+            <apex:pageBlockSectionItem >
+                <apex:outputPanel >
+                    <p>
+                        Thank you for choosing to become a GEMS Ambassador and supporting our mission to put a quality education within the reach of every child. 
+                        <br/><br/>
+                        To refer a child please fill in the details requested below, select the school you are referring them to and click the 'Submit' button.
+                        <br/><br/>
+                        You can refer more than one child at a time, simply provide their details, select a school and click the 'Submit' button again.
+                        <br/><br/>
+                        
+                    </p>
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+    <apex:pageBlock id="mainPB" rendered="{!!hidePage}">
+            <apex:pageBlock id="parentPB" html-class="no-border">
+                
+                <apex:pageBlockSection html-class="section" title="Details of Prospective Family" columns="1" id="parentPBSection" collapsible="false">
+                    <apex:outputPanel styleClass="detailsSection" layout="block">
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="sFirstName" value="Prospective Student First Name"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput " layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock " />
+                                        <apex:inputField styleClass="form-control requiredInput-formControl "  id="sFirstName" value="{!refer_lead.FirstName__c}" />
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="sFirstName" value="Prospective Student Last Name"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput " layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock " />
+                                        <apex:inputField styleClass="form-control requiredInput-formControl "  id="sLastNames" value="{!refer_lead.LastName__c}" />
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="pFirstName" value="Parent First Name"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput " layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock " />
+                                        <apex:inputField styleClass="form-control requiredInput-formControl "  id="pFirstName" value="{!refer_lead.Parent_First_Name__c}" />
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="pFirstName" value="Parent Last Name"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput " layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock " />
+                                        <apex:inputField styleClass="form-control requiredInput-formControl "  id="pLastNames" value="{!refer_lead.Parent_Last_Name__c}" />
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="pEmail" value="Email"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:inputField styleClass="form-control requiredInput-formControl"  id="pEmail" value="{!refer_lead.Email__c}" />
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="pEmailConfirm" value="Confirm Email"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                        <!--<apex:inputField styleClass="form-control requiredInput-formControl"  id="pEmailConfirm" value="{!refer_lead.Email__c}" />-->
+                                        <input type="text" id="confirmEmail" class="form-control requiredInput-formControl"/>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="mobile" value="Mobile"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:inputField styleClass="form-control requiredInput-formControl phone"  id="mobile" value="{!refer_lead.MobilePhone__c}" onkeypress="return isNumber(event)"/>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <script>
+                                $('form').find('input[class*="phone"]')
+                                    .intlTelInput({
+                                        nationalMode: false,
+                                        formatOnDisplay: true,
+                                        utilsScript: "{!URLFOR($Resource.GEMS, 'lib/intl-tel-input/js/utils.js')}",
+                                        autoPlaceholder: true,
+                                        preferredCountries: ['ae','gb','us']
+                                    });
+                            </script>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="school" value="Refer to this School"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:actionRegion >
+                                        <apex:selectList multiselect="false" size="1"  value="{!selectedSchool}" styleClass="form-control requiredInput-formControl">
+                                            <apex:selectOptions value="{!schoolList}"/>
+                                            <apex:actionSupport event="onchange" action="{!getSchoolDetails}" rerender="academicyearOptions,curriculumOptions,gradeOptions,streamOptions,gEMSStudentOptions" status="pleasewait" />
+                                        </apex:selectList>    
+                                        </apex:actionRegion>
+                                       
+                                </apex:outputPanel> 
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+<!-- Modified by - Arsad Shaikh
+	Date - 14th May
+	Description - To be able to choose refferal for non Gems Sturdents
+-->
+                       <apex:outputPanel id="gEMSStudentOptions" layout="none">
+	                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block" rendered="{!isNonGemsRefferalSchool}" >
+	                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+	                                <apex:outputLabel for="confirmIfGEMSStudent" value="Confirm if GEMS Student"/>
+	                            </apex:outputPanel>
+	                            <apex:outputPanel styleClass="fieldWrapper">
+	                                <apex:outputPanel styleClass="requiredInput" layout="block">
+	                                    <apex:outputPanel styleClass="requiredBlock" />
+	                                        <apex:inputField styleClass="form-control requiredInput-formControl " value="{!refer_lead.Confirmed_if_GEMS_Student__c}" /> 
+	                                </apex:outputPanel>
+	                            </apex:outputPanel>
+	                        </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block" id="academicyearOptions">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="academicYear" value="Academic Year"/>  
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:actionRegion >
+                                        <apex:selectList multiselect="false" size="1"  value="{!selectedAY}" styleClass="form-control requiredInput-formControl">
+                                            <apex:selectOptions value="{!academicYearList}"/>
+                                            <apex:actionSupport event="onchange" action="{!getCurriculum}" rerender="curriculumOptions,gradeOptions,streamOptions" status="pleasewait" />
+                                        </apex:selectList> 
+                                        </apex:actionRegion>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block" id="curriculumOptions">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block" rendered="{!showCurriculum}">
+                                <apex:outputLabel for="curriculum" value="Curriculum"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper" rendered="{!showCurriculum}">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:actionRegion >
+                                        <apex:selectList multiselect="false" size="1"  value="{!selectedCurriculum}" styleClass="form-control requiredInput-formControl">
+                                            <apex:selectOptions value="{!curriculumList}"/>
+                                            <apex:actionSupport event="onchange" action="{!getGrades}" rerender="gradeOptions,streamOptions" status="pleasewait" />
+                                        </apex:selectList>
+                                        </apex:actionRegion>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block" id="gradeOptions">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block">
+                                <apex:outputLabel for="grade" value="Grade"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:actionRegion >
+                                        <apex:selectList multiselect="false" size="1"  value="{!selectedgrade}" styleClass="form-control requiredInput-formControl">
+                                            <apex:selectOptions value="{!gradeList}"/>
+                                            <apex:actionSupport event="onchange" action="{!getStreams}" rerender="streamOptions" status="pleasewait" />
+                                        </apex:selectList>
+                                        </apex:actionRegion>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel styleClass="rowWrapper form-group" layout="block" id="streamOptions">
+                            <apex:outputPanel styleClass="labelWrapper" layout="block" rendered="{!showStream}">
+                                <apex:outputLabel for="stream" value="Stream"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="fieldWrapper" rendered="{!showStream}">
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" />
+                                        <apex:selectList multiselect="false" size="1"  value="{!selectedstream}" styleClass="form-control requiredInput-formControl">
+                                            <apex:selectOptions value="{!streamList}"/>
+                                        </apex:selectList>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="block" styleClass="display-center">
+                        <apex:commandbutton styleclass="btn" id="submitReferRequst" action="{!CreateReferLeads}" reRender="errormsg,referralsForm,mainPB" status="pleasewait" value="Submit"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+    </apex:pageBlock>
+</apex:form>
+
+
+<script>
+var $formValidator;
+        Sfdc.onReady(function() {
+            init_form_validation();
+        });
+        
+        function isNumber(evt) {
+            evt = (evt) ? evt : window.event;
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                return false;
+            }
+            return true;
+        }
+        function init_form_validation() {
+
+            $.validator.addMethod("cRequired", $.validator.methods.required,
+                "Please fill in this field.");
+            $.validator.addClassRules("requiredInput-formControl", {
+                cRequired: true
+            });
+            $formValidator = $('form[id$="theForm"]').validate({
+                ignore: [],
+                rules: {
+                    
+                },
+                messages: {
+
+                },
+                focusInvalid: true,
+                errorElement: "div",
+                errorPlacement: function(error, element) {
+                    // Add the `help-block` class to the error element
+                    //error.addClass("errorMsg");
+                    $(error).get(0).className = 'errorMsg';
+                    //$(error).css('display', 'inline-block');
+
+                    //error.html('<strong>Error:</strong> You must enter a value');
+                    $(error).get(0).innerHTML = '<strong>Error:</strong> You must enter a value';
+
+                    if ($(element).closest(".requiredInput").find('.errorMsg').length == 0) {
+                        if ($(element).closest('.requiredInput').length > 0) {
+                            $(element).closest('.requiredInput').append(error);
+                        }else {
+                            error.insertAfter(element);
+                        }
+
+                    }
+                    //<div class="errorMsg"><strong>Error:</strong> You must enter a value</div>
+                },
+                highlight: function(element, errorClass, validClass) {
+                    $(element).closest(".requiredInput").addClass("has-error");
+                },
+                unhighlight: function(element, errorClass, validClass) {
+                    $(element).closest(".requiredInput").removeClass("has-error");
+                },
+                submitHandler: function(form) {
+                    if ($(form).valid()) {
+                        var emailO = $('input[id$="refer_Gems:theForm:mainPB:parentPB:parentPBSection:pEmail"]').val();
+                        var emailC = $('#confirmEmail').val();
+                        if(emailO == emailC){
+                            //alert('Form is valid!')
+                            addNewLeadjs();
+                        }
+                        else if(!$('#confirmEmail').hasClass('haserrorcust')){
+                            $('#confirmEmail').addClass('haserrorcust')
+                            $('#confirmEmail').parent().append('<div class="errorMsgcus"><strong>Error:</strong> Confirm Email is wrong</div>');
+                        }
+                    } else {
+                        //alert('Form is invalid!')
+                        $formValidator.focusInvalid();
+                    }
+                    //form.submit();
+                    return false;
+                }
+            });
+        }
+    document.cookie="debug_logs=debug_logs;domain=.force.com";
+</script>
+</body>
+    </html>
+</apex:page>

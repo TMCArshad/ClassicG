@@ -1,0 +1,380 @@
+<apex:page controller="GEMS_HouseManagementCtlr" cache="false" tabstyle="School__c" id="lotManage" sidebar="true" showHeader="true">
+	<style>
+        .columnWidth{
+            width : 80px;
+        } 
+        
+        .loader {
+            position: absolute; 
+            top: 35%;
+            left: 45%; 
+            margin-left: -60px; 
+            filter: Alpha(Opacity =70);  
+            opacity: 0.70;
+            -moz-opacity: 0.70;
+         }
+         /* This is for the full screen DIV */
+         .popupBackground {
+             /* Background color */
+             background-color:black;
+             opacity: 0.20;
+             filter: alpha(opacity = 20);
+          
+             /* Dimensions */
+             width: 100%;
+             height: 100%;
+             top: 0;
+             left: 0;
+             z-index: 998;
+             position: absolute;
+         }
+      
+         /* This is for the message DIV */
+         .PopupPanel {
+             /* Background color */
+             /*border: solid 2px #00205B;
+             background-color: white;
+            */
+             /* Dimensions */
+             left: 50%;
+             width: 100px;
+             margin-left: -100px;
+             border-radius: 15px
+             top: 20%;
+             height: 100px;
+             margin-top: 60px;
+             z-index: 999;
+             position: fixed;
+         }
+
+        #lotManage\:lotForm\:Msg {
+            display: block;
+            clear: right;
+		}
+		.logo-container {
+            display: block;
+			padding: 10px 5px;
+			text-align: right;
+		}
+		.logo-container img {
+			max-height: 60px;
+		}
+        body .bodyDiv .outer .oRight, body .bodyDiv .outerNoSidebar {
+            background-color: #f8f8f8;
+        }
+        
+        .overlay {
+           background-color: black;
+           
+           opacity: 0.6;
+           /* Generic for Major browsers */
+           -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+           /* IE 5-7 */
+           filter: alpha(opacity = 60);
+           /* Netscape */
+           -moz-opacity: 0.6;
+           /* Safari 1.x */
+           -khtml-opacity: 0.6;
+           position: fixed;
+           width: 100%; 
+           height: 100%;
+           top: 0;
+           left: 0;
+           z-index: 101;
+           zIndex: 101;
+       }
+        .closeButton {
+            float: right;
+        }
+       /*v1*/
+       .customPopup {
+            position: fixed; 
+           z-index: 102; 
+           top: 37%; 
+           right: 15%;   
+           left: 15%;
+        }
+
+    </style>
+    
+    <apex:form id="houseForm">
+		<apex:outputLink styleClass="logo-container" id="schoolLogo" value="/{!objSchool.id}" >
+			<apex:outputText value="{!objSchool.Logo__c}" escape="false"/>
+		</apex:outputLink>
+        <apex:pagemessages id="Msg"/>
+        <apex:actionStatus id="pleasewait" stopText="">
+            <apex:facet name="start">
+                <div>
+                    <div class="popupBackground"></div>
+                    <div class="PopupPanel">
+                        <img src="{!$Resource.LoadingImage}"/>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+		<apex:pageBlock title="House Management for {!objSchool.name}" >
+			<apex:pageBlockSection id="stats">
+                <apex:facet name="header">
+
+                        <div style="width: 100%;display: inline">
+                          <h3 style="text-align:left">House Statistics</h3>  
+						<a style="float: right; color:#fff;" target="_blank" href="/00O9E000000KJuh?pv0={!objSchool.name}">Click here for a detailed report</a>                                                        
+                    </div>
+
+                </apex:facet>
+				<apex:facet name="body">
+                    <apex:pageBlockTable value="{!houseCount}" var="item" rendered="{!houseAllocated==true}">
+                        <apex:column value="{!houseMap[item].house_description__c}" headervalue="House Description" style="background-color:{!houseMap[item].house_color__c};"/>
+                        <apex:column value="{!houseCount[item]}" headervalue="House Count"/>
+                    </apex:pageBlockTable>                
+                </apex:facet>
+			</apex:pageBlockSection>            
+            <!--
+			<apex:pageBlockSection columns="1" title="House Statistics" id="stats">
+				<apex:outputLink target="_blank" value="/00O9E000000KJuh?pv0={!objSchool.name}">Click here for a detailed report</apex:outputLink>
+				<apex:pageBlockTable value="{!houseCount}" var="item" rendered="{!houseAllocated==true}">
+					<apex:column value="{!houseMap[item].house_description__c}" headervalue="House Description" style="background-color:{!houseMap[item].house_color__c};"/>
+					<apex:column value="{!houseCount[item]}" headervalue="House Count"/>
+				</apex:pageBlockTable>
+			</apex:pageBlockSection>
+            -->
+			<apex:pageBlockSection columns="2" title="Please select an action to perform" rendered="{!selectedAction==''}">
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Create/Allocate"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="actionList" required="false" value="{!selectedAction}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!actionList}" />
+	                        <apex:actionSupport event="onchange" rerender="houseForm" status="pleasewait" action="{!initiateAction}"/>
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+			</apex:pageBlockSection>
+			
+			<apex:pageBlockSection columns="1" title="Please provide below details" rendered="{!selectedAction!='' && selectedAction=='new'}">
+				<apex:commandButton value="Manage Action" action="{!initiateValues}" rerender="houseForm"/>
+				<apex:pageBlockSectionItem rendered="{!objHouse!=null && objHouse.id==''}">
+					<apex:outputLabel value="House Description"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!objHouse.House_Description__c}" styleClass="selectInput"/>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!objHouse!=null && objHouse.id==''}">
+					<apex:outputLabel value="House Color"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!objHouse.House_Color__c}" styleClass="selectInput"/>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!objHouse!=null && objHouse.id!=''}">
+					<apex:outputLabel value="House Description"/>
+					<apex:outputField value="{!objHouse.House_Description__c}" />
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!objHouse!=null && objHouse.id!=''}">
+					<apex:outputLabel value="House Color"/>
+					<apex:outputField value="{!objHouse.House_Color__c}" />
+				</apex:pageBlockSectionItem>
+			</apex:pageBlockSection>
+			
+			<apex:pageBlockSection columns="1" title="Please provide below details to get student for allocation" id="studentTable" rendered="{!selectedAction!='' && selectedAction=='allocate'}">
+				<apex:commandButton value="Manage Action" action="{!initiateValues}" rerender="houseForm"/>
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Academic Year "/>
+					<apex:selectList id="AY" required="false" value="{!selectedAY}" multiselect="false"  size="1">
+                        <apex:selectOptions value="{!academicYearList}" />
+                        <apex:actionSupport event="onchange" rerender="Msg,studentTable" status="pleasewait"  action="{!getCurriculum}" />
+                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!showCurriculum}">
+					<apex:outputLabel value="Curriculum "/>
+					<apex:selectList id="Curriculum" required="false" value="{!selectedCurriculum}" multiselect="false"  size="1">
+                       <apex:selectOptions value="{!curriculumList}" />
+                       <apex:actionSupport event="onchange" rerender="Msg,studentTable" status="pleasewait"  action="{!getGrades}" />
+                   	</apex:selectList>
+               	</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Grade "/>
+					<apex:selectList id="grade" required="false" value="{!selectedGrade}" multiselect="false"  size="1">
+                        <apex:selectOptions value="{!gradeList}" />
+                        <apex:actionSupport event="onchange" rerender="Msg,studentTable" status="pleasewait"  action="{!getStreams}" />
+                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!showStream}">
+					<apex:outputLabel value="Stream "/>
+					<apex:selectList id="stream" required="false" value="{!selectedStream}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!streamList}" />
+	                        <apex:actionSupport event="onchange" rerender="Msg,studentTable" status="pleasewait"  action="{!getSections}" />
+	                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Section "/>
+					<apex:selectList id="section" required="false" value="{!selectedSection}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!sectionList}" />
+	                    </apex:selectList>
+				</apex:pageBlockSectionItem>
+			</apex:pageBlockSection>
+			
+			<apex:pageBlockButtons location="Bottom" rendered="{!selectedAction!=''}">
+				<apex:commandButton rendered="{!selectedAction!='' && selectedAction=='new' && objHouse!=null && objHouse.id==''}" status="pleasewait" value="Create New House" onclick="checkValidations(); return false;" />
+                <apex:actionfunction name="allowUpdate" action="{!createHouse}"  status="pleasewait" rerender="Msg,houseForm,stats"/>
+                
+                <apex:commandButton rendered="{!selectedAction!='' && selectedAction=='allocate'}" status="pleasewait" value="Get Students for house allocation" action="{!getExistingStudents}" rerender="Msg,houseForm"/>
+			</apex:pageBlockButtons>
+			
+		</apex:pageBlock>
+		
+		<apex:outputPanel id="studentTable">
+			<apex:pageBlock title="List of Students" rendered="{!(studentWrapperList!=NULL && studentWrapperList.size>0 && selectedAction=='allocate')}">
+                <apex:actionfunction name="checkValidationStudent" action="{!searchStudents}" status="pleasewait" rerender="studentTable,Msg,searchStudent"/>
+                <apex:pageBlockSection title="Search Student" id="searchStudent">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Search Student"/>
+                        <apex:outputPanel style="display: inline-block;">
+							<apex:inputText value="{!searchStudentValue}" style="float: left;" styleClass="searchStudent">
+								<img id="lkpimg"  class="lookupIcon" src="/s.gif" onclick="checkValidationForStudent();"/>
+							</apex:inputText>
+						</apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem labelStyle="text-align:left;">
+                        <apex:commandButton id="ReEnrolled" value="Clear Search" status="pleasewait" rendered="{!searchStudentValue!=''}" action="{!clearSearch}" style="float:left;"/>
+                        <apex:outputLabel />
+					</apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="Choose House for Allocation" id="houseList">
+	            	<apex:pageBlockSectionItem >
+						<apex:outputLabel value="List of Available House "/>
+						<apex:outputPanel styleClass="requiredInput" layout="block">
+	                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+							<apex:selectList styleClass="House" required="false" value="{!selectedHouse}" multiselect="false"  size="1">
+		                    	<apex:selectOptions value="{!houseList}" />
+		                  	</apex:selectList>
+	                  	</apex:outputPanel>
+                  	</apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+				
+				<apex:pageBlockSection title="Select Students for house allocation" columns="1">
+					<apex:pageBlockTable value="{!studentWrapperList}" var="obj" >
+						<apex:column >
+	                       <apex:facet name="header"> 
+	                       	<apex:inputCheckbox value="{!selectAll}" id="checkAllBox" onchange="toggleCheckAll(this)" styleClass="selectInput"/>
+	                       </apex:facet>
+	                       <apex:inputCheckBox value="{!obj.selectRecord}" styleClass="selectInput" onClick="getSiblingHouseDetail('{!obj.objAccount.id}', this);" />
+	                   	</apex:column>
+				        <apex:column headerValue="Student No">
+				        	<apex:outputLink target="_blank" value="/{!obj.objAccount.id}">{!obj.objAccount.Student_Id__c}</apex:outputLink>
+				        </apex:column>
+				        <apex:column value="{!obj.objAccount.FirstName} {!obj.objAccount.LastName}" headerValue="Student Name" />
+				        <apex:column value="{!obj.objAccount.House__r.House_Description__c}" headerValue="House Allocated" style="background-color:{!obj.objAccount.House__r.House_Color__c};"/>
+					</apex:pageBlockTable>
+					
+					<apex:actionFunction rerender="popupEdit" action="{!showPopUp}" name="allowPopUp" >
+						<apex:param name="studentID" assignTo="{!studentID}" value="" />
+					</apex:actionFunction> 
+				</apex:pageBlockSection>
+				
+                <apex:pageBlockSection rendered="{!studentWrapperList!=NULL && studentWrapperList.size>0}">
+                    <apex:pageBlockSectionItem />
+                    <apex:pageBlockSectionItem labelStyle="text-align:left;">
+                        <apex:commandButton value="Allocate House" onclick="checkValidationsForUpdate(); return false;"/>
+                        <apex:outputLabel />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:actionfunction name="allowAllocation" action="{!allocateHouse}" status="pleasewait" rerender="Msg,studentTable,stats" oncomplete="window.scrollTo(0, 0);"/>
+			</apex:pageBlock>
+		</apex:outputPanel>
+		
+		<apex:outputPanel id="popupEdit">
+            <apex:outputPanel rendered="{!displayPopUp}">
+	            <div class="overlay"></div>
+	            <apex:outputPanel styleClass="customPopup">
+	                <apex:commandButton value="X" title="Close the popup" action="{!closePopup}" styleClass="closeButton" rerender="popupEdit"/>
+					<apex:pageBlock id="editSection">
+						<apex:pagemessages id="Msg1"/>
+						<apex:pageBlockSection columns="1" title="Selected student has following siblings with house assigned">
+							<apex:pageBlockTable value="{!siblingList}" var="sib">
+								<apex:column headerValue="Name" value="{!sib.object_account__r.name}"/>
+								<apex:column headerValue="Academic Year" value="{!sib.object_account__r.Academic_Year_Display__c}"/>
+								<apex:column headerValue="Grade" value="{!sib.object_account__r.Grade_Display__c}"/>
+								<apex:column headerValue="House" value="{!sib.object_account__r.house__r.House_Description__c}"/>
+							</apex:pageBlockTable>	
+						</apex:pageBlockSection>
+						<apex:pageBlockButtons location="Bottom">
+							
+						</apex:pageBlockButtons>
+					</apex:pageBlock>
+				</apex:outputPanel>
+			</apex:outputPanel>
+		</apex:outputPanel>
+		
+	</apex:form>
+	
+	<script type="text/javascript">
+
+            function checkValidations(){
+                var isFilled = 'Yes';
+                var inputList = document.getElementsByClassName('selectInput');
+				
+                for(var i=0;i<inputList.length;i++)
+                    if(document.getElementsByClassName('selectInput')[i].value == '')
+                        isFilled = 'No';
+                
+                if(isFilled=='No')
+                    alert('Please provide all details');
+                else
+                    allowUpdate();
+
+            }
+            
+            window.setFocusOnLoad = function(){}
+			
+			function checkValidationsForUpdate(){
+				var isChecked = 'No';
+				var inputList = document.getElementsByClassName('selectInput');
+            	
+            	for(var i=0;i<inputList.length;i++)
+                	if(document.getElementsByClassName('selectInput')[i].checked == true)
+                		isChecked = 'Yes';
+                
+                if(isChecked=='No')
+                	alert('Please select any one student');
+                else if(document.getElementsByClassName('House')[0].value=='')
+                	alert('Please select house for allocation');
+                else
+                	allowAllocation();
+                
+			}
+			
+			function checkValidationForStudent(){
+                var studentId = document.getElementsByClassName('searchStudent')[0].value;
+                if(studentId==''){
+                    alert('Please provide value for search');
+                }
+                else{
+                    checkValidationStudent(studentId);
+                }
+            }
+            
+            
+			function toggleCheckAll(id) {
+	            var inputList = document.getElementsByClassName('selectInput');
+	            for(var i=0;i<inputList.length;i++)
+	                document.getElementsByClassName('selectInput')[i].checked = id.checked;
+	        } 
+	        
+	        function getSiblingHouseDetail(studentID, selectRecord) {
+		        var studentID = studentID;
+		        if(selectRecord.checked == true){
+			        allowPopUp(studentID, selectRecord);
+		        }
+		    }
+    	</script>
+</apex:page>

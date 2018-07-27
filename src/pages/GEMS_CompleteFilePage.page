@@ -1,0 +1,287 @@
+<apex:page id="DocumentUploadPage" sidebar="false" showheader="false"
+            tabStyle="Account" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0"
+           controller="GEMS_CompleteFileCntlr" >
+	  
+   <!--  <script src="{!URLFOR($Resource.ProcessFlow_resource, 'ProcessFlow/ProcessFlow.js')}"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.ProcessFlow_resource, 'ProcessFlow/ProcessFlow.css')}"/> -->
+     <apex:composition template="GEMS_PageTemplate">
+      <apex:define name="header">
+            <title>Short Form - Step 3 : Complete Profile</title>
+             <apex:variable var="currentPage" value="profile"/>
+          <style>
+              .pageBlockSectionWrapper .detailList tr > td:first-child {
+                  padding-left: 0;
+              }
+              .pageBlockSectionWrapper .detailList tr > td:last-child {
+                  padding-right: 0;
+              }
+
+              .Declaration .fieldWrapper select,
+              .Health-Restrictions .fieldWrapper select,
+              .Additional-Applicant-Details .fieldWrapper select {
+                  width: auto;
+              }
+
+              .Health-Restrictions .fieldWrapper textarea,
+              .Additional-Applicant-Details .fieldWrapper textarea,
+              .Declaration .fieldWrapper textarea {
+                  height: 80px !important;
+              }
+
+              .descWrapper {
+                  display: none;
+              }
+
+              .modal-header, .modal-footer,
+              .apexp .bPageBlock .error {
+                  border: none !important;
+              }
+
+              .editPage .pbBody .pageBlockSectionWrapper:not(:first-child) .pbSubheader h3::after {
+                  content: '* = Required Information';
+                  float: right;
+                  font-size: 16px;
+                  padding-top: 4px;
+              }
+
+          </style>
+      </apex:define>
+      <!-- Body -->
+      <apex:define name="body">
+		<body>
+			<c:GEMS_CSS />
+
+			<div class="row page-info">
+				<div class="col-lg-12 col-md-12">
+					
+					<p>
+                        Thank you for completing your registration. Please complete the sections below, including the declaration and final submission.
+                        <b>Note, at minimum an applicant’s recent school/nursery reports and passport copy are required before an application can be processed.</b>
+                    </p>
+                    <b>Tips:</b>
+                    <ul>
+                        <li>Uploading scanned copies of passports, national ID and school reports will allow us to process your application quickly.</li>
+                        <li>You have received an email confirmation that contains a “Complete Profile” link for each applicant. You may use this link to return later and upload additional documents.</li>
+                    </ul>
+				</div>
+			</div>
+            <apex:pagemessages id="errormsg"/>
+
+            <div id="MainCompDiv" class="row">
+                <div class="col-lg-12">
+                    <h4>Applicant Name : {!objSR.First_Name__c}&nbsp;{!objSR.Last_Name__c}</h4>
+                </div>
+                <div class="col-lg-12">
+                    <c:GEMS_UploadDocumentsVC id="DocUploadComp" ObjectName="HexaBPM__Service_Request__c"/>
+                </div>
+            </div>
+            <div class="form-panel" id="form-conents">
+                <apex:form id="mainForm" >
+                    <apex:pagemessages id="errorInfo"/>
+
+                    <apex:inputHidden id="ga_utm_source" value="{!objSR.Google_Analytics_Source__c}"/>
+                    <apex:inputHidden id="ga_utm_medium" value="{!objSR.Google_Analytics_Medium__c}"/>
+                    <apex:inputHidden id="ga_utm_campaign" value="{!objSR.Google_Analytics_Campaign__c}"/>
+                    <apex:inputHidden id="ga_utm_content" value="{!objSR.Google_Analytics_Content__c}"/>
+                    <apex:inputHidden id="ga_utm_term" value="{!objSR.Google_Analytics_Term__c}"/>
+                    <apex:inputHidden id="ga_client_id" value="{!objSR.Google_Analytics_Client_Id__c}"/>
+                    <apex:inputHidden id="ga_gclid" value="{!objSR.Google_Analytics_gclid__c}"/>
+
+                    <!--<apex:actionfunction name="RePrepareFields" action="{!reloadFlowComponent}" status="pleasewait"-->
+                                         <!--rerender="dynComp" onComplete="InvokeChangeEventComplete();"/>-->
+
+                    <apex:dynamicComponent id="dynComp" componentValue="{!DyncPgMainPB}"/>
+                    <!--<apex:commandButton id="completeFormSubmit" action="{!submitSR}"  value="Save" styleClass="btn next-step" style="float:right;"/>-->
+                    <button title="Confirm the declaration" id="completeFormSubmit" disabled="disabled" type="submit" onClick="validate_submit();"
+                            class="btn next-step" style="float:right;min-width: 130px;">Save</button>
+                    <apex:actionFunction name="completeFormSave" action="{!saveSR}" reRender="thankYouModal" status="pleasewait"></apex:actionFunction>
+
+                    <apex:outputPanel id="thankYouModal" layout="block">
+                        <apex:outputPanel rendered="{!SRSaved}" layout="block">
+                            <!-- Modal -->
+                            <div class="modal fade" style="display: block; opacity: 1;" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                                <div class="modal-dialog modal-md" role="document">
+                                    <div class="modal-content" style="margin-top: 100px">
+                                        <div class="modal-header text-center">
+                                            <h1>Thank You</h1>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            Thank you for completing your application.
+                                            <apex:outputPanel layout="none" rendered="{!hasMoreThanOneLead}">
+                                                <a style="text-decoration: underline;" href="{!$Page.GEMS_PaymentPage}?BSU={!$CurrentPage.parameters.BSU}&RefId={!$CurrentPage.parameters.RefId}">
+                                                    Click here</a>
+                                                to complete file for remaining applicants.
+                                            </apex:outputPanel>
+                                            <p style="font-weight: 700">
+                                                Note: If there are documents you have not yet submitted you may return to this page by clicking on the "Complete Profile" link in your email to upload further documents.
+                                            </p>
+                                        </div>
+
+                                        <div class="modal-footer text-center" style="text-align: center">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal"
+                                                    onclick="$(document.getElementById('{!$Component.mainForm.thankYouModal}')).fadeOut('slow');">
+                                                Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-backdrop fade in"></div>
+                            <script>
+                                 if ('parentIFrame' in window) {
+                                    parentIFrame.scrollToOffset(0, 0);
+                                }
+                            </script>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+
+                </apex:form>
+            </div>
+
+            <script src="{!URLFOR($Resource.GEMS,'js/validator/jquery.validate.js')}"></script>
+            <script src="{!URLFOR($Resource.GEMS,'js/validator/additional-methods.js')}"></script>
+
+            <script>
+                $('.rowWrapper.type-BOOLEAN').css('float', 'left').parent().css('direction', 'rtl');
+
+                //$('.Declaration .fieldWrapper input[id$="Declarationc"]').removeProp('checked', 'checked');
+                function init_submitButton(){
+                    $('.Declaration .fieldWrapper input[id$="Declarationc"]').get(0).checked=false;
+                    $('.Declaration .fieldWrapper input[id$="Declarationc"]').on('change', function(){
+                        var completeFormSubmitBtn = document.getElementById('completeFormSubmit');
+
+                        if(!$(this).prop('checked')){
+                            $(completeFormSubmitBtn).attr('disabled', 'disabled');
+                        }else{
+                            $(completeFormSubmitBtn).removeAttr('disabled');
+                        }
+                    })
+                }
+
+                function validate_submit(){
+                    var $form = $('form[id$="mainForm"]');
+                    if($form.valid()){
+                        completeFormSave();
+                    }else{
+                        $formValidator.focusInvalid();
+                    }
+                }
+                function InvokeChangeEvent(){
+                    <!--RePrepareFields();-->
+                }
+                function InvokeChangeEventComplete (){
+                    init_submitButton();
+                }
+
+                var $formValidator;
+                $(function(){
+                    init_form_validation();
+
+                    init_submitButton();
+                })
+
+                function init_form_validation(){
+                    $.validator.addMethod("cRequired", $.validator.methods.required,
+                            "Please fill in this field.");
+                    $.validator.addClassRules("requiredInput", { cRequired: true});
+
+                    jQuery.validator.addMethod("mobile", function(value, element) {
+                        return $(element).intlTelInput("isValidNumber");
+                    }, "Please specify the correct phone number.");
+                    $.validator.addClassRules("phone", { mobile: true});
+
+
+                    $formValidator = $('form[id$="mainForm"]').validate({
+                        ignore: [],
+                        rules: {
+                            <!--"DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009UEPQA2:PBSItem_Declarationc:Declarationc": "required",-->
+
+                            //Address Area, City/State
+                            "DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009zXdQAI:PBSItem_FatherOtherCityStatec:FatherOtherCityStatec": {
+                                required: function(element) {
+                                    return $(document.getElementById('DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009zXdQAI:PBSItem_CityEmiratec:CityEmiratec'))
+                                                    .find('option:selected').text() =="Other";
+                                }
+                            },
+                            "DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009zXdQAI:PBSItem_FatherOtherAreac:FatherOtherAreac": {
+                                required: function(element) {
+                                    return $(document.getElementById('DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009zXdQAI:PBSItem_Areac:Areac'))
+                                                    .find('option:selected').text() =="Other";
+                                }
+                            },
+
+                            //Health Restrictions
+                            "DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009UEAQA2:PBSItem_Otherinformationrelatedtohealthnotec:Otherinformationrelatedtohealthnotec" : {
+                                required: function(element){
+                                    return $("[id$='PBSItem_Anyotherinformationrelatedtohealthc:Anyotherinformationrelatedtohealthc']").val() === 'Yes';
+                                }
+                            },
+
+                            // Therapy
+                            "DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009UEKQA2:PBSItem_Learningsupportortherapynotesc:Learningsupportortherapynotesc": {
+                                required: function(element){
+                                    return $("[id$='PBSItem_Anysortoflearningsupportortherapyc:Anysortoflearningsupportortherapyc']").val() === 'Yes';
+                                }
+                            },
+
+                            // Special Education
+                            "DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009UEKQA2:PBSItem_SpecialEducationNeedsNotec:SpecialEducationNeedsNotec": {
+                                required: function(element){
+                                    return $("[id$='PBSItem_StudentrequireEnglishsupportc:StudentrequireEnglishsupportc']").val() === 'Yes';
+                                }
+                            },
+
+                            // Emotional/Physical needs
+                            "DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009UEKQA2:PBSItem_EnglishSupportNotesc:EnglishSupportNotesc": {
+                                required: function(element){
+                                    return $("[id$='PBSItem_Childhaveanyspecialeducationneedsc:Childhaveanyspecialeducationneedsc']").val() === 'Yes';
+                                }
+                            },
+
+                            // Emotional/Physical needs
+                            "DocumentUploadPage:j_id0:mainForm:MainPB:PBS_a0p9E0000009UEKQA2:PBSItem_Ifyesc:Ifyesc": {
+                                required: function(element){
+                                    return $("[id$='PBSItem_Behaviourbeenanycauseforconcernc:Behaviourbeenanycauseforconcernc']").val() === 'Yes';
+                                }
+                            }
+                        },
+                        messages: {},
+                        focusInvalid: true,
+                        errorElement: "span",
+                        errorPlacement: function (error, element) {
+                            // Add the `help-block` class to the error element
+                            error.addClass("help-block");
+
+                            if($(element).parents('.form-group').length > 0){
+                                $(element).parents('.form-group').append(error);
+                            }
+                            else if (element.prop("type") === "checkbox") {
+                                error.insertAfter(element.parent("label"));
+                            } else {
+                                error.insertAfter(element);
+                            }
+                        },
+                        highlight: function (element, errorClass, validClass) {
+                            $(element).parents(".form-group").addClass("has-error");
+                        },
+                        unhighlight: function (element, errorClass, validClass) {
+                            $(element).parents(".form-group").removeClass("has-error");
+                        },
+                        submitHandler: function (form) {
+                            if($(form).valid()){
+                                //alert('Form is valid!')
+                                //saveNewChild();
+                            }else {
+                                //alert('Form is invalid!')
+                                $formValidator.focusInvalid();
+                            }
+                            //form.submit();
+                            return false;
+                        }
+                    });
+                }
+            </script>
+		</body>
+	  </apex:define>
+	</apex:composition>
+</apex:page>

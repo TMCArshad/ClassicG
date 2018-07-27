@@ -1,0 +1,532 @@
+<apex:page docType="html-5.0" controller="GEMS_reEnrollmentCtlr" id="reEnrollment" sidebar="false" showHeader="false" cache="false"><!--tabstyle="HexaBPM__Service_Request__c"-->
+    <apex:stylesheet value="{!$Resource.HexaBPM__DocumentCSS}/popup/reveal.css"/>
+    <apex:includeScript value="{!$Resource.HexaBPM__DocumentCSS}/popup/jquery.min.js"/>
+    <apex:includeScript value="{!$Resource.HexaBPM__DocumentCSS}/popup/jquery.reveal.js"/>
+    
+    <style>
+        .columnWidth{
+            width : 80px;
+        }
+        
+        .loader {
+            position: absolute; 
+            top: 35%;
+            left: 45%;
+            margin-left: -60px; 
+            filter: Alpha(Opacity =70);  
+            opacity: 0.70;
+            -moz-opacity: 0.70;
+         }
+         /* This is for the full screen DIV */
+         .popupBackground {
+             /* Background color */
+             background-color:black;
+             opacity: 0.20;
+             filter: alpha(opacity = 20);
+          
+             /* Dimensions */
+             width: 100%;
+             height: 100%;
+             top: 0;
+             left: 0;
+             z-index: 998;
+             position: absolute;
+         }
+      
+         /* This is for the message DIV */
+         .PopupPanel {
+             /* Background color */
+             /*border: solid 2px #00205B;
+             background-color: white;
+            */
+             /* Dimensions */
+             left: 50%;
+             width: 100px;
+             margin-left: -100px;
+             border-radius: 15px
+             top: 20%;
+             height: 100px;
+             margin-top: 60px;
+             z-index: 999;
+             position: fixed;
+         }
+ .overlay {
+           background-color: black;
+           
+           opacity: 0.6;
+           /* Generic for Major browsers */
+           -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+           /* IE 5-7 */
+           filter: alpha(opacity = 60);
+           /* Netscape */
+           -moz-opacity: 0.6;
+           /* Safari 1.x */
+           -khtml-opacity: 0.6;
+           position: fixed;
+           width: 100%; 
+           height: 100%;
+           top: 0;
+           left: 0;
+           z-index: 101;
+           zIndex: 101;
+       }
+        .closeButton {
+            float: right;
+        }
+       
+       .customPopup {
+            position: absolute; 
+           z-index: 102; 
+           top: 1%; 
+           right: 15%;   
+           left: 15%;
+        }
+
+        .pbBody .pbSubheader {
+            background-color: #b5cae7 !important;
+            border: 1px solid #9296e7 !important;
+        }
+        .mainTitle {
+            color: #2195df !important;
+        }
+
+        .apexp .bPageBlock .mainPBHeader{
+            color: #084777;
+            font-size: 11px;
+            font-weight: bold;
+            display: block;
+            overflow: hidden;
+            padding: 5px;
+            border: 1px solid #b5cae7;
+            background: url( 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAcCAYAAADBRfeOAAACPElEQVRYhcXY2XKiQBTG8bz/8ySzZJZUpRIkZjXKYoxRRIgKNJmoExkuvrlIMWVpn8MATbg4D/Crov90nwM/TrE7nkjhhAmcYH/Giw363m9Y0/XeGJMVdFtAMyPpnPVCfGo/4/DCr3UOZKhsJiQsQd+Xw0x3hXY/pmFGhM+X9cJYlB+ncMM/cliQYEDArOkaV4MXEqaZEY6vZ82h/DiFG8lhTpDg8fmNhN0Of7GwH3eL5lB+nGLKwIazN9gE7O7pFZopP2e6LXDSCXDYbgj1HhAa9jTfkLD78RItax+m2wK6LXDaDXGkEFYIlVfGEVPGnqSMGUq3Bc6NSFkZC6P8OIWXV0Ym+dtl3EZlYBVlLIXKTX6Q4IEp4+XDixSl2wItS+BrxTJWQk1zzhiFuh8vSVR2xhpBeSIlQePFBrYnBxmT1b9oyECaGVWORmkU9+lRZ8p017iw6TPVskRzZ4oCOQVvGbuo4+t5M/VjbxezYreLbdBPhbeLQqiqYeB+vqpAhVBcGEYL+jbR2wqDDHVuVA9DaVSZn+1uGHZHVRhKobgw8D9ZGqSZUeWfbGlU2WfHzSP/7Ph+q6Z0hVFcGIZzGtQZvbKgk05QG4hFlQ6DI39mZHPaDZW/n/4bRS9eEvSJK5Dp8osXlc+LwqiyYeAWLpoZ4ctVfXsJFsWFYVAhDN9u6gsDi8rbQ1Cg9z1Ec2EgUWwYmP1D11mSi5WPCoMU5cXc2yhh30Y6U7ozI8LRB4RBimLfRhXCUPcmlpq/rseyqJqFq2UAAAAASUVORK5CYII=' )
+                        no-repeat right 0 #e6effc !important;
+            margin: 5px 0;
+        }
+
+        .apexp .bPageBlock.apexDefaultPageBlock .pbBody {margin-left:0; margin-right: 0;}
+        .apexp .bPageBlock.apexDefaultPageBlock .pbBody .pbSubheader {
+            <!--color: #084777 !important;-->
+            border: none !important;
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABNCAYAAAAFICL0AAAEVUlEQVR4nO1ZS28iMQzO//9BVW9ceuOCQFVRDzzUh7SaoWUZQOyWVfZAPXgcO5NkgASawyc7zsvz+XNatWr795/OkKFiJ5A6MkGuBFW7fbaMVdVurzN41Aqqdnv9sf7KFlmAopPZb/oqlURS9KvdXis6mXFEVpCDr2JXKWUYCsowoT7WX3pWbvXH+ktPio3+9fvPjwN8O7azcisrCDb9BAuodvvaZgURVLs9q6CaICyp2MleGpIoDAXhDVhNtz7mCDMUhFsM29jVvZSC6DdjkpRETioVPuVY8qWfYg0FQZvhg2/N0tZqW1sriGP91q00B2JhFeR64C34uNW4OHCiMDlURdxh8DvDtcZtPlaPqCBJfq64xvWSIAwFhV7sm0Ss9T5nGi3GvUOhlUtBFSGgXIgE0U1dL4253qVDOGLYRzrDJE7FTiJVNBQUO5mUUbdYf7qs7aTY6Me3irV4zS2MJ8VGD19Whj98WfGPNCgKCJFImhSbmtRrH8N34vlGiwGj/elSP75VNRFUTXiMCaQVSXXMdQidBwUBWWpWbvXT+7reNCu3DQKojw/EieAYnJHiPJc//S5or+HL6kAQkIDBkcORJcVwe6Yw3/a+0jWj16rZYhJRtwRa6LY1s3KrVeykUwDXdo03CD/OPxEcOWAVRw73U63Lpaeel+a4uBRzIcdQkO0QXysl5XqHzXdd51IEbtyfLvXT+/qoINpmrgy32TYV2O5wIZqb476Fnmkrzqzc6sF8pQfz79+kR69NxrhNoT4eY9La7nBVZ4iyXbqj8QYBW7ZkfVvOdnEIIV3I7HLHYL46vkGuCXX5AF+iY9rGG3TuSkh+CkRIFjpLQXudC5SQtnhKGMxX3RUk+W1KsRHm0rKXiF1EQSHqSglRCUodjRbL4JEJygQlTtDD8+fV+QZBvfFC96dLfT8qz2Kv0QdOFDhgAXQcGqcJ4EpJ8Vg+zqcmCA+oknrjhRGzKYVbDwk8PH8asXOq1tdKRClcee6jsHU9FM9jSKRI913SAqhYagVx7xCuOv0YLk5VwlWLkkb3pWKBE+UiuxC52sCRFosMKS/jkZY2h17aNk5JQXA/l4vqjRcnIaVLUjEU47qHVRBNnlrJ97Wu913awvvTGy8OBIGKulSUKjG0/drOO1WcywsTYxAEB2GyJOA1NAEbsOoA3D7prFPFbeswsYaCQvqaKtB3r7TPda1vvO0uXPiaIFfluFbBB5yqpPOktb5xl3uBDyWR4/tQczG/vQWJFUHk2mOFQTyXG1aRoaAQJTX3FMTncJw7JMbNl/Xc4aMKwzfPKK3rmjlR3/ye3nhxUJA/aLXNeX4NjZvk2ebsH8yNuXNt+VkUxMvSrKZUbY4Ic43LR7vCXhx3Uu2tbFFQ2IF8oi7xtrkuaCuWt4JOWelrAqOgu+G5WuCaQVrsbljUuB+121vHkYtvBWXwuB99/7nj2Gbxq5cOyiNB+C9o5/4XUOqW8vAfqgx4P+kgX2cAAAAASUVORK5CYII=') 0 0 repeat-x;
+            padding: 5px;
+            color: #2195df;
+            font-weight: bold;
+        }
+        div[id='reEnrollment\:reEnrollment\:reEnrollmentBlock'],
+        div[id='reEnrollment\:reEnrollment\:NBAD\:gemsNBAD-mainsection'] .detailList .data2Col,
+        div[id='reEnrollment\:reEnrollment\:NBAD'] {
+            border: none !important;
+        }
+        div[id='reEnrollment\:reEnrollment\:NBAD'] .pbHeader {
+            background-color: #138e4b;
+            height: 70px;
+
+        }
+
+        div[id='reEnrollment\:reEnrollment\:NBAD'] .pbHeader > table {
+            display: none;
+        }
+
+        select[id$='wantCreditCard'] + fieldset {
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0;
+            padding: 0;
+        }
+
+        ol > li {
+            margin-left: 0;
+            margin-bottom: 10px;
+        }
+    </style>
+    
+    
+    <apex:form id="reEnrollment" styleClass="homeTab">
+        <apex:pagemessages id="Msg"/>
+        <apex:actionStatus id="pleasewait" stopText="">
+            <apex:facet name="start">
+                <div>
+                    <div class="popupBackground"></div>
+                    <div class="PopupPanel">
+                        <img src="{!$Resource.LoadingImage}"/>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <apex:pageBlock id="reEnrollmentBlock" rendered="{!objSR.Accept_Offer__c == '' && isBlocked==false && reEnrolStarted==true}">
+            <apex:facet name="header">
+                <apex:outputPanel layout="block" styleClass="mainPBHeader">
+                    <apex:outputLabel value="Re-Enrolment" style="float:left"/>
+                    <apex:outputLabel value="{!studentName}"
+                                      style="float:right; padding-right: 25px; text-transform:uppercase;"/>
+                </apex:outputPanel>
+            </apex:facet>
+            <apex:pageBlockSection columns="1">
+                <apex:pageBlockSectionItem >
+                    Dear Parent,<br/>
+                    <p>We are currently finalizing enrolment for the next academic year.
+                        We require that you indicate your intention regarding the re-enrolment of your child for the
+                        {!academicyear} academic year commencing in {!startMonth} {!academicYearCurrent}.</p>
+                    <!--Currently we are enrolling and recruiting for the next academic year. We ask that you please indicate your intention regarding your child's re-enrolment/ re-registration-->
+                    <!--of your child for June {!academicyear} by submitting this form.       -->
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection columns="1" title="Please provide details" id="staffExist" collapsible="false">
+                <apex:pageBlockSectionItem id="staffExistField">
+                    <apex:outputPanel layout="block">
+                        <apex:outputLabel >
+                            Is father or mother GEMS staff?
+                        </apex:outputLabel>
+                        <apex:selectList style="margin-left: 10px;" id="gemsStaffExist" required="true" value="{!selectedGemsStaffExist}" multiselect="false"  size="1">
+                            <apex:selectOptions value="{!gemsStaffExist}" />
+                            <apex:actionSupport event="onchange" reRender="staffExist,Msg,reEnrollmentBlock" status="pleasewait" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="staffId" rendered="{!selectedGemsStaffExist=='Yes'}">
+                    <apex:outputPanel layout="block">
+                    <apex:outputLabel >Enter 8 digit Staff No</apex:outputLabel>
+                    <apex:inputText style="margin-left: 68px;" value="{!staffId}" maxlength="8" id="staffIdField" styleClass="StaffID" onChange="generateOTP();"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            
+                <apex:pageBlockSectionItem id="OTPId" rendered="{!selectedGemsStaffExist=='Yes'}">
+                    <apex:outputPanel layout="block">
+                    <apex:outputLabel >Enter OTP</apex:outputLabel>
+                    <apex:inputText style="margin-left: 122px;" value="{!otpProvided}" id="otpField" maxlength="4" styleClass="otp" onChange="validateOTP('false');"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            
+            
+            <apex:pageBlockSection title="Re-Enrolment Details" columns="1" id="reEnrolCheck" collapsible="false">
+                <apex:pageBlockSectionItem id="yes">
+                    <apex:inputCheckBox value="{!yes}" id="yesField" onchange="uncheckNo();" immediate="true"/>
+                    <apex:outputLabel for="yesField">
+                        <!--My child will be returning to {!objstudent.school__r.name} for the academic year {!academicyear}, and request a seat for June {!academicYearCurrent}.-->
+                        <!--In order to secure the seat, I agree to pay the required non-refundable fee, which is adjustable against the-->
+                        <!--1st term/semester fees.-->
+                        My child will be returning to {!objstudent.school__r.name}  for the academic year {!academicyear}. 
+                        <apex:outputPanel layout="none" rendered="{!hasPriceItem}">
+                        In order to secure their seat, I agree to pay the required, non-refundable fee, which is adjustable against the first term/semester fees.
+                        </apex:outputPanel>
+                    </apex:outputLabel>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="no" >
+                    <apex:inputCheckBox value="{!no}" id="noField" onchange="uncheckYes();" immediate="true"/>
+                    <apex:outputLabel for="noField">
+                        <!--My child will not be returning to {!objstudent.school__r.name} for the academic year {!academicyear}, and I will complete the-->
+                        <!--necessary withdrawal process prior to the 1st of June {!academicYearCurrent}-->
+                        My child will not be returning to {!objstudent.school__r.name} for the academic year {!academicyear}.
+                    </apex:outputLabel>
+                </apex:pageBlockSectionItem>    
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="Declaration" columns="1" collapsible="false">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >
+                        I understand and agree that: <br/><br/>
+
+                        <ol>
+                           <li> Unregistered children, as well as, children with an outstanding tuition fee balance, will not be able to begin class next academic year.  </li>
+
+                           <li> At this time, tuition fees for the next academic year have not been determined. Tuition fees are subject to change according to the relevant governing regulatory authority (KHDA, ADEC, MOE etc.)</li> 
+                            
+                           <li> If payment of the Third Term’s tuition fees is not received by the due date, the re-enrolment fee will be adjusted against the outstanding tuition fees and your child’s place for 2018-2019 academic year will be offered to another student. </li>
+
+
+                            <apex:outputPanel rendered="{!hasPriceItem}" layout="none">
+                                <li>My child's seat is not secured, unless I pay the re-enrolment fee by the date indicated by the school.</li>
+                            </apex:outputPanel>
+                        </ol>
+
+
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem id="declaration">
+                    <apex:outputLabel for="declarationField">
+                        <apex:inputCheckbox value="{!objSR.Declaration__c}" id="declarationField"/>
+                        Ticking the declaration box (as a substitute for your signature) is to confirm that you agree to the above declaration.
+                    </apex:outputLabel>
+
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockButtons location="Bottom"  id="buttons">
+                <apex:commandButton value="Proceed" onClick="validateOTP('true'); return false;" rendered="{!selectedGemsStaffExist=='Yes'}" status="pleasewait"/>
+                <apex:commandButton value="Re-Generate OTP" onClick="generateOTP(); return false;" rendered="{!selectedGemsStaffExist=='Yes'}" status="pleasewait"/>
+                <apex:commandButton value="Proceed" action="{!showPopUp}" rerender="popup,Msg" status="pleasewait" rendered="{!selectedGemsStaffExist!='Yes'}"/>
+                
+                <apex:actionfunction name="Proceed" action="{!showpopup}" status="pleasewait" rerender="popup,Msg"/>
+            </apex:pageBlockButtons>
+            
+        </apex:pageBlock>
+        
+        
+        <apex:outputPanel id="popup">
+            <apex:outputPanel rendered="{!displayPopUp}">
+            <div class="overlay"></div>
+            <apex:outputPanel styleClass="customPopup">
+                <apex:commandButton value="X" title="Close the popup" action="{!closePopup}" styleClass="closeButton" rerender="popup"/>
+                     <apex:pageBlock id="NBAD" title="NBAD" rendered="{!yes==true}">
+                         <apex:facet name="header">
+                             <apex:outputPanel id="logosection" layout="block" style="width" styleClass="logo-heading">
+                                 <table style="width: 100%">
+                                     <tbody>
+                                     <tr>
+                                         <td style="height: 70px;width: 200px; vertical-align: middle">
+                                             <apex:image style="float:left; padding-left: 20px;" height="50" value="{!URLFOR($Resource.NBADAssets, 'NBAD_logo.png')}" title="NBAD"/>
+                                         </td>
+                                         <td></td>
+                                         <td style="height: 70px; width: 200px; vertical-align: middle">
+                                             <apex:image style="float: right;padding-right: 20px;" height="50" value="{!URLFOR($Resource.NBADAssets, 'GEMS_logo.png')}" title="GEMS"/>
+                                         </td>
+                                     </tr>
+                                     </tbody>
+                                 </table>
+                             </apex:outputPanel>
+                         </apex:facet>
+
+                        <apex:pageBlockSection id="gemsNBAD-mainsection" columns="1" collapsible="false">
+
+                            <apex:pageBlockSectionItem dataStyle="text-align:center">
+                                <b>Save on school fee with NBAD GEMS Co-brand Credit Card</b>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem dataStyle="text-align: center;" >
+                                <apex:image value="{!URLFOR($Resource.NBADAssets, 'NBAD_card.png')}" title="NBAD Card" />
+                            </apex:pageBlockSectionItem>
+
+                            <apex:pageBlockSectionItem >
+                                With the NBAD GEMS Credit Card, you can now provide your children with the caliber of education that
+                                guarantees them a bright future, without worrying about the financial requirements.
+                            </apex:pageBlockSectionItem>
+
+                            <apex:pageBlockSectionItem dataStyleClass="creditCard">
+                                <!--<apex:outputPanel layout="block">-->
+
+                                    <apex:outputPanel layout="none">
+                                        <apex:outputLabel value="Do you want to apply for NBAD GEMS Credit Card?"></apex:outputLabel>
+                                        <apex:inputField id="wantCreditCard" style="display: none;" value="{!objSR.Apply_Gems_Credit_Card__c}"/>
+                                        <apex:selectRadio onChange="wantCreditCard_changed(this);" id="wantCreditCardOption" style="display:inline;vertical-align: middle; padding:0;">
+                                            <apex:selectOption itemLabel="Yes" itemValue="Yes"/>
+                                            <apex:selectOption itemLabel="No" itemValue="No"/>
+                                        </apex:selectRadio>
+                                    </apex:outputPanel>
+                                <!--</apex:outputPanel>-->
+                            </apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockButtons location="Bottom">
+                            <apex:commandButton value="Confirm" action="{!upsertReEnrollmentSR}" status="pleasewait" rerender="reEnrollment"/>
+                        </apex:pageBlockButtons>
+                      </apex:pageBlock>
+                      
+                      <apex:pageBlock rendered="{!no==true}">
+                          <apex:facet name="header">
+                              <apex:outputPanel styleClass="pbTitle" layout="block" style="width: 100%;">
+                                  <h2 class="mainTitle">Transfer Certificate Request</h2>
+                              </apex:outputPanel>
+                          </apex:facet>
+                        <apex:pageBlockSection columns="1">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputPanel layout="block">
+                                    <apex:outputLabel for="gemsStaffExist">
+                                        Would you like to apply for transfer certificate
+                                    </apex:outputLabel>
+                                    <apex:selectList style="margin-left: 10px;" id="gemsStaffExist" required="true" value="{!selectedTCrequest}" multiselect="false"  size="1">
+                                        <apex:selectOptions value="{!applyForTC}" />
+                                    </apex:selectList>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            
+                        </apex:pageBlockSection>
+                        <apex:pageBlockButtons location="Bottom">
+                            <apex:commandButton value="Confirm" action="{!upsertReEnrollmentSR}" status="pleasewait" rerender="reEnrollment"/>
+                        </apex:pageBlockButtons>
+                    </apex:pageBlock>
+            </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        
+        <apex:pageBlock rendered="{!objSR.Accept_Offer__c == 'Yes' && objSR.Payment_Status__c != 'Paid' && totalPrice>0 && objSR.Payment_Status__c!='Pay At School' && reEnrolStarted==true}">
+            <apex:pageBlockSection columns="1">
+                <apex:pageBlockSectionItem > Date <apex:outputText value="{0,date,dd/MM/YYYY}"> <apex:param value="{!ObjSR.createdDate}"/> </apex:outputText></apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > Student Id <apex:outputField value="{!objstudent.Student_Id__c}"/> </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > Student Name <apex:outputField value="{!objstudent.name}"/> </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > Academic Year <apex:outputText value="{!academicyear}"/> </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > Grade <apex:outputText value="{!objGrade.Grade_Display__c}"/> </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > School <apex:outputField value="{!objstudent.school__r.name}"/> </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > 
+                    Re-enrolment Fee (Payment Pending)
+                    <apex:outputText value="{0, number, ###,###,###,##0 AED}" id="myNumberDisplay" >
+                        <apex:param value="{!totalPrice}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!objSR.Academic_Year__r.Re_Enrolment_Payment_Delay_Date__c!=null && objSR.Academic_Year__r.Re_Enrolment_Payment_Delay_Date__c>TODAY()}"> Online Payment will be made available on <apex:outputText value="{0,date,dd/MM/YYYY}"> <apex:param value="{!objSR.Academic_Year__r.Re_Enrolment_Payment_Delay_Date__c}"/> </apex:outputText></apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons location="Bottom" rendered="{!objSR.Payment_Status__c != 'Paid' && reEnrolStarted==true && objSR.Payment_Status__c!='Pay At School' && (objSR.Academic_Year__r.Re_Enrolment_Payment_Delay_Date__c==null || (objSR.Academic_Year__r.Re_Enrolment_Payment_Delay_Date__c!=null && objSR.Academic_Year__r.Re_Enrolment_Payment_Delay_Date__c<TODAY()))}">
+                <apex:commandButton value="Confirm & Proceed to Payment"  action="{!payNow}" rerender="Msg" status="pleasewait" rendered="{!totalPrice>0}"/>
+                <apex:commandButton value="Confirm"  action="{!submitReEnrollmentSR}" rerender="Msg,reEnrollment" status="pleasewait" rendered="{!totalPrice=0}"/>
+                <apex:commandButton value="Pay At School"  action="{!payAtSchool}" rerender="Msg,payAtschool" status="pleasewait" rendered="{!totalPrice>0}"/>
+                
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+         
+        <apex:pageBlock rendered="{!(payAtSchool == true || objSR.Payment_Status__c=='Pay At School') && reEnrolStarted==true}" id="payAtschool">
+            <apex:pageBlockSection columns="1" title="Confirmation of Re-enrolment (Payment Pending)" collapsible="false">
+                <apex:pageBlockSectionItem >    
+                        Dear Parent, <br/><br/>
+
+                        Thank you for re-enroling and securing the seat of your child, {!objStudent.Name} - Student Id : {!objStudent.Student_Id__c}, for the {!academicyear} academic year  at {!objstudent.school__r.name}. Below is to confirm your selected indication, which you have chosen during the re-enrolment process, for your records. 
+                        <br/><br/>
+                        YES, my child will be returning to  {!objstudent.school__r.name} for the  {!academicyear} academic year  and request a seat for {!startMonth} {!academicYearCurrent}. 
+                        <br/><br/>
+                        Please note: <br/>
+                        1. Payment is pending for Re-Enrolment of your child, and would be done at School.
+                        <br/><br/>
+                        2. Unregistered children, as well as, children with an outstanding tuition fee balance, will not be able to be re-enrolled.
+                        <br/><br/>
+                        3. At this time, tuition fees for the next academic year have not been determined. Should there be a fee increase prior to the start of the academic year, as a result of which you wish to withdraw your request for re-enrolment, please notify the Registrar’s Office as soon as possible.
+                        <br/><br/>
+                        4. If the payment of the Third Term’s tuition fees has not been received by the due date, the re-enrolment fee will be adjusted against the outstanding tuition fees and your child’s place for {!academicyear} academic year will be offered to the next student on the waitlist.
+                        <br/><br/>
+                        We know you have a choice of education providers, and would like to take the time to thank you for choosing to continue your child’s education at our school.
+                         <br/><br/>
+                        With kind regards,
+                        <br/><br/>
+                        Registrar
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        
+        <apex:pageBlock rendered="{!objSR.Accept_Offer__c == 'Yes' && (objSR.Payment_Status__c == 'Paid' || totalPrice==0)  && reEnrolStarted==true}">
+            <apex:pageBlockSection columns="1" title="Confirmation of Re-enrolment" collapsible="false">
+                <apex:pageBlockSectionItem >    
+                        Dear Parent, <br/><br/>
+
+                        Thank you for re-enroling and securing the seat of your child, {!objStudent.Name} - Student Id : {!objStudent.Student_Id__c}, for the {!academicyear} academic year  at {!objstudent.school__r.name}. Below is to confirm your selected indication, which you have chosen during the re-enrolment process, for your records. 
+                        <br/><br/>
+                        YES, my child will be returning to  {!objstudent.school__r.name} for the  {!academicyear} academic year  and request a seat for {!startMonth} {!academicYearCurrent}. 
+                        <br/><br/>
+                        Please note: <br/>
+                        1. Unregistered children, as well as, children with an outstanding tuition fee balance, will not be able to be re-enrolled.
+                        <br/><br/>
+                        2. At this time, tuition fees for the next academic year have not been determined. Should there be a fee increase prior to the start of the academic year, as a result of which you wish to withdraw your request for re-enrolment, please notify the Registrar’s Office as soon as possible.
+                        <br/><br/>
+                        3. If the payment of the Third Term’s tuition fees has not been received by the due date, the re-enrolment fee will be adjusted against the outstanding tuition fees and your child’s place for {!academicyear} academic year will be offered to the next student on the waitlist.
+                        <br/><br/>
+                        We know you have a choice of education providers, and would like to take the time to thank you for choosing to continue your child’s education at our school.
+                         <br/><br/>
+                        With kind regards,
+                        <br/><br/>
+                        Registrar
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{!objSR.Accept_Offer__c == 'No' && reEnrolStarted==true}">
+            <apex:pageBlockSection columns="1" title="Cancellation of Re-enrolment" collapsible="false">
+                <apex:pageBlockSectionItem >    
+                        Dear Parent, <br/><br/>
+
+                        You have cancelled the re-enrolment of your child, {!objStudent.Name} - Student Id : {!objStudent.Student_Id__c}, for the {!academicyear} academic year  at {!objstudent.school__r.name}. Below is to confirm your selected indication, which you have chosen during the re-enrolment process, for your records.
+                        <br/><br/>
+                        No, my child will not be returning to  {!objstudent.school__r.name} for the  {!academicyear} academic year. 
+                        <br/><br/>
+                        
+                        With kind regards,
+                        <br/><br/>
+                        Registrar
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            
+        </apex:pageBlock>
+        
+        <apex:pageBlock rendered="{!reEnrolStarted==false}">
+            <apex:pageBlockSection columns="1" title="Re-Enrolment" collapsible="false">
+                <apex:pageBlockSectionItem >    
+                        Dear Parent, <br/><br/>
+                        
+                        Re-Enrolment has not started yet for the next academic year
+                        <br/><br/>
+                        
+                        With kind regards,
+                        <br/><br/>
+                        Registrar
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            
+        </apex:pageBlock>
+        
+        <script type="text/javascript">
+
+            function wantCreditCard_changed(this_r){
+                console.log($(this_r).val());
+                $('select[id$="this_r"').val($(this_r).val());
+            }
+            
+            function uncheckNo(){
+                if(document.getElementById('reEnrollment:reEnrollment:reEnrollmentBlock:reEnrolCheck:yes:yesField').checked == true){
+                    document.getElementById('reEnrollment:reEnrollment:reEnrollmentBlock:reEnrolCheck:no:noField').checked = false;
+                }   
+            }
+            
+            function uncheckYes(){
+                if(document.getElementById('reEnrollment:reEnrollment:reEnrollmentBlock:reEnrolCheck:no:noField').checked == true){
+                    document.getElementById('reEnrollment:reEnrollment:reEnrollmentBlock:reEnrolCheck:yes:yesField').checked = false;
+                }
+            }
+            
+            $(document).ready(function() {
+              $(window).keydown(function(event){
+                if(event.keyCode == 13) {
+                  event.preventDefault();
+                  return false;
+                }
+              });
+            });
+            
+            
+            function generateOTP() {
+                var staffID = $(".StaffID").val();//document.getElementsByClassName('StaffID')[0].value;
+                var studentId = '{!studentId}';
+                if(staffID!=''){
+                    Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.GEMS_reEnrollmentCtlr.generateOTP}', staffID, studentId, function(result, event){
+                        alert(result);
+                    }, 
+                        {escape: true}
+                    );
+                }
+            }
+            
+            
+            function validateOTP(proceed) {
+                var otpProvided = $(".otp").val();//document.getElementsByClassName('otp')[0].value;
+                var staffID = $(".StaffID").val();//document.getElementsByClassName('StaffID')[0].value;
+                var studentId = '{!studentId}';
+                
+                if(otpProvided!=''){
+                    Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.GEMS_reEnrollmentCtlr.validateOTP}', otpProvided, staffID, studentId, function(result, event){
+                        if(proceed == 'true'){
+                            Proceed();
+                        }else{
+                            alert(result);
+                        }
+                    }, 
+                        {escape: true}
+                    );
+                }else{
+                    alert('Please provide Staff ID and OTP to proceed.')
+                }
+            }
+
+        </script>
+    </apex:form>
+    <script src="{!URLFOR($Resource.GEMS, 'modules/iframe-resizer/iframeResizer.contentWindow.min.js')}"></script>
+
+</apex:page>

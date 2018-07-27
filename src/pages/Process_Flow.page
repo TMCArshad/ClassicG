@@ -1,0 +1,588 @@
+<apex:page controller="Process_FlowCls" id="DyncPgFlow" tabstyle="Account" sidebar="false"
+           action="{!Redirect_DefaultCustomPage}"
+           showHeader="false" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0">
+    <apex:composition template="GEMS_LongFormPageTemplate">
+        <apex:define name="header">
+            <title>Long Form Step 2 - Primary Contact</title>
+            <!--<script src="{!URLFOR($Resource.ProcessFlow_resource , 'ProcessFlow/ProcessFlow.js')}"></script>    -->
+            <!--<apex:stylesheet value="{!URLFOR($Resource.ProcessFlow_resource , 'ProcessFlow/ProcessFlow.css')}"/>-->
+            <style>
+
+                body .bPageTitle {
+                    padding: 0
+                }
+
+                .page-title.row h3, .page-title.row h4,
+                .page-title.row h5 {
+                    color: #000;
+                }
+
+                .dashboard-content {
+                    border: none;
+                    padding-right: 10px;
+                }
+
+                .noSidebarCell > table.row {
+                    margin: 0;
+                }
+
+                .message table td {
+                    padding: 0;
+                }
+
+                .message {
+                    margin: 8px 0px;
+                }
+
+                .actionLink:hover {
+                    text-decoration: underline !important;
+                }
+
+                .reveal-modal {
+                    top: 180px;
+                }
+
+                .reveal-modal .close-reveal-modal {
+                    top: 12px;
+                }
+
+                .pbBody {
+                    margin-left: 0px !important;
+                    margin-right: 0px !important;
+                }
+
+                .pageTitle {
+                    color: #454a50;
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-top: 35px;
+                    margin-bottom: 13px;
+                }
+
+                .pageDescription {
+                    color: #454a50;
+                    line-height: 1.5;
+                    margin-bottom: 13px;
+                    font-size: 12px;
+                }
+
+                .loader {
+                    z-index: 1200;
+                    position: absolute;
+                    margin-left: -60px;
+                    filter: Alpha(Opacity=70);
+                    opacity: 0.70;
+                    -moz-opacity: 0.70;
+                    top: 40%;
+                    left: 50%;
+                }
+
+                .rowWrapper {
+                    width: 100%;
+                    display: table;
+                    padding: 10px 0 10px 0;
+                }
+
+                .rowWrapper td {
+                    border: none;
+                }
+
+                /*fixing side spacing*/
+                .noSidebarCell {
+                    padding: 0;
+                }
+
+                .bodyDiv .outerNoSidebar table .sidebarCell {
+                    padding-right: 1px;
+                }
+
+                .bodyDiv .outerNoSidebar table .sidebarCell #NavigDiv {
+                    border-left: 1px solid #cbcbcb;
+                }
+
+                .bPageBlock .pbBody .labelCol.empty {
+                    display: none;
+                }
+
+                .lookupInput input {
+                    display: inline !important;
+                }
+
+                .panel-container {
+                    padding-top: 15px;
+                    padding-bottom: 15px;
+                }
+
+                .bPageBlock .pbBody .labelCol.empty {
+                    display: none;
+                }
+
+                .editPage .pbBody .pageBlockSectionWrapper:nth-child(1) .pbSubheader h3::after {
+                    content: '* = Required Information';
+                    float: right;
+                    font-size: 16px;
+                    padding-top: 4px;
+                }
+            </style>
+        </apex:define>
+        <apex:define name="body">
+            <body class="profile">
+
+            <c:GEMS_CSS />
+
+            <apex:outputlabel id="hdnCurrentPageId" value="{!strPageId}" style="display:none;"/>
+
+            <div class="main-row sidebar-components">
+                <div id="NavigDiv">
+                    <!--<c:DPFSideBarComponent id="MenuComp" curPageId="{!strPageId}" rerender="MainPnl"/>-->
+                    <c:GEMS_FlowStepTabs id="MenuComp" curPageId="{!strPageId}" rerender="MainPnl"/>
+                </div>
+            </div>
+
+
+            <apex:form id="frm">
+                <!-- page navigation -->
+                <apex:actionfunction name="InvokeAction" action="{!DynamicButtonAction}" status="pleasewait"
+                                     rerender="hdnCurrentPageId,MenuComp,MainPnl" oncomplete="ErrorFocus();"/>
+                <!--  for re-evaluating all the conditions and displaying the sections and details   -->
+                <apex:actionfunction name="RePrepareFields" action="{!RePrepareSection}" status="pleasewait"
+                                     rerender="hdnCurrentPageId,MenuComp,MainPnl,ScriptPnl" onComplete="InvokeChangeEventComplete();"/>
+                <apex:actionfunction name="SaveRecord" action="{!CommitRecord}" status="pleasewait"
+                                     rerender="hdnCurrentPageId,MenuComp,MainPnl" oncomplete="ErrorFocus();"/>
+                <apex:actionfunction name="CancelReq" action="{!CancelSR}" status="pleasewait"
+                                     rerender="hdnCurrentPageId,MenuComp,MainPnl"/>
+                <apex:actionfunction name="NavigatePage" action="{!goTopage}" status="pleasewait"
+                                     rerender="hdnCurrentPageId,MenuComp,MainPnl" oncomplete="ErrorFocus();">
+                    <apex:param name="NextPageId" value="" assignTo="{!strNavigatePageId}"/>
+                </apex:actionfunction>
+                <apex:actionfunction name="clearFields" action="{!RePrepareSection}" status="pleasewait"
+                                     rerender="MainPnl"/>
+
+                <apex:inputhidden value="{!stringActionId}" id="hdnActnId"/>
+                <apex:outputpanel id="MainPnl" layout="block" styleClass="panel-container">
+                    <apex:inputhidden value="{!strReqFieldIds}" id="hdnReqFldIds"/>
+                    <!--<div class="page-title row" style="margin-left: 0; margin-bottom: 15px;">-->
+                        <!--<div class="medium-9 columns title">-->
+                            <!--<h3 style="display: block; font-size: 18px;">{!pageTitle}</h3>-->
+                            <!--<h5 style="display: block; font-size: 14px;">-->
+                                <!--<apex:outputtext rendered="{!IF(objSR.HexaBPM__Record_Type_Name__c=='New_Company_Setup',false,true)}"-->
+                                        <!--value="{!pageDescription}" escape="false"/>-->
+                                <!--<apex:outputtext rendered="{!IF(objSR.HexaBPM__Record_Type_Name__c=='New_Company_Setup',true,false)}"-->
+                                        <!--value="New Company Setup - ({!objSR.Name})" escape="false"/>-->
+                            <!--</h5>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                    <div class="row page-info" style="margin-bottom: 30px">
+                        <div class="col-lg-12 col-md-12">
+                            <!--<h2>{!pageTitle}</h2>-->
+                            <p>{!pageDescription}</p>
+                        </div>
+                    </div>
+                    <div class="message" style="display:none;" id="errorDiv">
+                        <div class="reqErrorMsg">
+                            <img src="/img/msg_icons/error24.png" alt='Error' style="float:left;margin-right:8px;"/>
+                            <h4>Error: </h4>
+                            <span>Invalid Data.</span>
+                            <span style="display: block; padding-left: 20px;">Review all Required Fields below and provide values for those.</span>
+                        </div>
+                    </div>
+
+                    <apex:actionStatus id="ActStatus">
+                        <apex:facet name="start">
+                            <img class="loader" id="theLoadImage" src="/img/loading32.gif"/>
+                        </apex:facet>
+                    </apex:actionStatus>
+                    <apex:outputpanel id="DyncPnl">
+                        <apex:pagemessages id="errormsg" escape="false"/>
+
+                        <apex:dynamicComponent componentValue="{!DyncPgMainPB}"/>
+
+                    </apex:outputpanel>
+
+                    <apex:outputpanel layout="block" id="ScriptPnl">
+                        <apex:inputhidden id="hiddenPageIds" value="{!strHiddenPageIds}"/>
+                        <script>
+
+                            var hdnMenu;
+                            if (document.getElementById('{!$Component.hiddenPageIds}') != null)
+                                hdnMenu = document.getElementById('{!$Component.hiddenPageIds}').value;
+                            //hdnMenu = '{!strHiddenPageIds}';
+                            var CommunityUsr = '{!isCommunity}';
+                            console.log('hdnMenu===>' + hdnMenu);
+                            if (hdnMenu != null && hdnMenu != '') {
+                                var hdnsize = hdnMenu.indexOf(",");
+                                if (hdnsize > -1) {
+                                    var hdnPgLst = hdnMenu.split(',');
+                                    for (i = 0; i < hdnPgLst.length; i++) {
+                                        if (document.getElementById(hdnPgLst[i]) != null) {
+                                            document.getElementById(hdnPgLst[i]).style.display = 'none';
+                                        }
+                                    }
+                                } else {
+                                    if (document.getElementById(hdnMenu) != null)
+                                        document.getElementById(hdnMenu).style.display = 'none';
+                                }
+                            }
+                            //
+                            //to hide the red bar for check boxes
+                            if (document.getElementById('{!$Component.hdnReqFldIds}') != null) {
+                                var reqflds = document.getElementById('{!$Component.hdnReqFldIds}').value;
+                                if (reqflds != null && reqflds != '') {
+                                    var ReqFldCompIds = reqflds;
+                                    var n = ReqFldCompIds.indexOf(",");
+
+                                    var BranchCompanyElemId = '';
+                                    var ParentCompanyElemId = '';
+
+                                    if (n > -1) {
+                                        var strFldIds = ReqFldCompIds.split(',');
+                                        if (strFldIds != null && strFldIds.length > 0) {
+                                            for (var i = 0; i < strFldIds.length; i++) {
+                                                var ComPid = strFldIds[i];
+                                                var inputs, index;
+                                                inputs = document.getElementsByTagName('input');
+                                                for (index = 0; index < inputs.length; ++index) {
+                                                    var ElemId = inputs[index].id;
+                                                    if (ElemId.indexOf(ComPid) > -1) {
+                                                        if (document.getElementById(ElemId).type == 'checkbox' && document.getElementById(ElemId + '_ReqBlock') != null) {
+                                                            document.getElementById(ElemId + '_ReqBlock').style.backgroundColor = "#F9F4F4";
+                                                        }
+                                                    }
+                                                    if (ElemId.indexOf('ParentCompanyNamewithoutsuffixc') > -1) {
+                                                        ParentCompanyElemId = ElemId;
+                                                    } else if (ElemId.indexOf('BranchNamec') > -1) {
+                                                        BranchCompanyElemId = ElemId;
+                                                    }
+                                                    //to hide the customer field for community user logins
+                                                    if ((CommunityUsr == true || CommunityUsr == 'true') && ElemId.indexOf(':Customerc') > -1) {
+                                                        document.getElementById(ElemId).disabled = true;
+                                                        if (document.getElementById(ElemId + '_lkwgt') != null)
+                                                            document.getElementById(ElemId + '_lkwgt').style.display = 'none';
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        //for muliple fields
+                                        var ComPid = ReqFldCompIds;
+                                        var inputs, index;
+                                        inputs = document.getElementsByTagName('input');
+                                        for (index = 0; index < inputs.length; ++index) {
+                                            var ElemId = inputs[index].id;
+                                            if (ElemId.indexOf(ComPid) > -1) {
+                                                if (document.getElementById(ElemId).type == 'checkbox' && document.getElementById(ElemId + '_ReqBlock') != null) {
+                                                    document.getElementById(ElemId + '_ReqBlock').style.backgroundColor = "#F9F4F4";
+                                                }
+                                            }
+                                            if (ElemId.indexOf('ParentCompanyNamewithoutsuffixc') > -1) {
+                                                ParentCompanyElemId = ElemId;
+                                            } else if (ElemId.indexOf('BranchNamec') > -1) {
+                                                BranchCompanyElemId = ElemId;
+                                            }
+                                            if ((CommunityUsr == true || CommunityUsr == 'true') && ElemId.indexOf(':Customerc') > -1) {
+                                                document.getElementById(ElemId).disabled = true;
+                                                if (document.getElementById(ElemId + '_lkwgt') != null)
+                                                    document.getElementById(ElemId + '_lkwgt').style.display = 'none';
+                                            }
+                                        }
+                                    }
+                                    console.log('BranchCompanyElemId==>' + BranchCompanyElemId);
+                                    console.log('ParentCompanyElemId==>' + ParentCompanyElemId);
+                                    if (ParentCompanyElemId != null && ParentCompanyElemId != '' && BranchCompanyElemId != null && BranchCompanyElemId != '') {
+                                        document.getElementById(ParentCompanyElemId).setAttribute("onchange", "AutoPopulateBranch('" + ParentCompanyElemId + "','" + BranchCompanyElemId + "');");
+                                        document.getElementById(ParentCompanyElemId).setAttribute("onblur", "AutoPopulateBranch('" + ParentCompanyElemId + "','" + BranchCompanyElemId + "');");
+                                        document.getElementById(ParentCompanyElemId).setAttribute("onmouseout", "AutoPopulateBranch('" + ParentCompanyElemId + "','" + BranchCompanyElemId + "');");
+
+                                        document.getElementById(BranchCompanyElemId).setAttribute("onchange", "AutoPopulateBranch('" + ParentCompanyElemId + "','" + BranchCompanyElemId + "');");
+                                        document.getElementById(BranchCompanyElemId).setAttribute("onblur", "AutoPopulateBranch('" + ParentCompanyElemId + "','" + BranchCompanyElemId + "');");
+                                        document.getElementById(BranchCompanyElemId).setAttribute("onmouseout", "AutoPopulateBranch('" + ParentCompanyElemId + "','" + BranchCompanyElemId + "');");
+                                    }
+                                    //AutoPopulateBranch
+                                }
+                            }
+                        </script>
+                    </apex:outputpanel>
+                    <script>
+                        var ReqFieldsFilled = true;
+
+
+                        //navigate from one to another page
+                        function DoAction(ButtonSectionId, IgnoreReqFlds) {
+                            if($formValidator != undefined && !($formValidator.valid() && $($formValidator.currentForm).valid())){
+                                $formValidator.focusInvalid();
+                                return;
+                            }
+
+                            DisableButtons();
+                            if (document.getElementById('{!$Component.hdnActnId}') != null) {
+                                document.getElementById('{!$Component.hdnActnId}').value = ButtonSectionId;
+                                if (IgnoreReqFlds == true || IgnoreReqFlds == 'true') {
+                                    InvokeAction();
+                                } else {
+                                    ValidateRequiredFlds();
+                                    if (ReqFieldsFilled == true) {
+                                        InvokeAction();
+                                    } else {
+                                        location.href = "#";
+                                        location.href = "#errorDiv";
+                                        //window.location.hash = '#errorDiv';
+                                    }
+                                }
+                            }
+                        }
+                        //save sr and keep the user on the same page
+                        function SaveDetails() {
+                            ValidateRequiredFlds();
+                            if (ReqFieldsFilled == true) {
+                                DisableButtons();
+                                SaveRecord();
+                            }
+                            //EnableButtons();
+                        }
+                        //re evaluate the condition and re-prepare the sections with new values
+
+                        function InvokeChangeEvent() {
+                            RePrepareFields();
+                        }
+                        
+                        function InvokeFieldChange() {
+                            clearFields();
+                        }
+                        
+                        function InvokeChangeEventComplete(){
+                            reinit_fields();
+
+                            $('[id$=":PBSItem_Makanic:Makanic"]').rules('add', {
+                                number: true
+                            });
+                            $('[id$=":PBSItem_MakaniMotherc:MakaniMotherc"]').rules('add', {
+                                number: true
+                            });
+                            $('[id$=":PBSItem_MakaniGuardianc:MakaniGuardianc"]').rules('add', {
+                                number: true
+                            });
+
+
+                        }
+
+                        //cancel sr and redirects to home
+                        function CancelRequest() {
+                            CancelReq();
+                        }
+                        //error message displayed
+                        function DisplayMessage(FldDetail, FldLabel) {
+                            if (document.getElementById('FldDesc') != null)
+                                document.getElementById('FldDesc').innerHTML = FldDetail;
+                            if (document.getElementById('FldHead') != null)
+                                document.getElementById('FldHead').innerHTML = FldLabel + ' Description';
+                        }
+                        //whether user entered value or not for the required fields
+                        function ValidateRequiredFlds() {
+                            ReqFieldsFilled = true;
+                            if (document.getElementById('{!$Component.hdnReqFldIds}') != null) {
+                                var ReqFldCompIds = document.getElementById('{!$Component.hdnReqFldIds}').value;
+                                if (ReqFldCompIds != null && ReqFldCompIds != '') {
+                                    var n = ReqFldCompIds.indexOf(",");
+                                    if (n > -1) {
+                                        var strFldIds = ReqFldCompIds.split(',');
+                                        if (strFldIds != null && strFldIds.length > 0) {
+                                            for (var i = 0; i < strFldIds.length; i++) {
+                                                var ComPid = strFldIds[i];
+                                                var inputs, index, selects;
+
+                                                inputs = document.getElementsByTagName('input');
+                                                selects = document.getElementsByTagName('select');
+
+                                                for (index = 0; index < inputs.length; ++index) {
+                                                    var ElemId = inputs[index].id;
+                                                    if (ElemId.indexOf(ComPid) > -1) {
+                                                        if (document.getElementById(ElemId).value == null || document.getElementById(ElemId).value == '') {
+                                                            ReqFieldsFilled = false;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                for (index = 0; index < selects.length; ++index) {
+                                                    var ElemId = selects[index].id;
+                                                    if (ElemId.indexOf(ComPid) > -1) {
+                                                        if (document.getElementById(ElemId).value == null || document.getElementById(ElemId).value == '') {
+                                                            ReqFieldsFilled = false;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        var ComPid = ReqFldCompIds;
+                                        var inputs, index, selects;
+
+                                        inputs = document.getElementsByTagName('input');
+                                        selects = document.getElementsByTagName('select');
+
+                                        for (index = 0; index < inputs.length; ++index) {
+                                            var ElemId = inputs[index].id;
+                                            if (ElemId.indexOf(ComPid) > -1) {
+                                                if (document.getElementById(ElemId).value == null || document.getElementById(ElemId).value == '') {
+                                                    ReqFieldsFilled = false;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        for (index = 0; index < selects.length; ++index) {
+                                            var ElemId = selects[index].id;
+                                            if (ElemId.indexOf(ComPid) > -1) {
+                                                if (document.getElementById(ElemId).value == null || document.getElementById(ElemId).value == '') {
+                                                    ReqFieldsFilled = false;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (ReqFieldsFilled == false) {
+                                document.getElementById('errorDiv').style.display = '';
+                            } else {
+                                //all required fields are filled
+                                document.getElementById('errorDiv').style.display = 'none';
+                            }
+                        }
+                        //
+                        function DisableButtons() {
+                            /*
+                            var node_list = document.getElementsByTagName('input');
+                            for(var i = 0; i < node_list.length; i++) {
+                                var node = node_list[i];
+                                if(node.getAttribute('type') == 'submit' && node.value!='Top-up Balance') {
+                                    node.className = 'btnDisabled';
+                                    node.value = 'Processing...';
+                                }
+                            }
+                            */
+                        }
+                        //
+                        function EnableButtons() {
+                            /*
+                            var node_list = document.getElementsByTagName('input');
+                            for(var i = 0; i < node_list.length; i++) {
+                                var node = node_list[i];
+                                if(node.getAttribute('type') == 'submit') {
+                                    node.className = 'btn';
+                                }
+                            }
+                            */
+                        }
+                        function Navigate_To_Page(NextPG) {
+                            ValidateRequiredFlds();
+                            if (ReqFieldsFilled == true) {
+                                NavigatePage(NextPG);
+                            } else {
+                                location.href = "#";
+                                location.href = "#errorDiv";
+                                //window.location.hash = '#errorDiv';
+                            }
+                        }
+                        function ErrorFocus() {
+                            
+                            if (document.getElementById('{!$Component.frm.errormsg}') != null) {
+                                var ErrorDiv = document.getElementById('{!$Component.frm.errormsg}');
+                                ErrorDiv.setAttribute('id', 'ErrMsgDiv');
+                                //window.location.hash = '#ErrMsgDiv';
+                                location.href = "#";
+                                location.href = "#ErrMsgDiv";
+                            }
+                        }
+                        function AutoPopulateBranch(ParentCompanyId, BranchCompanyId) {
+                            if (document.getElementById(ParentCompanyId) != null && document.getElementById(ParentCompanyId).value != null) {
+                                if (document.getElementById(BranchCompanyId) != null) {
+                                    document.getElementById(BranchCompanyId).value = document.getElementById(ParentCompanyId).value + ' Freezone Branch';
+                                }
+                            }
+                        }
+
+
+                        var $formValidator;
+                        function init_form_validation(){
+                            $.validator.addMethod("cRequired", $.validator.methods.required,
+                                    "Please fill in this field.");
+                            $.validator.addClassRules("requiredInput", { cRequired: true});
+
+                            jQuery.validator.addMethod("mobile", function(value, element) {
+                                return $(element).val().trim() == '' || $(element).intlTelInput("isValidNumber");
+                            }, "Please specify the correct phone number.");
+                            $.validator.addClassRules("phone", { mobile: true});
+
+                            jQuery.validator.addMethod("numberOnly", function(value, element) {
+                                return /^\d+$/.test(value);
+                            }, "Invalid number.");
+                            $.validator.addClassRules("double", { numberOnly: true});
+
+
+                            //$formValidator = $('form[id$="GEMS_EnquiryDetails_Form"]').validate({
+                            $formValidator = $('form[id$="DyncPgFlow:GEMS_LongFormPageTemplate:frm"]').validate({
+                                ignore: [],
+                                rules: {
+
+                                },
+                                messages: {
+
+                                },
+                                focusInvalid: true,
+                                errorElement: "span",
+                                errorPlacement: function (error, element) {
+                                    // Add the `help-block` class to the error element
+                                    error.addClass("help-block");
+
+                                    if($(element).parents('.form-group').length > 0){
+                                        $(element).parents('.form-group').append(error);
+                                    }
+                                    else if (element.prop("type") === "checkbox") {
+                                        error.insertAfter(element.parent("label"));
+                                    } else {
+                                        error.insertAfter(element);
+                                    }
+                                },
+                                highlight: function (element, errorClass, validClass) {
+                                    $(element).parents(".form-group").addClass("has-error");
+                                },
+                                unhighlight: function (element, errorClass, validClass) {
+                                    $(element).parents(".form-group").removeClass("has-error");
+                                },
+                                submitHandler: function (form) {
+                                    if($(form).valid()){
+                                        //alert('Form is valid!')
+                                        //saveNewChild();
+                                    }else {
+                                        //alert('Form is invalid!')
+                                        $formValidator.focusInvalid();
+                                    }
+                                    //form.submit();
+                                    return false;
+                                }
+                            });
+                        }
+
+                        Sfdc.onReady(function(){
+                            init_form_validation();
+
+                            $('[id$=":PBSItem_Makanic:Makanic"]').rules('add', {
+                                number: true
+                            });
+                            $('[id$=":PBSItem_MakaniMotherc:MakaniMotherc"]').rules('add', {
+                                number: true
+                            });
+                            $('[id$=":PBSItem_MakaniGuardianc:MakaniGuardianc"]').rules('add', {
+                                number: true
+                            });
+
+
+                        })
+                    </script>
+                </apex:outputpanel>
+            </apex:form>
+
+            </body>
+        </apex:define>
+    </apex:composition>
+</apex:page>

@@ -1,0 +1,17 @@
+<apex:page controller="Test_CheckCtlr" sidebar="false" >
+    <apex:form >
+        <apex:page title="Test Title">
+        <apex:pageBlock >          
+        <apex:pageBlockSection title="Test Title Page Section" >
+
+    <apex:outputText value="{mymessage}">
+    
+    </apex:outputText>
+    
+    
+    
+         </apex:pageBlockSection>
+       </apex:pageBlock>
+      </apex:page>
+    </apex:form>  
+</apex:page>

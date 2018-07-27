@@ -1,0 +1,356 @@
+<apex:page controller="GEMS_reEnrolmentManagementCtlr" cache="false" tabstyle="School__c" id="reEnrolManage" sidebar="true" showHeader="true">
+	<style>
+        .columnWidth{
+            width : 80px;
+        }
+        
+        .loader {
+            position: absolute; 
+            top: 35%;
+            left: 45%; 
+            margin-left: -60px; 
+            filter: Alpha(Opacity =70);  
+            opacity: 0.70;
+            -moz-opacity: 0.70;
+         }
+         /* This is for the full screen DIV */
+         .popupBackground {
+             /* Background color */
+             background-color:black;
+             opacity: 0.20;
+             filter: alpha(opacity = 20);
+          
+             /* Dimensions */
+             width: 100%;
+             height: 100%;
+             top: 0;
+             left: 0;
+             z-index: 998;
+             position: absolute;
+         }
+      
+         /* This is for the message DIV */
+         .PopupPanel {
+             /* Background color */
+             /*border: solid 2px #00205B;
+             background-color: white;
+            */
+             /* Dimensions */
+             left: 50%;
+             width: 100px;
+             margin-left: -100px;
+             border-radius: 15px
+             top: 20%;
+             height: 100px;
+             margin-top: 60px;
+             z-index: 999;
+             position: fixed;
+         }
+         
+         .lookupIcon {
+            background-image: url(/img/func_icons/util/lookup20.gif);
+            background-position: 0 0;
+            width: 20px;
+            height: 20px;
+            background-position: top left;
+        }
+        
+ 		.overlay {
+        	background-color: black;
+           
+           	opacity: 0.6;
+           	/* Generic for Major browsers */
+           	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+           	/* IE 5-7 */
+           	filter: alpha(opacity = 60);
+           	/* Netscape */
+           	-moz-opacity: 0.6;
+           	/* Safari 1.x */
+           	-khtml-opacity: 0.6;
+           	position: fixed;
+           	width: 100%; 
+           	height: 100%;
+           	top: 0;
+           	left: 0;
+           	z-index: 101;
+           	zIndex: 101;
+		}
+		.closeButton {
+    		float: right;
+		}
+       .customPopup {
+     	   position: absolute; 
+           right: 15%;   
+           left: 15%;
+           
+           background-color: white;
+		   border-style: solid;
+		   padding: 10px;
+	       z-index: 9999;
+		   top: 20%;
+		}
+		
+		.logo-container {
+            display: block;
+            padding: 10px 5px;
+            text-align: right;
+        }
+        .logo-container img {
+            max-height: 60px;
+        }
+
+		td.streamList-cell {
+            padding-left: 2px !important;
+            padding-bottom: 0 !important;
+		}
+    </style>
+	
+	<apex:form id="reEnrolForm">
+		<apex:outputLink styleClass="logo-container" id="schoolLogo" value="/{!objSchool.id}" >
+			<apex:outputText value="{!objSchool.Logo__c}" escape="false"/>
+		</apex:outputLink>
+        <apex:pagemessages id="Msg"/>
+        <apex:actionStatus id="pleasewait" stopText="">
+            <apex:facet name="start">
+                <div>
+                    <div class="popupBackground"></div>
+                    <div class="PopupPanel">
+                        <img src="{!$Resource.LoadingImage}"/>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+		<apex:pageBlock title="Re-Enrolment Reset" >
+			<apex:pageBlockSection title="Search Filter" columns="1">
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Academic Year"/>
+					<apex:outputText value="{!academicYearLabel}"/>
+				</apex:pageBlockSectionItem>
+				
+				<apex:pageBlockSectionItem rendered="{!curriculumList!=NULL && curriculumList.size>1}">
+	    			<apex:outputLabel value="Curriculum"></apex:outputLabel>
+	    			<apex:selectList id="curriculumList" required="false" value="{!selectedcurriculum}" multiselect="false"  size="1">
+	                    <apex:selectOptions value="{!curriculumList}" />
+	                    <apex:actionSupport event="onchange" reRender="promotionTable,gradeList,streamList,sectionList" status="pleasewait"  action="{!getGradesForSchool}" />
+	                </apex:selectList>	
+                </apex:pageBlockSectionItem>
+				
+    			<apex:pageBlockSectionItem >
+	    			<apex:outputLabel value="Grade"></apex:outputLabel>
+	    			<apex:selectList id="gradeList" required="false" value="{!selectedGrade}" multiselect="false"  size="1">
+	                    <apex:selectOptions value="{!gradeList}" />
+	                    <apex:actionSupport event="onchange" reRender="streamList,sectionList,promotionTable" status="pleasewait"  action="{!getStreamsForSchool}" />
+	                </apex:selectList>	
+                </apex:pageBlockSectionItem>
+
+				<apex:pageBlockSectionItem dataStyleClass="streamList-cell" dataStyle="padding: 0;border: 0;">
+                    <apex:outputPanel id="streamList" styleClass="streamList" layout="block">
+                        <apex:pageBlockSection columns="1" rendered="{!streamList!=NULL && streamList.size>1}">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Stream"></apex:outputLabel>
+                                <apex:selectList required="false" value="{!selectedStream}" multiselect="false"  size="1">
+                                    <apex:selectOptions value="{!streamList}" />
+                                    <apex:actionSupport event="onchange" reRender="sectionList,promotionTable" status="pleasewait"  action="{!getSectionsForSchool}" />
+                                </apex:selectList>
+                            </apex:pageBlockSectionItem>
+							<apex:pageBlockSectionItem dataStyle="padding:0;">
+                                <style>
+                                    td.streamList-cell {border-bottom: 1px solid #ececec !important;}
+                                </style>
+							</apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+
+
+				<!--<apex:pageBlockSectionItem id="streamList" html-style="display:{!IF(AND(), 'table-row', 'none')};" html-class="table-row">-->
+				<!--</apex:pageBlockSectionItem>-->
+
+                
+                <apex:pageBlockSectionItem >
+	    			<apex:outputLabel value="Section"></apex:outputLabel>
+	    			<apex:selectList id="sectionList" required="false" value="{!selectedSection}" multiselect="false"  size="1">
+	                    <apex:selectOptions value="{!sectionList}" />
+	                </apex:selectList>	
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+	    			<apex:outputLabel value="Filter Status"></apex:outputLabel>
+	    			<apex:selectList id="sectionList" required="false" value="{!selectedEnrolmentStatus}" multiselect="false"  size="1">
+	                    <apex:selectOptions value="{!reEnrolmentStatus}" />
+	                    <apex:actionSupport event="onchange" reRender="promotionTable" status="pleasewait"  action="{!getReEnrolmentRemark}" />
+	                </apex:selectList>	
+                </apex:pageBlockSectionItem>
+    		</apex:pageBlockSection>
+    		
+    		<apex:pageBlockButtons location="bottom">
+    			<apex:commandButton action="{!getStudents}" value="Get Students for Reset" rerender="reEnrolForm,Msg,promotionTable"/>
+    		</apex:pageBlockButtons>
+		</apex:pageBlock>
+		
+		<apex:outputPanel id="promotionTable">
+			<apex:pageBlock rendered="{!(promotionWrapperList!=NULL && promotionWrapperList.size>0) || performedSearch==true}">   
+	    		<apex:pageBlockSection title="Search Student" id="searchStudent">
+		   		<!-- <apex:pageBlockSectionItem >
+					<apex:outputLabel value="Search Criteria: "/>
+				    <apex:selectList id="searchCriteria" required="false" value="{!selectedCriteria}" multiselect="false"  size="1" styleClass="searchCriteria">
+		                <apex:selectOptions value="{!searchCriteria}" />
+		            </apex:selectList>
+			    </apex:pageBlockSectionItem>-->
+	    		<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Search Student"/>
+					<apex:inputText value="{!searchStudentValue}" style="float: left;" styleClass="searchStudent">
+                       	<img id="lkpimg"  class="lookupIcon" src="/s.gif" onclick="checkValidationForStudent();"/>
+                   	</apex:inputText>
+				    </apex:pageBlockSectionItem>
+				    <apex:actionfunction name="checkValidationStudent" action="{!searchStudents}" status="pleasewait" rerender="promotionTable,Msg,searchStudent"/>
+					<apex:commandButton id="ReEnrolled" value="Clear Search" status="pleasewait" rendered="{!searchStudentValue!=''}" action="{!clearSearch}" style="float:left; margin-left: 36.5%"/>
+				</apex:pageBlockSection>
+	    		<apex:pageBlockSection title="Update Students" id="updateStudents">
+	     			<apex:pageBlockSectionItem >
+		     			<apex:outputLabel value="Re-Enrolment Status"></apex:outputLabel>
+		    			<apex:selectList id="sectionList" required="false" value="{!selectedEnrolmentRemark}" multiselect="false"  size="1" styleClass="selectedEnrolmentRemark">
+		                    <apex:selectOptions value="{!reEnrolmentRemark}" />
+		                    <apex:actionSupport event="onchange" reRender="updateStudents" status="pleasewait" />
+		                </apex:selectList>	
+	                </apex:pageBlockSectionItem>
+	     		</apex:pageBlockSection>
+			</apex:pageBlock> 
+			
+			<apex:pageBlock rendered="{!(promotionWrapperList!=NULL && promotionWrapperList.size>0) || performedSearch==true}">
+				<apex:pageBlockTable id="promoTable" value="{!promotionWrapperList}" var="objPro" align="center" style="margin-bottom:3px;">
+					<apex:column >
+                        <apex:facet name="header"> 
+                        	<apex:inputCheckbox value="{!selectAll}" id="checkAllBox" onchange="toggleCheckAll(this)" styleClass="selectInput"/>
+                        </apex:facet>
+                        <apex:inputCheckBox value="{!objPro.selectRecord}" styleClass="selectInput"/>
+                    </apex:column>
+			        <apex:column value="{!objPro.objPromo.student__r.Student_Id__c}" headerValue="Student No" />
+			        <apex:column value="{!objPro.studentName}" headerValue="Student Name" />
+				        
+			        <apex:column value="{!objPro.Status}" headerValue="Status" />
+			        <apex:column headerValue="Blocked" rendered="{!selectedEnrolmentStatus!='Re-Enroled' && selectedEnrolmentStatus!='GEMS Staff Re-Enroled / Fee Override'}">
+                      	<apex:commandLink action="{!showPopUp}" rerender="popup,Msg" status="status">{!objPro.Block}
+                      		<apex:param name="blockObj" assignTo="{!blockObj}" value="{!objPro.objPromo.id}" />
+                      		<apex:param name="blockAction" assignTo="{!blockAction}" value="{!objPro.Block}" />
+                      		<apex:param name="blockReason" assignTo="{!blockReason}" value="{!objPro.blockReason}" />
+                      		<apex:param name="blockStudent" assignTo="{!blockStudent}" value="{!objPro.objPromo.Student__c}" />
+                    	</apex:commandLink>
+                  	</apex:column>
+                  	<apex:column headerValue="Re-Enrolment Remark">
+                  		<apex:inputText value="{!objPro.Remark}" />
+                  	</apex:column>
+			    </apex:pageBlockTable>
+			    
+			    <apex:outputPanel id="mainPanel" style="float:right;">
+					<apex:outputPanel rendered="{!AND(IF(paginater.isAll, false, true), IF(paginater.totalPage == 1, false, true))}">
+						<apex:outputText rendered="{!paginater.showPrevious}">
+							<apex:commandLink action="{!previousPage}" value="Prev" rerender="mainPanel,promoTable" status="pleasewait"/>
+						</apex:outputText>
+						<apex:repeat value="{!paginater.pageList}" var="pl">
+							&nbsp;
+							<apex:outputText rendered="{!!pl.isActive}">
+								<apex:commandLink action="{!updatePage}" rerender="mainPanel,promoTable" status="pleasewait">
+			                        {!pl.pageNum}                               
+			                    	<apex:param name="selectedPage" value="{!pl.pageNum}" assignTo="{!paginater.pageNum}" />
+								</apex:commandLink>
+							</apex:outputText>
+							<apex:outputText rendered="{!pl.isActive}" value="{!pl.pageNum}" />
+						</apex:repeat>
+						&nbsp;
+						<apex:outputText rendered="{!paginater.showNext}">
+							<apex:commandLink action="{!nextPage}" value="Next" rerender="mainPanel,promoTable" status="pleasewait"/>
+						</apex:outputText>
+					</apex:outputPanel>
+					<br/>
+				</apex:outputPanel>
+		
+			    <apex:pageBlockButtons location="Bottom" rendered="{!promotionWrapperList!=NULL && promotionWrapperList.size>0}">
+                    <apex:commandButton id="updateStudents" value="Update Students" status="pleasewait" onclick="checkValidations('Update'); return false;"/>
+                </apex:pageBlockButtons>
+                
+                <apex:actionfunction name="allowUpdate" action="{!updatePromotions}" status="pleasewait" rerender="reEnrolForm,Msg,promoTable,popup" oncomplete="{!IF(selectedEnrolmentRemark!='Blocked', 'window.scrollTo(0, 0);', '')}">
+					<apex:param name="blockAction" assignTo="{!blockAction}" value="Block" />
+				</apex:actionfunction>
+			</apex:pageBlock>
+		</apex:outputPanel>
+		
+		<apex:outputPanel id="popup">
+        <apex:outputPanel rendered="{!displayPopUp}">
+			<div class="overlay"></div>
+			<apex:outputPanel styleClass="customPopup">
+				<apex:commandButton value="X" title="Close the popup" action="{!closePopup}" styleClass="closeButton" rerender="popup"/>
+                     <apex:pageBlock title="{!IF(blockAction == 'Block','Blocking of student','Unblocking of student')}">
+					  	<apex:pagemessages id="Msg1"/>
+					  	<apex:pageBlockSection columns="1">
+					  		<apex:pageBlockSectionItem rendered="{!blockAction == 'Block'}">
+					  			<apex:outputlabel value="Block Reason"/>
+					  			 <apex:outputPanel styleClass="requiredInput" layout="block">
+                        			<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						  			 <apex:selectList multiSelect="false" size="1" value="{!selectedBlockRemark}" styleClass="blockReason">
+		                                <apex:selectOptions value="{!blockRemark}" />
+		                             </apex:selectList>
+	                             </apex:outputPanel>
+					  		</apex:pageBlockSectionItem>
+					  		<apex:pageBlockSectionItem rendered="{!blockAction == 'Unblock'}">
+					  			<apex:outputlabel value="Block Reason"/>
+					  			 <apex:outputText value="{!blockReason}"/>
+					  		</apex:pageBlockSectionItem>
+					  	</apex:pageBlockSection>
+					  	<apex:pageBlockButtons location="Bottom">
+					  		<apex:commandButton rendered="{!blockAction == 'Unblock'}" action="{!blockStudent}" value="Confirm"  status="pleasewait" rerender="Msg1,popup,promotionTable"/>
+					  		<apex:commandButton rendered="{!blockAction == 'Block'}" value="Confirm"  onclick="checkValidations('Block'); return false;"/>
+					  		<apex:actionfunction name="allowBlock" action="{!blockStudent}" status="pleasewait" rerender="Msg1,popup,promotionTable"/>
+					  	</apex:pageBlockButtons>
+				  	</apex:pageBlock>
+			</apex:outputPanel>
+		</apex:outputPanel>
+		</apex:outputPanel>
+		<script>
+			function checkValidations(location){
+				if(location=='Block'){
+					var reason = document.getElementsByClassName('blockReason')[0].value;
+					if(reason=='')
+						alert('Please provide reason for blocking');
+					else
+						allowBlock();
+				}
+				else{
+					var isChecked = 'No';
+					var inputList = document.getElementsByClassName('selectInput');
+	            	
+	            	for(var i=0;i<inputList.length;i++)
+	                	if(document.getElementsByClassName('selectInput')[i].checked == true)
+	                		isChecked = 'Yes';
+	                if(isChecked=='No')
+	                	alert('Please select any one student');
+	                else if(document.getElementsByClassName('selectedEnrolmentRemark')[0].value=='')
+	                	alert('Please provide Re-Enrolment Status');
+	                else
+                		allowUpdate();
+          		}
+			}
+			
+			function checkValidationForStudent(){
+                var studentId = document.getElementsByClassName('searchStudent')[0].value;
+                //var searchCriteria = document.getElementsByClassName('searchCriteria')[0].value;
+                
+                //if(searchCriteria==''){
+                	//alert('Please provide search criteria');
+                //}else 
+                
+                if(studentId==''){
+                    alert('Please provide value for search');
+                }
+                else{
+                    checkValidationStudent(studentId);
+                }
+            }
+            
+            function toggleCheckAll(id) {
+	            var inputList = document.getElementsByClassName('selectInput');
+	            for(var i=0;i<inputList.length;i++)
+	                document.getElementsByClassName('selectInput')[i].checked = id.checked;
+	        } 
+		</script>
+	</apex:form>
+</apex:page>

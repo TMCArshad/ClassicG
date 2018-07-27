@@ -1,0 +1,1406 @@
+<!--
+ - Created by bilalnazir on 4/17/17.
+ -->
+
+<apex:page docType="html-5.0" id="GEMS_EmiratesIDSFReader" controller="GEMS_EmiratesIDSFReaderController" sideBar="false">
+
+    <apex:includeScript value="{!URLFOR($Resource.GEMS, 'modules/PublicDataActiveX/js/errors.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.GEMS, 'modules/PublicDataActiveX/js/occupations.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.GEMS, 'modules/PublicDataActiveX/js/eida_webcomponents.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.GEMS, 'modules/PublicDataActiveX/js/fingers.js')}"/>
+
+    <apex:sectionHeader title="{!IF(userAccount != null, userAccount.Name, 'Service Request')}" subtitle="Sync Emirates ID"/>
+
+    <style>
+        .dateFormat {
+            display: none;
+        }
+
+        div.photo {
+            width:100px;
+            height:100px;
+        }
+    </style>
+
+    <c:GEMS_CSS />
+    <apex:form id="emiratesForm">
+
+        <!--<apex:pageMessages id="pageMessage" escape="false"/>-->
+        <apex:actionFunction name="activeX_NotSupported" action="{!NotSupport_ActiveX}"
+                             reRender="pageMessage" status="pleasewait">
+
+        </apex:actionFunction>
+
+
+        <!--<img  alt="TIFF format is supported by this browser!"-->
+        <!--style="display: none !important;" src="" id="imgHolderSignature" width="284px" height="48px" />-->
+
+        <apex:pageBlock id="accountInfoBlock" title="Account Details" rendered="{!$CurrentPage.parameters.srid == null && userAccount != null}">
+            <!--<apex:variable value="{!IF( ISBLANK(userAccount.Emirates_Full_Name__c) == false, userAccount.Emirates_Full_Name__c, userAccount.Name)}" var="name"/>-->
+            <apex:pageBlockSection columns="2" collapsible="false">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Student Name"/>
+                    <!--<apex:outputField value="{!IF(userAccount.Emirates_Full_Name__c == NULL, userAccount.Name, userAccount.Emirates_Full_Name__c)}"/>-->
+                    <apex:outputText value="{!studentName}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Student Number"/>
+                    <apex:outputText value="{!studentNumber}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Emirates Id Owner"/>
+                    <apex:outputPanel layout="none">
+                        <!--<apex:outputText value="{!SRPrimaryContact}" />-->
+                        <apex:outputField rendered="{!userAccount.RecordType.DeveloperName =='Student'}" value="{!userAccount.RecordType.DeveloperName}"/>
+                        <apex:outputField rendered="{!userAccount.RecordType.DeveloperName !='Student'}" value="{!userAccount.Role__c}" />
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock id="srAccountInfoBlock" title="Service Request Details" rendered="{!$CurrentPage.parameters.srid != null && userAccount = null}">
+            <!--<apex:variable value="{!IF( ISBLANK(userAccount.Emirates_Full_Name__c) == false, userAccount.Emirates_Full_Name__c, userAccount.Name)}" var="name"/>-->
+            <apex:pageBlockSection columns="2" collapsible="false">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Student Name"/>
+                    <!--<apex:outputField value="{!IF(userAccount.Emirates_Full_Name__c == NULL, userAccount.Name, userAccount.Emirates_Full_Name__c)}"/>-->
+                    <!--<apex:outputField value="{!userAccount.Name}" />-->
+                    <apex:outputPanel layout="none">
+
+                        <apex:outputText rendered="{!$CurrentPage.parameters.srid != null}" value="{!IF(serviceRequest.Name_in_Emirates_ID__c != null, serviceRequest.Name_in_Emirates_ID__c, IF(serviceRequest.Student__c != null, serviceRequest.Student__r.name, ''))}" />
+                        <!--<apex:outputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Student'}" html-disabled="true" value="{!IF(serviceRequest.Mother_Name_in_Emirates_ID__c = null, serviceRequest.Mother_Name_in_Emirates_ID__c, serviceRequest.Name_in_Emirates_ID__c)}" />-->
+                        <!--<apex:outputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother' }" html-disabled="true" value="{!serviceRequest.Mother_Name_in_Emirates_ID__c}" />-->
+                        <!--<apex:outputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father' }" html-disabled="true" value="{!serviceRequest.Father_Name_in_Emirates_ID__c}" />-->
+
+                    </apex:outputPanel>
+
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Student Number"/>
+                    <apex:outputText rendered="{!$CurrentPage.parameters.srid != null}" value="{!IF(NOT(ISBLANK(serviceRequest.StudentId__c)),serviceRequest.StudentId__c, IF(serviceRequest.Student__c != null, serviceRequest.Student__r.Student_Id__c, ''))}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Relationship"/>
+                    <apex:outputPanel >
+                        <apex:outputText value="{!SRPrimaryContact}"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+
+        <apex:pageBlock id="cardDetailsContainer" title="Sync Card">
+
+            <apex:inputHidden value="{!cardReadStatus}" id="cardReadStatusHiddenBtn"/>
+            <apex:actionFunction name="showCardReadStatus" reRender="buttonsSet,statusMessage" immediate="true" status="pleasewait"/>
+
+            <apex:pageMessages id="pageMessage" escape="false"/>
+            <span id="loading_data" style="visibility: hidden; text-align: center;">
+                <apex:image height="12" value="/img/loading32.gif" alt="reading card data"/>
+                <font color="red"></font>
+            </span>
+
+            <apex:pageBlockButtons id="buttonsSet" location="both"> <!--rendered="{!OR(NOT(ISNULL(userAccount)),NOT(ISNULL(serviceRequest)))}"-->
+                <!--<apex:outputPanel id="readingCarDetailsBtn" style="display: none;" styleClass="loading btnDisabled">-->
+                <!--<apex:image height="12" value="/img/loading32.gif" alt="reading card data"/>-->
+                <!--<span>Reading card details...</span>-->
+                <!--</apex:outputPanel>-->
+
+                <apex:commandButton id="readCardDetailsBtn"
+                                    value="Read Card Details" onclick="read_card_details();return false;" disabled="true">
+
+                    <!--<apex:image rendered="{!OR(cardReadStatus != '', AND(cardReadStatus != 'failed', cardReadStatus != 'success'))}" style="vertical-align: middle;" height="16" value="/img/loading32.gif" alt="reading card data"/>-->
+                </apex:commandButton>
+                <!--<input id="syncUpdateBtn" type="button" class="btn" onClick="sync_update(); return false;" disabled="disabled" value="Sync & Update"/>-->
+                <apex:commandButton id="syncUpdateBtn" styleClass="btn" onclick="sync_update(); return false;" disabled="true" value="Sync & Update"/>
+                <apex:commandButton value="Close" styleClass="btn" onclick="onCancelClicked(); return false;"></apex:commandButton>
+            </apex:pageBlockButtons>
+
+            <apex:outputPanel id="statusMessage">
+                    {!cardReadStatus}
+            </apex:outputPanel>
+
+            <apex:outputPanel id="accountsBody" styleClass="pbBody" layout="block" rendered="{!$CurrentPage.parameters.srid == null && userAccount != null}">
+
+                <apex:actionFunction name="syncCard" action="{!SyncAccount_fromCard}" onComplete="syncCard_Complete();"
+                                     reRender="accountInfoBlock,accountsBody,pageMessage" status="pleasewait">
+
+                </apex:actionFunction>
+                <apex:inputField style="display: none;" html-disabled="true" value="{!userAccount.Country__c}" />
+
+                <table class="list" border="0" cellpadding="0" cellspacing="0">
+                    <colgroup span="4"></colgroup>
+                    <tbody>
+                    <tr class="headerRow">
+                        <th width="20%">Field</th>
+                        <th width="30%">Emirates ID</th>
+                        <th width="10%">
+                            <span style="display: block;margin-bottom: 5px">Copy</span>
+                            <apex:outputLabel for="copyAll_fields" style="vertical-align: middle; display: inline-block;">
+                                <apex:inputCheckbox onchange="toggleFieldsSelection(this);" selected="false" id="copyAll_Accountfields"></apex:inputCheckbox>
+                                All
+                            </apex:outputLabel>
+                        </th>
+                        <th width="50%">Salesforce</th>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Photo"/>
+                        </td>
+                        <td align="left" >
+                            <!--<OBJECT id="EIDAWebComponent" style="border:solid 1px gray"-->
+                            <!--CLASSID="CLSID:A4B3BB86-4A99-3BAE-B211-DB93E8BA008B"-->
+                            <!--height="0" width="0"-->
+                            <!--&gt;-->
+                            <!--&lt;!&ndash;width="130" height="154"&ndash;&gt;-->
+                            <!--This browser does not support ActiveX components.-->
+                            <!--</OBJECT>-->
+                            <OBJECT id="EIDAWebComponent" style="border:solid 1px gray"
+                                    CLASSID="CLSID:A4B3BB86-4A99-3BAE-B211-DB93E8BA008B"
+                                    width="0" height="0">
+                                This browser does not support ActiveX components.
+                            </OBJECT>
+
+                            <canvas id="photo_data" class="photoCanvasEmiratesId" width="130" height="154"></canvas>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <!--<apex:outputField value="{!userAccount.Photo__c}" />-->
+                            <!--<apex:image value="{!emiratesCardInfo.PhotoBas64}" />-->
+                            <div id="photo" class="sfdc_richtext">
+                                <!--<apex:inputField html-disabled=true value="{!userAccount.Photo__c}"/>-->
+                                <!--<apex:image id="photo" value="{!IF(ISNULL(photoBase64String), '/img/social/unknown_profile_pic.png?v=2', photoBase64String)}" height="154" />-->
+                                <apex:inputHidden id="studentAccountPhoto" value="{!photoBase64String}" />
+                                <canvas id="photoCanvas" width="130" height="154"></canvas>
+                            </div>
+
+                            <script>
+                                var c = document.getElementById("photoCanvas");
+                                var ctx = c.getContext("2d");
+                                var img = new Image();
+                                img.onload = function() {
+                                    if('{!ISBLANK(photoBase64String)}' == 'true'){
+                                        var hRatio = c.width / img.width    ;
+                                        var vRatio = c.height / img.height  ;
+                                        var ratio  = Math.min ( hRatio, vRatio );
+
+                                        ctx.drawImage(img, 0,0, img.width, img.height, 0,0,img.width*ratio, img.height*ratio);
+                                    }else
+                                        ctx.drawImage(img, 0, 0, 130, 154);
+                                };
+                                img.src = '{!IF(ISNULL(photoBase64String), IF(ISBLANK(userAccount.Photo_URL__c), '/img/social/unknown_profile_pic.png?v=2',userAccount.Photo_URL__c),
+                                        JSENCODE('data:image/jpeg;base64,' + photoBase64String))}';
+                                //console.log('Image source ==>' + img.src);
+                            </script>
+                            <!--<div class="photo"-->
+                            <!--style="background-image: url('data:image/jpeg;base64,{!emiratesCardInfo.PhotoBas64})'">-->
+                            <!--</div>-->
+                        </td>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Name in Emirates ID"/>
+                        </td>
+                        <td>
+                            <span id="FullName_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox rendered="{!$CurrentPage.parameters.add != null}" disabled="{!IF($CurrentPage.parameters.add != null, 'true', 'false')}" value="{!accountInsert}" />
+                            <apex:inputCheckbox rendered="{!$CurrentPage.parameters.add = null}" disabled="false" />
+                        </td>
+                        <td>
+
+                            <apex:inputField html-disabled="true" value="{!userAccount.Emirates_Full_Name__c}" />
+                        </td>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Name in Emirates ID Arabic"/>
+                        </td>
+                        <td>
+                            <span id="ArabicFullName_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.Arabic_Name__c}" />
+                        </td>
+                    </tr>
+
+
+                    <apex:outputPanel layout="none" rendered="{!userAccount.RecordType.DeveloperName == 'Student'}">
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Gender"/>
+                            </td>
+                            <td>
+                                <span id="Sex_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Gender__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="DOB"/>
+                            </td>
+                            <td>
+                                <span id="DateOfBirth_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Date_Of_Birth__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Place of Birth"/>
+                            </td>
+                            <td>
+                                <span id="PlaceOfBirth_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Place_of_Birth__c}" />
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+
+                    <apex:outputPanel layout="none" rendered="{!userAccount.RecordType.DeveloperName != 'Student'}">
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Company"/>
+                            </td>
+                            <td>
+                                <span id="WorkAddress_CompanyName_Ar_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Other_Company__c}" />
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Apartment No"/>
+                        </td>
+                        <td>
+                            <span id="HomeAddress_FlatNumber_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.Apartment_No__c}" />
+                        </td>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Building"/>
+                        </td>
+                        <td>
+                            <span id="HomeAddress_Building_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.Building__c}" />
+                        </td>
+                    </tr>
+
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="City"/>
+                        </td>
+                        <td>
+                            <span id="HomeAddress_CityDesc_PDLabel"><b>--</b> </span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.City_State__c}" />
+                        </td>
+                    </tr>
+
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Area"/>
+                        </td>
+                        <td>
+                            <span id="WorkAddress_Street_PDLabel"><b>--</b> </span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.Area__c}" />
+                        </td>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Street"/>
+                        </td>
+                        <td>
+                            <span id="WorkAddress_Street_PDLabel"><b>--</b> </span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.Street__c}" />
+                        </td>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="PO Box"/>
+                        </td>
+                        <td>
+                            <span id="WorkAddress_POBox_PDLabel"><b>--</b> </span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.P_O_Box__c}" />
+                        </td>
+                    </tr>
+
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Emirates ID No"/>
+                        </td>
+                        <td>
+                            <span id="IDNumber_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.Emirates_ID__c}" />
+                        </td>
+                    </tr>
+
+                    <apex:outputPanel layout="none" rendered="{!userAccount.RecordType.DeveloperName == 'Student'}">
+                        <!--<tr class="dataRow">-->
+                        <!--<td>-->
+                        <!--<apex:outputLabel value="Emirates ID Issue Date"/>-->
+                        <!--</td>-->
+                        <!--<td>-->
+                        <!--<span id="IssueDate_PDLabel"><b>&#45;&#45;</b></span>-->
+                        <!--</td>-->
+                        <!--<td class="copyVal-checkbox">-->
+                        <!--<apex:inputCheckbox disabled="false" />-->
+                        <!--</td>-->
+                        <!--<td>-->
+                        <!--<apex:inputField html-disabled="true" value="{!userAccount.Emirates_ID_Issue_Date__c}" />-->
+                        <!--</td>-->
+                        <!--</tr>-->
+                    </apex:outputPanel>
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Emirates ID Issue Date"/>
+                        </td>
+                        <td>
+                            <span id="IssueDate_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.Emirates_ID_Issue_Date__c}" />
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Emirates ID Expiry Date"/>
+                        </td>
+                        <td>
+                            <span id="ExpiryDate_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <apex:inputField html-disabled="true" value="{!userAccount.Emirates_ID_Expiry_Date__c}" />
+                        </td>
+                    </tr>
+
+                    <apex:outputPanel layout="none" rendered="{!userAccount.RecordType.DeveloperName == 'Student'}">
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Passport No"/>
+                            </td>
+                            <td>
+                                <span id="PassportNumber_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Passport_No__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Passport Issued Place"/>
+                            </td>
+                            <td>
+                                <!--<span id="PassportCountry_PDLabel"><b>&#45;&#45;</b> </span>-->
+                                <span id="PassportCountryDesc_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Passport_Issue_Place__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Passport Issued Date"/>
+                            </td>
+                            <td>
+                                <span id="PassportIssueDate_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Passport_Issue_Date__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Passport Expiry Date"/>
+                            </td>
+                            <td>
+                                <span id="PassportExpiryDate_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Passport_Expiry_Date__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Visa No"/>
+                            </td>
+                            <td>
+                                <span id="ResidencyNumber_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Visa_No__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Visa Expiry Date"/>
+                            </td>
+                            <td>
+                                <span id="ResidencyExpiryDate_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Visa_Expiry_Date__c}" />
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+                    </tbody>
+                </table>
+            </apex:outputPanel>
+
+            <apex:outputPanel id="srBody" styleClass="pbBody" layout="block" rendered="{!$CurrentPage.parameters.srid != null && serviceRequest != null}">
+
+                <apex:actionFunction name="syncCard" action="{!SyncSR_fromCard}" onComplete="syncCard_Complete();" reRender="srAccountInfoBlock, srBody,pageMessage"></apex:actionFunction>
+
+
+                <apex:inputField style="display:none" rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.Country_Mother__c}" />
+                <apex:inputField style="display:none" rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.Country__c}" />
+
+                <table class="list" border="0" cellpadding="0" cellspacing="0">
+                    <colgroup span="4"></colgroup>
+                    <tbody>
+                    <tr class="headerRow">
+                        <th width="20%">Field</th>
+                        <th width="30%">Emirates ID</th>
+                        <th width="10%">
+                            <span style="display: block;margin-bottom: 5px">Copy</span>
+                            <apex:outputLabel for="copyAll_fields" style="vertical-align: middle; display: inline-block;">
+                                <apex:inputCheckbox onchange="toggleFieldsSelection(this);" selected="false" id="copyAll_fields"></apex:inputCheckbox>
+                                All
+                            </apex:outputLabel>
+                        </th>
+                        <th width="50%">Salesforce</th>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Photo"/>
+                        </td>
+                        <td align="left" >
+                            <OBJECT id="EIDAWebComponent" style="border:solid 1px gray"
+                                    CLASSID="CLSID:A4B3BB86-4A99-3BAE-B211-DB93E8BA008B"
+                                    height="0" width="0"
+                            >
+                                <!--width="130" height="154"-->
+                                This browser does not support ActiveX components.
+                            </OBJECT>
+                            <canvas id="photo_data" class="photoCanvasEmiratesId" width="130" height="154"></canvas>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <!--<apex:outputField value="{!userAccount.Photo__c}" />-->
+                            <!--<apex:image value="{!emiratesCardInfo.PhotoBas64}" />-->
+                            <div id="photo" class="sfdc_richtext">
+                                <!--<apex:inputField html-disabled=true value="{!userAccount.Photo__c}"/>-->
+                                <!--<apex:image id="photo" value="{!IF(ISNULL(photoBase64String), '/img/social/unknown_profile_pic.png?v=2', photoBase64String)}" height="154" />-->
+                                <apex:inputHidden id="SRAccountPhoto" value="{!photoBase64String}" />
+                                <canvas id="photoCanvas" width="130" height="154"></canvas>
+                            </div>
+
+                            <script>
+                                var c = document.getElementById("photoCanvas");
+                                var ctx = c.getContext("2d");
+                                var img = new Image();
+                                img.onload = function() {
+                                    ctx.drawImage(img, 0, 0);
+                                };
+                                img.src = '{!IF(ISNULL(photoBase64String), '/img/social/unknown_profile_pic.png?v=2',
+                                        JSENCODE('data:image/jpeg;base64,' + photoBase64String))}';
+                                //console.log('Image source ==>' + img.src);
+                            </script>
+                            <!--<div class="photo"-->
+                            <!--style="background-image: url('data:image/jpeg;base64,{!emiratesCardInfo.PhotoBas64})'">-->
+                            <!--</div>-->
+                        </td>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Name in Emirates ID"/>
+                        </td>
+                        <td>
+                            <span id="FullName_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+
+                            <!--<apex:inputField html-disabled="true" value="{!userAccount.Emirates_Full_Name__c}" />-->
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Student'}" html-disabled="true" value="{!serviceRequest.Name_in_Emirates_ID__c}" />
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother' }" html-disabled="true" value="{!serviceRequest.Mother_Name_in_Emirates_ID__c}" />
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father' }" html-disabled="true" value="{!serviceRequest.Father_Name_in_Emirates_ID__c}" />
+                        </td>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Name in Emirates ID Arabic"/>
+                        </td>
+                        <td>
+                            <span id="ArabicFullName_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <!--<apex:inputField html-disabled="true" value="{!serviceRequest.Arabic_Name__c}" />-->
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Student'}" html-disabled="true" value="{!serviceRequest.Arabic_Name_in_Emirates_ID__c}" />
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother' }" html-disabled="true" value="{!serviceRequest.Mother_Arabic_Name_in_Emriates_ID__c}" />
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father' }" html-disabled="true" value="{!serviceRequest.Father_Arabic_Name_in_Emirates_ID__c}" />
+
+                        </td>
+                    </tr>
+
+
+                    <apex:outputPanel layout="none" rendered="{!SRPrimaryContact == 'Student'}">
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Gender"/>
+                            </td>
+                            <td>
+                                <span id="Sex_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Gender__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="DOB"/>
+                            </td>
+                            <td>
+                                <span id="DateOfBirth_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Date_Of_Birth__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Place of Birth"/>
+                            </td>
+                            <td>
+                                <span id="PlaceOfBirth_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Place_of_Birth__c}" />
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+
+                    <apex:outputPanel layout="none" rendered="{!SRPrimaryContact != 'Student'}">
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Company"/>
+                            </td>
+                            <td>
+                                <span id="WorkAddress_CompanyName_Ar_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <!--<apex:inputField html-disabled="true" value="{!userAccount.Apartment_No__c}" />-->
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.Other_Company_Mother__c}" />
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.Other_Company_Father__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Apartment No"/>
+                            </td>
+                            <td>
+                                <span id="HomeAddress_FlatNumber_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <!--<apex:inputField html-disabled="true" value="{!userAccount.Apartment_No__c}" />-->
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.Apartment_No_Mother__c}" />
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.Apartment_No__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Building"/>
+                            </td>
+                            <td>
+                                <span id="HomeAddress_Building_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!userAccount.Building__c}" />
+                            </td>
+                        </tr>
+
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="City"/>
+                            </td>
+                            <td>
+                                <span id="HomeAddress_CityDesc_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <!--<apex:inputField html-disabled="true" value="{!userAccount.City_State__c}" />-->
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.City_Emirate_Mother__c}" />
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.City_Emirate__c}" />
+                            </td>
+                        </tr>
+
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Area"/>
+                            </td>
+                            <td>
+                                <span id="WorkAddress_Street_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <!--<apex:inputField html-disabled="true" value="{!userAccount.Area__c}" />-->
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.Area_Mother__c}" />
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.Area__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Street"/>
+                            </td>
+                            <td>
+                                <span id="WorkAddress_Street_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <!--<apex:inputField html-disabled="true" value="{!userAccount.Street__c}" />-->
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.Street_Mother__c}" />
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.Street__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="PO Box"/>
+                            </td>
+                            <td>
+                                <span id="WorkAddress_POBox_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <!--<apex:inputField html-disabled="true" value="{!userAccount.P_O_Box__c}" />-->
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.P_O_Box_Mother__c}" />
+                                <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.P_O_Box__c}" />
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Emirates ID No"/>
+                        </td>
+                        <td>
+                            <span id="IDNumber_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <!--<apex:inputField html-disabled="true" value="{!userAccount.Emirates_ID__c}" />-->
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Student'}" html-disabled="true" value="{!serviceRequest.Emirates_ID__c}"/>
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.Emirates_ID_Mother__c}"/>
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.Emirates_ID_Father__c}"/>
+                        </td>
+                    </tr>
+
+                    <apex:outputPanel layout="none" rendered="{!SRPrimaryContact == 'Student'}">
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Emirates ID Issue Date"/>
+                            </td>
+                            <td>
+                                <span id="IssueDate_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Emirates_ID_Issue_Date__c}" />
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+
+                    <tr class="dataRow">
+                        <td>
+                            <apex:outputLabel value="Emirates ID Expiry Date"/>
+                        </td>
+                        <td>
+                            <span id="ExpiryDate_PDLabel"><b>--</b></span>
+                        </td>
+                        <td class="copyVal-checkbox">
+                            <apex:inputCheckbox disabled="false" />
+                        </td>
+                        <td>
+                            <!--<apex:inputField html-disabled="true" value="{!userAccount.Emirates_ID_Expiry_Date__c}" />-->
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Student'}" html-disabled="true" value="{!serviceRequest.Emirates_ID_Expiry_Date__c}" />
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Mother'}" html-disabled="true" value="{!serviceRequest.Emirates_ID_Expire_Date_Mother__c}" />
+                            <apex:inputField rendered="{!$CurrentPage.parameters.srid != null && SRPrimaryContact == 'Father'}" html-disabled="true" value="{!serviceRequest.Emirates_ID_Expire_Date_Father__c}" />
+                        </td>
+                    </tr>
+
+                    <apex:outputPanel layout="none" rendered="{!SRPrimaryContact == 'Student'}">
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Passport No"/>
+                            </td>
+                            <td>
+                                <span id="PassportNumber_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Passport_No__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Passport Issued Place"/>
+                            </td>
+                            <td>
+                                <!--<span id="PassportCountry_PDLabel"><b>&#45;&#45;</b> </span>-->
+                                <span id="PassportCountryDesc_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Passport_Issue_Place__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Passport Issued Date"/>
+                            </td>
+                            <td>
+                                <span id="PassportIssueDate_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Passport_Issue_Date__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Passport Expiry Date"/>
+                            </td>
+                            <td>
+                                <span id="PassportExpiryDate_PDLabel"><b>--</b> </span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Passport_Expiry_Date__c}" />
+                            </td>
+                        </tr>
+
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Visa No"/>
+                            </td>
+                            <td>
+                                <span id="ResidencyNumber_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Visa_No__c}" />
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel value="Visa Expiry Date"/>
+                            </td>
+                            <td>
+                                <span id="ResidencyExpiryDate_PDLabel"><b>--</b></span>
+                            </td>
+                            <td class="copyVal-checkbox">
+                                <apex:inputCheckbox disabled="false" />
+                            </td>
+                            <td>
+                                <apex:inputField html-disabled="true" value="{!serviceRequest.Visa_Expiry_Date__c}" />
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+                    </tbody>
+                </table>
+            </apex:outputPanel>
+
+        </apex:pageBlock>
+
+        <script>
+            //document.getElementById('photo').innerHTML = '{!userAccount.Photo__c}';
+        </script>
+    </apex:form>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>-->
+    <script src="{!URLFOR($Resource.GEMS, 'js/jquery.min.js')}"></script>
+
+    <script>
+
+        // ie console, polyfill
+        window.console = window.console || {log: function () {}};
+
+        $(function(){
+            if ("ActiveXObject" in window) {
+
+                enableCardReadBtn(true);
+                try {
+                    //cardReader = Initialize();
+                }catch (ex){
+                    console.log('card reader not able to initialized..' + ex);
+                }
+            }
+            else {
+                //cardReadStatus = 'failed';
+                enableCardReadBtn(false);
+                activeX_NotSupported();
+            }
+        })
+
+        function enableCardReadBtn(enable){
+            if(enable)
+                $('input[id$="readCardDetailsBtn"]').prop("disabled", false).removeClass('btnDisabled').addClass('btn');
+            else
+                $('input[id$="readCardDetailsBtn"]').prop("disabled", true).addClass('btnDisabled').removeClass('btn');
+        }
+
+        function disableFields(enable){
+            var dataRows = document.getElementsByClassName('dataRow');
+            for(var row =0; row < dataRows.length; row++){
+                var rowElem = dataRows[row];
+
+                var rowCells = rowElem.children;
+                if(rowCells.length == 4){
+
+                    if(enable)
+                        $(rowCells[3]).find('input,select').prop('disabled', true);
+                    else
+                        $(rowCells[3]).find('input,select').prop('disabled', false);
+                }
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function(){
+
+            //document.getElementById("{!$Component.GEMS_EmiratesIDSFReader.emiratesForm.cardDetailsContainer.buttonsSet.bottom.syncUpdateBtn}").disabled=true;
+            //$('input[id$="syncUpdateBtn"]')
+
+            //document.getElementsByTagName('head')[0].appendChild('<meta http-equiv="X-UA-Compatible" content="IE=edge" />');
+            var meta = document.createElement('meta');
+            meta.httpEquiv = "X-UA-Compatible";
+            meta.content = "IE=edge";
+            document.getElementsByTagName('head')[0].appendChild(meta);
+
+            var dataRows = document.getElementsByClassName('dataRow');
+            for(var row =0; row < dataRows.length; row++){
+                var rowElem = dataRows[row];
+
+                rowElem.onmouseover = function(){
+                    if (window.hiOn){
+                        hiOn(this);
+                    }
+                };
+
+                rowElem.onmouseout = function(row){
+                    if (window.hiOff){
+                        hiOff(this);
+                    }
+                };
+                rowElem.onblur = function(){
+                    if (window.hiOff){hiOff(this);}
+                }
+                rowElem.onfocus = function(){
+                    if (window.hiOn){hiOn(this);}
+                }
+            }
+
+            // Disable fields
+            disableFields(true);
+        })
+
+
+        var card_details = {},
+                cardReader;
+        function read_card_details(){
+
+
+            try {
+                //if initialization is successful
+                updateCardReadStatus('{!CARD_READ_STATUS_STARTED}');
+                if(cardReader !== '') //re-init
+                    cardReader = Initialize();
+
+                if(cardReader == '') {
+
+                    //$(document.getElementById('{!$Component.emiratesForm.cardDetailsContainer.cardReadStatusHiddenBtn}')).val({!CARD_READ_STATUS_STARTED});
+
+                    console.log('Staring : Card Reading status ==>' + $(document.getElementById('{!$Component.emiratesForm.cardDetailsContainer.cardReadStatusHiddenBtn}')).val())
+
+                    var photo_data = DisplayPhotography(),
+                            public_data = DisplayPublicData(),
+                            public_dataEx = DisplayPublicDataEx();
+
+                    $.extend(card_details, photo_data, public_data, public_dataEx);
+                    photo_data = null;
+                    public_data = null;
+                    public_dataEx = null;
+
+                    $('input[id$="syncUpdateBtn"]').prop("disabled", false).removeClass('btnDisabled').addClass('btn');
+                    //console.log(JSON.stringify(card_details));
+                    DisplayEmiratesIdInfo();
+
+                    //$(document.getElementById('{!$Component.emiratesForm.cardDetailsContainer.cardReadStatusHiddenBtn}')).val({!CARD_READ_STATUS_COMPLETED});
+
+                    console.log('Finished : Card Reading status ==>' + $(document.getElementById('{!$Component.emiratesForm.cardDetailsContainer.cardReadStatusHiddenBtn}')).val())
+
+                }else {
+                    console.log('EIDA Toolkit initialization failed! ' + cardReader);
+                }
+            }catch(ex){
+                alert('EIDA Toolkit initialization failed! \nDetail: ' + cardReader);
+            }finally {
+                updateCardReadStatus('{!CARD_READ_STATUS_COMPLETED}');
+            }
+
+        }
+
+        function  updateCardReadStatus(status){
+            if(status == '{!CARD_READ_STATUS_STARTED}'){
+                $('input[id$="readCardDetailsBtn"]').prop('value', 'Reading Card Details...');
+                $('input[id$="readCardDetailsBtn"]').prop("disabled", true).addClass('btnDisabled').removeClass('btn');
+            }else{
+                $('input[id$="readCardDetailsBtn"]').prop('value', 'Read Card Details');
+                $('input[id$="readCardDetailsBtn"]').prop("disabled", false).removeClass('btnDisabled').addClass('btn');
+            }
+        }
+        function DisplayEmiratesIdInfo(){
+            var eid_elem;
+            for (var k in card_details) {
+                eid_elem = document.getElementById(k);
+                if (eid_elem != undefined && card_details.hasOwnProperty(k)) {
+
+                    if(k == 'photo_data'){
+                        var base64 = ConvertToBase64(card_details[k]);
+                        drawImage(base64, k);
+                        console.log('Photo Data' + card_details[k]);
+                    }
+                    else {
+                        eid_elem.innerHTML = "<b>"+card_details[k]+"</b>";
+                    }
+
+                }
+            }
+        }
+
+
+        function toggleFieldsSelection(targetElem){
+
+            var selectAll = targetElem.checked;
+            var dataRows = document.getElementsByClassName('dataRow');
+            for(var row =0; row < dataRows.length; row++) {
+                var rowElem = dataRows[row];
+
+                var rowCells = rowElem.children;
+                if (rowCells.length == 4 && rowCells[2].children[0].disabled == false) {
+                    rowCells[2].children[0].checked = selectAll;
+                }
+            }
+        }
+
+
+        function sync_update(){
+            disableFields(false);
+
+            var dataRows = document.getElementsByClassName('dataRow');
+
+            // copy the rest fields
+            for(var row =0; row < dataRows.length; row++){
+                var rowElem = dataRows[row];
+
+                var rowCells = rowElem.children;
+                if(row == 0 && rowCells[1] && (rowCells.length == 4 && rowCells[2].children[0].checked)){
+                    sync_photo();
+                    continue;
+                }
+
+
+                if(rowCells.length == 4 && rowCells[2].children[0].checked){
+                    // Find its child `input` elements
+
+                    var new_val = (rowCells[1].innerText.trim() == '--' ? '' : rowCells[1].innerText.trim());
+
+                    if($(rowCells).find('select').length > 0){
+
+                        var sel_val = $(rowCells).find('select option').filter(
+                                function () {
+                                    return $(this).html() == new_val;
+                                }
+                        ).val();
+
+                        $(rowCells[3]).find('select').val(sel_val);
+                        console.log('selected Value >>' + sel_val);
+
+                    }else if($(rowCells).find('input').length > 0){
+                        $(rowCells[3]).find('input').val(new_val);
+                    }
+                }
+            }
+
+            //Sync card details
+            syncCard();
+
+            return false;
+        }
+
+        function sync_photo(){
+            try {
+                // copy the photography
+                var photography_hexStr = card_details['photo_data'];
+                if(photography_hexStr) {
+                    var base64 = ConvertToBase64(photography_hexStr);
+                    drawImage(base64, 'photoCanvas');
+
+                    $(document.getElementById('{!$Component.emiratesForm.cardDetailsContainer.SRAccountPhoto}'))
+                            .val(base64);
+                    $(document.getElementById('{!$Component.emiratesForm.cardDetailsContainer.studentAccountPhoto}'))
+                            .val(base64);
+
+                }
+            }catch (e){
+                console.log('reading photography failed.' + e);
+            }
+        }
+
+
+        function syncCard_Complete(){
+            disableFields(true);
+            DisplayEmiratesIdInfo();
+
+            //clar all checkboxes
+            var dataRows = document.getElementsByTagName('tr');
+            for(var row =0; row < dataRows.length; row++) {
+                var rowElem = dataRows[row];
+
+                var rowCells = rowElem.children;
+                if (rowCells.length == 4) {
+                    //rowCells[2].children[0].checked = false;
+                    $(rowCells[2]).find('input').prop('checked', false);
+                }
+            }
+
+        }
+
+        function onCancelClicked(){
+            if('{!$CurrentPage.parameters.id}'.trim().length > 0)
+                window.location.href= decodeURIComponent('/{!$CurrentPage.parameters.id}');
+            else if('{!$CurrentPage.parameters.srid}'.trim().length > 0)
+                window.location.href = decodeURIComponent('/{!$CurrentPage.parameters.srid}');
+            else if('{!$CurrentPage.parameters.cancelUrl}'.trim().length > 0){
+                window.location.href = decodeURIComponent('{!$CurrentPage.parameters.cancelUrl}');
+            }else{
+                window.location.href = '/home/home.jsp';
+            }
+
+            /*
+            if('{!$CurrentPage.parameters.cancelUrl}'.length > 0)
+                window.location.href=decodeURIComponent('{!URLENCODE($CurrentPage.parameters.cancelUrl)}');
+            else{
+                window.location.href=decodeURIComponent('{!URLENCODE($CurrentPage.parameters.id)}');
+            }*/
+        }
+
+
+
+        function drawImage(base64, canvasElem) {
+            "use strict";
+            var canvas = document.getElementById(canvasElem);
+            var ctx = canvas.getContext("2d");
+            //ctx.putImageData(imgData, 0, 0);
+
+            var img = new Image();
+            img.src = "data:image/jpeg;base64," + base64;
+            img.onload = function () {
+                console.log("Image Onload");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.onerror = function (stuff) {
+                console.log("Img Onerror:", stuff);
+                console.log(JSON.stringify(stuff));
+            };
+
+        }
+
+
+        function ConvertToBase64(hex) {
+            var cleaned_hex = clean_hex(hex, true);
+            if (cleaned_hex.length % 2) {
+                alert ("Error: cleaned hex string length is odd.");
+                return;
+            }
+            var binary = new Array();
+            for (var i=0; i<cleaned_hex.length/2; i++) {
+                var h = cleaned_hex.substr(i*2, 2);
+                binary[i] = parseInt(h,16);
+            }
+            return binary_to_base64(binary);
+        }
+
+
+        var base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        function binary_to_base64(input) {
+            var ret = new Array();
+            var i = 0;
+            var j = 0;
+            var char_array_3 = new Array(3);
+            var char_array_4 = new Array(4);
+            var in_len = input.length;
+            var pos = 0;
+
+            while (in_len--)
+            {
+                char_array_3[i++] = input[pos++];
+                if (i == 3)
+                {
+                    char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+                    char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+                    char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+                    char_array_4[3] = char_array_3[2] & 0x3f;
+
+                    for (i = 0; (i <4) ; i++)
+                        ret += base64_chars.charAt(char_array_4[i]);
+                    i = 0;
+                }
+            }
+
+            if (i)
+            {
+                for (j = i; j < 3; j++)
+                    char_array_3[j] = 0;
+
+                char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+                char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+                char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+                char_array_4[3] = char_array_3[2] & 0x3f;
+
+                for (j = 0; (j < i + 1); j++)
+                    ret += base64_chars.charAt(char_array_4[j]);
+
+                while ((i++ < 3))
+                    ret += '=';
+
+            }
+
+            return ret;
+        }
+        function clean_hex(input, remove_0x) {
+            input = input.toUpperCase();
+
+            if (remove_0x) {
+                input = input.replace(/0x/gi, "");
+            }
+
+            var orig_input = input;
+            input = input.replace(/[^A-Fa-f0-9]/g, "");
+            return input;
+        }
+
+
+        /********** HEX to and back base64 Conversion **********/
+        if (!window.atob) {
+            var tableStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            var table = tableStr.split("");
+
+            window.atob = function (base64) {
+                if (/(=[^=]+|={3,})$/.test(base64)) throw new Error("String contains an invalid character");
+                base64 = base64.replace(/=/g, "");
+                var n = base64.length & 3;
+                if (n === 1) throw new Error("String contains an invalid character");
+                for (var i = 0, j = 0, len = base64.length / 4, bin = []; i < len; ++i) {
+                    var a = tableStr.indexOf(base64[j++] || "A"), b = tableStr.indexOf(base64[j++] || "A");
+                    var c = tableStr.indexOf(base64[j++] || "A"), d = tableStr.indexOf(base64[j++] || "A");
+                    if ((a | b | c | d) < 0) throw new Error("String contains an invalid character");
+                    bin[bin.length] = ((a << 2) | (b >> 4)) & 255;
+                    bin[bin.length] = ((b << 4) | (c >> 2)) & 255;
+                    bin[bin.length] = ((c << 6) | d) & 255;
+                };
+                return String.fromCharCode.apply(null, bin).substr(0, bin.length + n - 4);
+            };
+
+            window.btoa = function (bin) {
+                for (var i = 0, j = 0, len = bin.length / 3, base64 = []; i < len; ++i) {
+                    var a = bin.charCodeAt(j++), b = bin.charCodeAt(j++), c = bin.charCodeAt(j++);
+                    if ((a | b | c) > 255) throw new Error("String contains an invalid character");
+                    base64[base64.length] = table[a >> 2] + table[((a << 4) & 63) | (b >> 4)] +
+                            (isNaN(b) ? "=" : table[((b << 2) & 63) | (c >> 6)]) +
+                            (isNaN(b + c) ? "=" : table[c & 63]);
+                }
+                return base64.join("");
+            };
+
+        }
+
+        function hexToBase64(str) {
+            return btoa(String.fromCharCode.apply(null,
+                    str.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
+            );
+        }
+
+        function base64ToHex(str) {
+            for (var i = 0, bin = atob(str.replace(/[ \r\n]+$/, "")), hex = []; i < bin.length; ++i) {
+                var tmp = bin.charCodeAt(i).toString(16);
+                if (tmp.length === 1) tmp = "0" + tmp;
+                hex[hex.length] = tmp;
+            }
+            return hex.join(" ");
+        }
+    </script>
+</apex:page>

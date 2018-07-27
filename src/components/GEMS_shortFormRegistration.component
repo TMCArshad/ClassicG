@@ -1,0 +1,85 @@
+<apex:component Controller="GEMS_ThankYouCntlrExt" allowDML="true">
+
+    <style>
+        .detailList > tbody > tr > th label{
+            font-weight: 500;
+        }
+
+        .detailList > tbody > tr > td, .detailList > tbody > tr > th {
+            padding: 3px 15px !important;
+        }
+    </style>
+
+    <apex:pageBlock rendered="{!objSR.Service_Type__c=='Enrollment Short Form' && stage=='Registration'}">
+        <div class="row page-info">
+            <div class="col-lg-12 col-md-12">
+                <h3>Thank you for completing the form</h3>
+                <p>
+                    Thank you for completing an application to {!objSR.school__r.name}, following the {!curriculum} for the {!academicYear} academic year.
+                </p>
+            </div>
+        </div>
+
+        <apex:pageBlockSection id="registrationSection" title="Student Details" columns="1" collapsible="false">
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Registration Number"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Name}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Name"></apex:outputLabel>
+            <apex:outputText value="{!studentName}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Grade"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Grade_Display__c}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Date of Birth"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Date_Of_Birth__c}" />
+        </apex:pageBlockSectionItem>
+        
+         <apex:pageBlockSectionItem rendered="{!objSR.Siblings_studying_in_a_GEMS_school__c == true}"
+                                    labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Sibling Name and Student Id:"></apex:outputLabel>
+            <apex:outputText value="{!siblingDetails}" /> 
+        </apex:pageBlockSectionItem> 
+        
+    </apex:pageBlockSection>
+
+        <apex:outputLink style="font-weight: 700" value="{!basicInfoPageURl}" id="theLink">Your request has been submitted and reference number is {!objSR.Name}</apex:outputLink>
+
+    <!-- <apex:pageBlockSection id="parentSection" title="Parent Details" columns="1" collapsible="false">
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Name"></apex:outputLabel>
+            <apex:outputText value="{!parentName}" /> 
+        </apex:pageBlockSectionItem>
+        
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="City/State"></apex:outputLabel>
+            <apex:outputText value="{!ParentCity}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Country"></apex:outputLabel>
+            <apex:outputText value="{!ParentCountry}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Phone"></apex:outputLabel>
+            <apex:outputText value="{!parentPhone}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Email"></apex:outputLabel>
+            <apex:outputText value="{!parentEmail}" />
+        </apex:pageBlockSectionItem>
+        
+    </apex:pageBlockSection> -->
+        
+        
+        <!-- <apex:outputLink value="{!basicInfoPageURl}" id="theLink">Your Request has been submitted and reference number is {!objSR.Name}</apex:outputLink>
+     --></apex:pageBlock>
+</apex:component>

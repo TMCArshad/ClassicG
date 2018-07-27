@@ -1,0 +1,3 @@
+<apex:page >
+<c:GEMS_GoogleCaptcha />
+</apex:page>

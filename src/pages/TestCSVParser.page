@@ -1,0 +1,8 @@
+<apex:page controller="TestCSVParserController">
+  <apex:form >
+      
+      <apex:inputFile value="{!fileContent}" />
+      <apex:commandButton value="Go" action="{!parseCSV}"/>
+      
+  </apex:form>
+</apex:page>

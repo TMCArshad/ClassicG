@@ -1,0 +1,497 @@
+<!--************************************************************************************
+* Name               : GEMS_EditCriticalDetailsPage                                                               *
+* Description        : VF Page for Edit critical Data                                     *
+* Created Date       : 17/01/2017                                                                 *
+* Created By         : Keerthan Tantry (PWC Digital)                                              *
+* ----------------------------------------------------------------------------------------------- *
+* VERSION     AUTHOR      DATE                                                                    *
+* 1.0         PWC         16/02/2017
+* 1.1       Leeba- PWC    4/3/2018 -  To - Curriculum Read Only
+************************************************************************************************** -->
+
+<apex:page controller="GEMS_EditCriticalDetailsCntlr" tabstyle="School__c" showHeader="true" sidebar="true" id="GEMS_EditCriticalDetailsPage"
+           docType="html-5.0">
+
+    <style>
+        .dataRow td {
+            border-left: 1px solid #ededed !important;
+        }
+ 
+        .logo-container {
+            display: block;
+            padding: 10px 5px;
+            text-align: right;
+        }
+        .logo-container img {
+            max-height: 60px;
+        }
+
+        #GEMS_EditCriticalDetailsPage\:theForm .pbBody table.list tr.headerRow th {
+            background: #c26b96;
+            border-color: #fff;
+            color: #fff;
+        }
+
+        body .bodyDiv .outer .oRight, body .bodyDiv .outerNoSidebar {
+            background-color: #f8f8f8;
+        }
+    </style>
+
+    <c:GEMS_CSS />
+    <apex:outputText styleClass="logo-container" id="schoolLogo" value="{!school.Logo__c}" escape="false"/>
+    <apex:form id="theForm">
+
+        <apex:pagemessages id="errormsg" escape="false"/>
+        <apex:pageBlock title="Edit Critical Data" id="PB">
+            <!--<apex:pageBlockButtons location="Bottom">-->
+                <!--<apex:commandButton value="Search" action="{!getAllStudents}" reRender="StudentPBS,errormsg"-->
+                                    <!--status="pleasewait"/>-->
+            <!--</apex:pageBlockButtons>-->
+
+            <apex:outputPanel layout="block" id="PBS">
+                <table class="list" border="0" cellpadding="0" cellspacing="0">
+                    <colgroup span="4"></colgroup>
+                    <tbody>
+                        <tr class="headerRow">
+                            <th width="20%"></th>
+                            <th width="35%">Change From</th>
+                            <th width="45%">Change To</th>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel >
+                                    Academic Year
+                                </apex:outputLabel>
+                            </td>
+                            <td>
+                                <apex:selectList value="{!selectedFromAcademicYear}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!academicYearFromList}"/>
+                                    <apex:actionSupport event="onchange" action="{!getCurriculumsForSchool}" reRender="PBS,StudentPBS"
+                                                        status="pleasewait">
+
+                                    </apex:actionSupport>
+                                </apex:selectList>
+                            </td>
+                            <td>
+
+                                <apex:selectList value="{!selectedToAcademicYear}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!academicYearFromList}"/>
+                                    <apex:actionSupport event="onchange" action="{!getToCurriculumsForSchool}" reRender="PBS,errormsg"
+                                                        status="pleasewait">
+
+                                    </apex:actionSupport>
+                                </apex:selectList>
+                            </td>
+                        </tr>
+                        <apex:outputPanel layout="none" rendered="{!OR(curriculumFromList.Size > 1,curriculumToList.size>1)}">
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel >
+                                    Curriculum
+                                </apex:outputLabel>
+                            </td>
+                            <td>
+                                <apex:outputpanel rendered="{!curriculumFromList.size > 1}" >
+                                <apex:selectList value="{!selectedFromCurriculum}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!curriculumFromList}"/>
+                                    <apex:actionSupport event="onchange" action="{!getGradesForSchool}" reRender="PBS,StudentPBS,errormsg"
+                                                        status="pleasewait"/>
+                                </apex:selectList>
+                                </apex:outputpanel>
+                            </td>
+                            <td>
+                                <apex:outputPanel rendered="{!curriculumToList.size > 1}">
+                                <apex:selectList value="{!selectedToCurriculum}" size="1" multiselect="false" disabled="true"> <!-- 1.1 -->
+                                    <apex:selectOptions value="{!curriculumToList}"/>
+                                    <apex:actionSupport event="onchange" action="{!getToGradesForSchool}" reRender="PBS,errormsg"
+                                                        status="pleasewait"/>
+                                </apex:selectList>
+                                 
+                                </apex:outputPanel>
+                            </td>
+                        </tr>
+                        </apex:outputPanel>
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel >
+                                    Grade
+                                </apex:outputLabel>
+                            </td>
+                            <td>
+                                <apex:selectList value="{!selectedFromGrade}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!gradeFromList}"/>
+                                    <apex:actionSupport event="onchange" action="{!getStreamsForSchool}" reRender="PBS,StudentPBS,errormsg"
+                                                        status="pleasewait"/>
+                                </apex:selectList>
+                            </td>
+                            <td>
+
+                                <apex:selectList value="{!selectedToGrade}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!gradeToList}"/>
+                                    <apex:actionSupport event="onchange" action="{!getToStreamsForSchool}" reRender="PBS"
+                                                        status="pleasewait"/>
+                                </apex:selectList>
+                            </td>
+                        </tr>
+                        <apex:outputPanel layout="none" rendered="{!OR(streamFromList.Size > 1,streamToList.size>1)}">
+                        <tr class="dataRow">
+                            
+                            <td>
+                                <apex:outputLabel >
+                                    Stream
+                                </apex:outputLabel>
+                            </td>
+
+                            <td>
+                            <apex:outputPanel rendered="{!streamFromList.size > 0}">
+                                <apex:selectList value="{!selectedFromStream}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!streamFromList}"/>
+                                    <apex:actionSupport event="onchange" action="{!getSectionsForSchool}" status="pleasewait"
+                                                        reRender="PBS,StudentPBS,errormsg"/>
+                                </apex:selectList>
+                            </apex:outputPanel>    
+                            </td>
+
+                            <td>
+                                <apex:outputPanel rendered="{!streamToList.size > 0}">
+                                <apex:selectList value="{!selectedToStream}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!streamToList}"/>
+                                    <apex:actionSupport event="onchange" action="{!getToSectionsForSchool}" status="pleasewait"
+                                                        reRender="PBS,StudentPBS,errormsg"/>
+                                </apex:selectList>
+                                </apex:outputPanel>
+                            </td>
+                        </tr>
+                        </apex:outputPanel>
+                        <tr class="dataRow">
+                            <td>
+                                <apex:outputLabel >
+                                    Section
+                                </apex:outputLabel>
+                            </td>
+                            <td>
+                                <apex:selectList value="{!selectedFromSection}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!sectionFromList}"/>
+                                    <apex:actionSupport event="onchange" action="{!FromSectionChange}" status="pleasewait" reRender="PBS,StudentPBS,errormsg"/>
+                                </apex:selectList>
+                            </td>
+                            <td>
+
+                                <apex:selectList value="{!selectedToSection}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!sectionToList}"/>
+                                </apex:selectList>
+                            </td>
+                        </tr>
+
+                        <tr class="dataRow">
+                            <td colspan="2" style="text-align: right">
+                                <apex:outputLabel >
+                                    Date of joining
+                                </apex:outputLabel>
+                            </td>
+                            <td>
+                                <!--<apex:input type="date" value="{!DOJ}"/>-->
+                                <apex:inputField value="{!objSR.Joining_Date__c}"  />
+                            </td>
+                        </tr>
+
+
+                    </tbody>
+                </table>
+            </apex:outputPanel>
+
+            <apex:pageBlockSection >
+                <apex:pageBlockSectionItem />
+                <apex:pageBlockSectionItem labelStyle="text-align:left;">
+                    <apex:commandButton value="Search" action="{!getAllStudents}" reRender="StudentPBS,errormsg"
+                    status="pleasewait"/>
+                    <apex:outputLabel />
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+
+        </apex:pageBlock>
+
+        <apex:pageBlock id="StudentPBS">
+            <apex:actionfunction name="checkValidationStudent" action="{!searchStudents}" status="pleasewait" rerender="StudentPBS,errormsg,searchStudent"/>
+                <apex:outputText rendered="{!studentWrapperList.size <= 0}">
+                    No records to display.
+                </apex:outputText>
+
+                <!--<apex:pageBlockButtons location="Bottom" rendered="{!studentWrapperList.size > 0}">-->
+                    <!--<apex:commandButton value="Request Change" action="{!requestChange}" status="pleasewait"-->
+                                        <!--reRender="theForm,errormsg" oncomplete="window.scrollTo(0,0);"/>-->
+                <!--</apex:pageBlockButtons>-->
+                
+                <apex:pageBlockSection title="Search Student" columns="2" id="searchStudent" rendered="{!studentWrapperList.size > 0}">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Search Student"/>
+                        <apex:outputPanel style="display: inline-block;">
+                            <apex:inputText value="{!searchStudentValue}" style="float: left;" styleClass="searchStudent">
+                                <img id="lkpimg"  class="lookupIcon" src="/s.gif" onclick="checkValidationForStudent();"/>
+                            </apex:inputText>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem labelStyle="text-align:left;">
+                        <apex:commandButton id="ReEnrolled" value="Clear Search" status="pleasewait" rendered="{!searchStudentValue!=''}" action="{!clearSearch}"/>
+                        <apex:outputLabel />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockTable value="{!studentWrapperList}" var="wrp" rendered="{!studentWrapperList.size > 0}">
+                    <apex:column >
+                        <apex:facet name="header">
+                            Select All
+                            <apex:inputCheckbox onclick="selectAllCheckboxes(this,'inputId')"/>
+                        </apex:facet>
+                        <apex:inputCheckbox value="{!wrp.isSelected}" id="inputId"/>
+                    </apex:column>
+
+                    <apex:column headerValue="SL.No" value="{!wrp.serialNumber}"/>
+                    <apex:column headerValue="Student No" value="{!wrp.Student.Student_Id__c}"/>
+                    <apex:column headerValue="Student Name" value="{!wrp.Student.Name}"/>
+                    <apex:column headerValue="Grade" value="{!wrp.student.Grade_Display__c}"/>
+                    <apex:column headerValue="Section" value="{!wrp.student.Section_Display__c}"/>
+                    <apex:column headerValue="Gender" value="{!wrp.student.Gender__c}"/>
+                    <!-- <apex:column headerValue="School Code" value="{!wrp.student.School__r.ID__c}"/> -->
+                </apex:pageBlockTable>
+                 
+                <apex:outputPanel id="mainPanel" style="float:right;">
+                    <apex:outputPanel rendered="{!AND(IF(paginater.isAll, false, true), IF(paginater.totalPage == 1, false, true))}">
+                        <apex:outputText rendered="{!paginater.showPrevious}">
+                            <apex:commandLink action="{!previousPage}" value="Prev" rerender="StudentPBS" status="pleasewait"/>
+                        </apex:outputText>
+                        <apex:repeat value="{!paginater.pageList}" var="pl">
+                            &nbsp;
+                            <apex:outputText rendered="{!!pl.isActive}">
+                                <apex:commandLink action="{!updatePage}" rerender="StudentPBS" status="pleasewait">
+                                    {!pl.pageNum}                               
+                                    <apex:param name="selectedPage" value="{!pl.pageNum}" assignTo="{!paginater.pageNum}" />
+                                </apex:commandLink>
+                            </apex:outputText>
+                            <apex:outputText rendered="{!pl.isActive}" value="{!pl.pageNum}" />
+                        </apex:repeat>
+                        &nbsp;
+                        <apex:outputText rendered="{!paginater.showNext}">
+                            <apex:commandLink action="{!nextPage}" value="Next" rerender="StudentPBS" status="pleasewait"/>
+                        </apex:outputText>
+                    </apex:outputPanel>
+                    <br/>
+                </apex:outputPanel>
+                
+                <apex:pageBlockSection columns="2" collapsible="false" rendered="{!studentWrapperList.size > 0}">
+
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel layout="block">
+                        <br/>
+                        <br/>
+                        <apex:outputLabel style="margin-right: 10px;font-weight: bold;vertical-align: top;">
+                            Remarks
+                        </apex:outputLabel>
+                        <!-- <apex:inputTextarea value="{!remarks}" style="width: 80%;"> 
+                        </apex:inputTextarea>-->
+                        <apex:inputField value="{!objSR.Comments__c}" style="width: 310px; height: 50px;"  />
+                        
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+
+            <apex:pageBlockSection rendered="{!studentWrapperList.size > 0}">
+                <apex:pageBlockSectionItem />
+                <apex:pageBlockSectionItem labelStyle="text-align:left;">
+                    <apex:commandButton value="Request Change" action="{!requestChange}" status="pleasewait"
+                                        reRender="theForm,errormsg" oncomplete="window.scrollTo(0,0);"/>
+                    <apex:outputLabel />
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <!--
+            <apex:pageBlockButtons location="Bottom">
+                <apex:commandButton value="Search" action="{!getAllStudents}" reRender="StudentPBS"
+                                    status="pleasewait"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2">
+                <apex:pageBlockSectionItem>
+                    <b>
+                       <span style="margin-left: 236px;">
+                       CHANGE FROM
+                       </span>
+                    </b>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem>
+                    <b>
+                       <span style="    margin-left: 141px;">
+                       CHANGE TO
+                       </span>
+                    </b>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" collapsible="false" id="PBS">
+                <apex:pageBlockSectionItem>
+                    <apex:outputLabel>
+                        Academic Year
+                    </apex:outputLabel>
+                    <apex:selectList value="{!selectedFromAcademicYear}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!academicYearFromList}"/>
+                        <apex:actionSupport event="onchange" action="{!getCurriculumsForSchool}" reRender="PBS"
+                                            status="pleasewait">
+
+                        </apex:actionSupport>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem>
+                    <apex:selectList value="{!selectedToAcademicYear}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!academicYearFromList}"/>
+                        <apex:actionSupport event="onchange" action="{!getToCurriculumsForSchool}" reRender="PBS"
+                                            status="pleasewait">
+
+                        </apex:actionSupport>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem>
+                    <apex:outputLabel>
+                        Curriculum
+                    </apex:outputLabel>
+                    <apex:selectList value="{!selectedFromCurriculum}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!curriculumFromList}"/>
+                        <apex:actionSupport event="onchange" action="{!getGradesForSchool}" reRender="PBS"
+                                            status="pleasewait"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem>
+                    <apex:selectList value="{!selectedToCurriculum}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!curriculumToList}"/>
+                        <apex:actionSupport event="onchange" action="{!getToGradesForSchool}" reRender="PBS"
+                                            status="pleasewait"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+
+
+                <apex:pageBlockSectionItem id="gradePBSI">
+                    <apex:outputLabel>
+                        Grade
+                    </apex:outputLabel>
+                    <apex:selectList value="{!selectedFromGrade}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!gradeFromList}"/>
+                        <apex:actionSupport event="onchange" action="{!getStreamsForSchool}" reRender="PBS"
+                                            status="pleasewait"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem>
+                    <apex:selectList value="{!selectedToGrade}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!gradeToList}"/>
+                        <apex:actionSupport event="onchange" action="{!getToStreamsForSchool}" reRender="PBS"
+                                            status="pleasewait"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem id="streamPBSI">
+                    <apex:outputLabel>
+                        Stream
+                    </apex:outputLabel>
+                    <apex:selectList value="{!selectedFromStream}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!streamFromList}"/>
+                        <apex:actionSupport event="onchange" action="{!getSectionsForSchool}" status="pleasewait"
+                                            reRender="PBS"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem>
+                    <apex:selectList value="{!selectedToStream}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!streamToList}"/>
+                        <apex:actionSupport event="onchange" action="{!getToSectionsForSchool}" status="pleasewait"
+                                            reRender="PBS"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem id="sectionPBSI">
+                    <apex:outputLabel>
+                        Section
+                    </apex:outputLabel>
+                    <apex:selectList value="{!selectedFromSection}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!sectionFromList}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem>
+                    <apex:selectList value="{!selectedToSection}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!sectionToList}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem id="dojPBSI">
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem>
+                    <apex:outputLabel>
+                        Date of joining
+                    </apex:outputLabel>
+                    <apex:input type="date" value="{!DOJ}"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        
+        <apex:pageBlock id="StudentPBS">
+            <apex:outputText rendered="{!studentWrapperList.size <= 0},{!(!onchangeflag)}"
+                No records to display.
+            </apex:outputText>
+            <apex:pageBlockButtons location="Bottom" rendered="{!studentWrapperList.size > 0}">
+                <apex:commandButton value="Request Change" action="{!requestChange}" status="pleasewait"
+                                    reRender="theForm,errormsg"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockTable value="{!studentWrapperList}" var="wrp" rendered="{!studentWrapperList.size > 0}">
+                <apex:column>
+                    <apex:facet name="header">
+                        Select All
+                        <apex:inputCheckbox onclick="selectAllCheckboxes(this,'inputId')"/>
+                    </apex:facet>
+                    <apex:inputCheckbox value="{!wrp.isSelected}" id="inputId"/>
+                </apex:column>
+
+                <apex:column headerValue="SL.No" value="{!wrp.serialNumber}"/>
+                <apex:column headerValue="Student No" value="{!wrp.Student.Student_Id__c}"/>
+                <apex:column headerValue="Student Name" value="{!wrp.Student.Name}"/>
+                <apex:column headerValue="Grade" value="{!wrp.student.sys_GRD_ID__c}"/>
+                <apex:column headerValue="Section" value="{!wrp.student.Section_Display__c}"/>
+                <apex:column headerValue="Gender" value="{!wrp.student.Gender__c}"/>
+            </apex:pageBlockTable>
+            <apex:pageBlockSection columns="2" collapsible="false" rendered="{!studentWrapperList.size > 0}">
+                <apex:pageBlockSectionItem>
+                    <apex:outputLabel>
+                        Remarks
+                    </apex:outputLabel>
+                    <apex:inputTextarea value="{!remarks}">
+
+                    </apex:inputTextarea>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+
+            -->
+        </apex:pageBlock>
+    </apex:form>
+
+    <script type="text/javascript">
+        function selectAllCheckboxes(obj, receivedInputID) {
+            var inputCheckBox = document.getElementsByTagName("input");
+            for (var i = 0; i < inputCheckBox.length; i++) {
+                if (inputCheckBox[i].id.indexOf(receivedInputID) != -1) {
+                    inputCheckBox[i].checked = obj.checked;
+                }
+            }
+        }
+        
+        function checkValidationForStudent(){
+                var studentId = document.getElementsByClassName('searchStudent')[0].value;
+                //var searchCriteria = document.getElementsByClassName('searchCriteria')[0].value;
+                
+                //if(searchCriteria==''){
+                    //alert('Please provide search criteria');
+                //}else 
+                
+                if(studentId==''){
+                    alert('Please provide value for search');
+                }
+                else{
+                    checkValidationStudent(studentId);
+                }
+            }
+    </script>
+
+</apex:page>

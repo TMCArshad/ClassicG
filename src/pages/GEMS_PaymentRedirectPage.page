@@ -1,0 +1,38 @@
+<apex:page controller="GEMS_PaymentRedirectController" showHeader="false" sideBar="false" action="{!handleRedirect}" docType="html-5.0">
+<style>
+    .pbSubsection {
+        padding: 25px 0;
+    }
+</style>  
+   <apex:form >
+      
+      <apex:pageMessages id="erroMessage" />
+      <apex:outputPanel styleClass="homeTab" layout="block">
+        <apex:pageBlock >
+            <apex:pageBlockSection collapsible="false" columns="1">
+                <apex:outputPanel id="success" layout="block">
+                    <table class="messageTable" style=" width: 100%; padding:0px;margin:0px;" cellspacing="0" cellpadding="0" border="0">
+                        <tbody>
+                        <tr valign="top">
+                            
+                            <td class="messageCell" style="vertical-align: middle;" >
+                                <div id="" class="messageText">
+                                <span id="" >
+                                    <h4><apex:outputLink value="{!paymentPageURL}" target="_blank">Click here to go back to payment page. </apex:outputLink></h4>
+                                </span>
+                                    
+                                    <br/>
+                                </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                    </table>
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:outputPanel>
+
+    <script src="{!URLFOR($Resource.GEMS, 'modules/iframe-resizer/iframeResizer.contentWindow.min.js')}"></script>
+   </apex:form>  
+
+</apex:page>

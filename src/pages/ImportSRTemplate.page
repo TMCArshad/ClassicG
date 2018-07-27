@@ -1,0 +1,179 @@
+<apex:page controller="ImportSRTemplateController" sidebar="false" tabstyle="HexaBPM__SR_Template__c" id="ImportProcessPg">
+    <apex:sectionheader title="Template Migration Process" subtitle="Import SR Template"/>
+    <style>
+        .loader {
+            position: absolute; 
+            top: 35%;
+            left: 45%; 
+            margin-left: -60px; 
+            filter: Alpha(Opacity =70);  
+            opacity: 0.70;
+            -moz-opacity: 0.70;
+         }
+         /* This is for the full screen DIV */
+         .popupBackground {
+             /* Background color */
+             background-color:black;
+             opacity: 0.20;
+             filter: alpha(opacity = 20);
+          
+             /* Dimensions */
+             width: 100%;
+             height: 100%;
+             top: 0;
+             left: 0;
+             z-index: 998;
+             position: absolute;
+         }
+         .actionLink:hover{
+            text-decoration:underline !important;
+         }
+         .actionLink {
+            color: #015BA7 !important;
+            font-weight: bold;
+            text-decoration: none;
+            /*vertical-align:top;*/
+         }
+         
+         /* This is for the message DIV */
+         .PopupPanel {
+             /* Background color */
+             /*border: solid 2px #00205B;
+             background-color: white;
+            */
+             /* Dimensions */
+             left: 50%;
+             width: 100px;
+             margin-left: -100px;
+             border-radius: 15px
+             top: 20%;
+             height: 100px;
+             margin-top: 60px;
+             z-index: 999;
+             position: fixed;
+         }
+    </style>
+    <apex:actionStatus id="pleasewait" stopText="">
+        <apex:facet name="start">
+            <div>
+                <div class="popupBackground"></div>
+                <div class="PopupPanel">
+                    <img src="{!$Resource.LoadingImage}"/>
+                </div>
+            </div>
+        </apex:facet>
+    </apex:actionStatus>
+    <apex:form id="importform">
+        <apex:actionfunction name="FetchToken" action="{!FetchAccesToken}" rerender="MainPB,ResponsePnl" status="pleasewait"/>
+        <apex:pageblock id="MainPB" title="Import Process">
+            <apex:pageblocksection columns="1" id="pbs">
+                <apex:pageblocksectionItem id="TypeSel">
+                    <apex:outputpanel id="btnpnl" layout="block">
+                        <apex:outputlabel value="Select Source Connection" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;
+                        <apex:selectlist value="{!selSandBox}" size="1" multiselect="false" onchange="FetchToken();" style="margin-left:3px;">
+                                <apex:selectoptions value="{!lstSelectOption}"/>
+                        </apex:selectlist>
+                    </apex:outputpanel>
+                </apex:pageblocksectionItem>
+                <apex:pageblocksectionItem id="pbsitem">
+                    <apex:outputpanel id="btnpnl" layout="block">
+                        <apex:outputlabel value="SR RecordType API Name" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;
+                        <apex:inputText value="{!strTemplateName}" style="width:400px;vertical-align:middle;margin-left:5px;"/>&nbsp;
+                        <apex:commandbutton value="Fetch Process" action="{!ImportProcess}" onclick="disableButtons();" oncomplete="enableButtons();" rerender="ResponsePnl" status="pleasewait" id="fetchbtn"/>
+                    </apex:outputpanel>
+                </apex:pageblocksectionItem> 
+            </apex:pageblocksection>
+        </apex:pageblock>
+        <apex:outputpanel layout="block" id="ResponsePnl">
+            <div style="max-width:65%;">
+                <apex:pagemessages id="msg" escape="false"/>
+            </div>
+            <apex:pageblock id="ResponsePB" title="SR Template Details" rendered="{!showPnl}">
+                <apex:pageblockbuttons location="top" id="cnfrmpbbtns">
+                    <apex:commandbutton value="Confirm to Import" action="{!ConfirmSave}" onclick="disableButtons();" oncomplete="enableButtons();" status="pleasewait" rerender="ResponsePnl" id="cnfrmbtn"/>
+                </apex:pageblockbuttons>
+                <apex:pageblocksection >
+                    <apex:outputtext value="{!objProcess.SRtemplate.Name}"/>
+                    <apex:outputtext value="{!objProcess.SRtemplate.HexaBPM__SR_RecordType_API_Name__c}"/>
+                    <apex:outputtext value="{!objProcess.SRtemplate.HexaBPM__Menu__c}"/>
+                </apex:pageblocksection>
+            </apex:pageblock>
+            <apex:pageblock title="SR Steps" rendered="{!showPnl}">
+                <apex:pageblocktable value="{!objProcess.lstSRSteps}" var="stp">
+                    <apex:column value="{!stp.Name}"/>
+                    <apex:column value="{!stp.HexaBPM__Step_No__c}"/>
+                    <apex:column value="{!stp.HexaBPM__Sys_Create_Condition__c}"/>
+                    <apex:column value="{!stp.HexaBPM__Sys_Default_Actions__c}"/>
+                    <apex:column value="{!stp.HexaBPM__Sys_Custom_Conditions_Actions__c}"/>
+                </apex:pageblocktable>
+            </apex:pageblock>
+            <apex:pageblock title="SR Template Price Line Items" rendered="{!showPnl}">
+                <apex:pageblocktable value="{!objProcess.lstSRTemplateItems}" var="itm">
+                    <apex:column value="{!itm.Name}"/>
+                    <apex:column value="{!itm.HexaBPM__On_Submit__c}"/>
+                    <apex:column headervalue="Consumed at">
+                        <apex:outputtext value="{!itm.HexaBPM__Consumed_at__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Evaluated at">
+                        <apex:outputtext value="{!itm.HexaBPM__Evaluated_at__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Product">
+                        <apex:outputtext value="{!itm.HexaBPM__Product__c}"/>
+                    </apex:column>
+                </apex:pageblocktable>
+            </apex:pageblock>
+            <apex:pageblock title="SR Template Docs" rendered="{!showPnl}">
+                <apex:pageblocktable value="{!objProcess.lstSRTemplDocs}" var="doc">
+                    <apex:column value="{!doc.Name}"/>
+                    <apex:column headervalue="Document Master">
+                        <apex:outputtext value="{!doc.HexaBPM__Document_Master__c}"/>
+                    </apex:column>
+                    <apex:column value="{!doc.HexaBPM__On_Submit__c}"/>
+                    <apex:column value="{!doc.HexaBPM__Generate_Document__c}"/>
+                    <apex:column headervalue="Evaluated at">
+                        <apex:outputtext value="{!doc.HexaBPM__Evaluated_at__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Courier Collected at">
+                        <apex:outputtext value="{!doc.HexaBPM__Courier_collected_at__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Courier Delivered at">
+                        <apex:outputtext value="{!doc.HexaBPM__Courier_delivered_at__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Conditions">
+                        <apex:outputtext value="{!doc.HexaBPM__Conditions__c}"/>
+                    </apex:column>
+                </apex:pageblocktable>
+            </apex:pageblock>
+            <apex:pageblock rendered="{!showPnl}" title="Business Rules">
+                <apex:pageblocktable value="{!objProcess.lstBR}" var="br">
+                    <apex:column headervalue="Step Number">
+                        <apex:outputtext value="{!br.HexaBPM__SR_Steps__r.HexaBPM__Step_No__c}"/>
+                    </apex:column>
+                    <apex:column value="{!br.Name}"/>
+                </apex:pageblocktable>
+            </apex:pageblock>
+        </apex:outputpanel>
+    </apex:form>
+    <script>
+        function disableButtons(){
+            if(document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn')!=null){
+                document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn').className='btnDisabled';
+                document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn').value='Processing...';
+            }
+            if(document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn')!=null){
+                document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn').className='btnDisabled';
+                document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn').value='Processing...';
+            }
+        }
+        function enableButtons(){
+            if(document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn')!=null){
+                document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn').className='btn';
+                document.getElementById('ImportProcessPg:importform:MainPB:pbs:pbsitem:fetchbtn').value='Fetch Process';
+            }
+            if(document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn')!=null){
+                document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn').className='btn';
+                document.getElementById('ImportProcessPg:importform:ResponsePB:cnfrmpbbtns:cnfrmbtn').value='Confirm to Import';
+            }
+        }
+    </script>
+</apex:page>

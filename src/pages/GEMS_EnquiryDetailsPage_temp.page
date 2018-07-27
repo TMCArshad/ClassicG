@@ -1,0 +1,986 @@
+<!--
+ - Created by bilalnazir on 3/14/17.
+ -->
+
+
+<apex:page id="GEMS_EnquiryDetailsPage" controller="GEMS_EnquiryDetailsCntlr" sidebar="false" showheader="false" cache="false"
+           tabStyle="Account" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0">
+    <apex:composition template="GEMS_PageTemplate">
+        <apex:define name="header">
+            <title>Short Form - Step 1 : Enquiry Details</title>
+
+            <apex:variable var="currentPage" value="enquiry"/>
+
+            <style>
+                .sub-panel-section {
+                <!-- border-bottom: 1 px solid #ddd;
+                --> margin-bottom: 25px !important;
+                }
+
+                .sub-panel-section .panel-body {
+                    padding-bottom: 0 !important;
+                }
+
+                .commandProceedBtn {
+                    margin-left: 100px;
+                    display: inline-block;
+                    float: right;
+                    background-color: #041e42;
+                }
+
+                .commandProceedBtn input.btn {
+                    min-width: 150px;
+                    border-right: 0 !important;
+                }
+
+                .commandProceedBtn:after {
+                    content: "\f105";
+                    color: #fff;
+                    padding-right: 10px;
+                    padding-left: 35px;
+                    font-size: 30px;
+                    vertical-align: middle;
+                    display: inline-block;
+                    font: normal normal normal 30px/1 FontAwesome;
+                    text-rendering: auto;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                }
+
+                div.help-block.with-errors {
+                    display: none;
+                }
+
+                .btn {
+                    min-width: 180px;
+                }
+
+                #captcha-container {
+                    margin-bottom: 20px;
+                }
+
+                .line-break {
+                    border-bottom: 1px solid #ddd;
+                    width: 100%;
+                    height: 1px;
+                    display: block;
+                }
+            </style>
+
+
+        </apex:define>
+        <apex:define name="body">
+
+            <div class="profile">
+                <c:GEMS_CSS />
+
+
+                <div class="row page-info" style="margin-bottom: 20px;">
+                    <div class="col-lg-12 col-md-12">
+                        <!--<h2>Family Details</h2>-->
+                        <!--<p>-->
+                        <!--Tell us about your family, please note that all required fields must be completed to proceed.-->
+                        <!--</p>-->
+                        <div style="margin: 20px 0 10px 0">
+                            <b>Tip:</b>
+                            <ul class="list-inline">
+                                <li>Please add all applicants on this page before proceeding.</li>
+                                <!--<li>Adding additional parent and guardian details is optional, but will give us a complete-->
+                                <!--picture of your family.-->
+                                <!--</li>-->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <section class="parent-details">
+                        <div class="col-lg-12">
+
+                            <apex:outputPanel id="exceptionErrors" rendered="{!showErrorMsg}" layout="block">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <apex:outputPanel layout="block" styleClass="alert alert-danger"
+                                                          html-role="alert">
+                                                {!ErrorMsg}
+                                        </apex:outputPanel>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+
+                            <apex:form rendered="{!!showErrorMsg}" id="GEMS_EnquiryDetails_Form" html-data-toggle="validator" html-role="form">
+                                <apex:pagemessages id="errormsg"  escape="false"/>
+                                <apex:outputPanel id="scrollTop">
+                                    <script>if('{!validationError}'=='true' && "parentIFrame" in window ){window.parentIFrame.scrollTo(0,0);}</script>
+                                </apex:outputPanel>
+                                <apex:outputPanel id="EnquiryDetailsPanel" layout="block" style="overflow:hidden;">
+
+                                    <apex:outputPanel id="GEMS_EnquiryDetails">
+
+                                        <!-- Parent Details Section -->
+                                        <apex:outputPanel id="parentDetailsPBS">
+                                            <div class="panel panel-default">
+                                                <div class="panel-heading">
+                                                    <h3 class="panel-title pull-left">Parent Details</h3>
+                                                <span class="pull-right">
+                                                    <abbr class="sf-required" title="required">*</abbr> = Required Information
+                                                </span>
+                                                </div>
+                                                <div class="panel-body" style="padding: 15px 0 0;">
+                                                    <div class="row">
+                                                        <div class="col-lg-12 col-md-12">
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                <div class="form-group">
+                                                                    <apex:outputLabel for="Title">Title<abbr
+                                                                            class="sf-required" title="required">*</abbr>
+                                                                    </apex:outputLabel>
+                                                                    <apex:inputField html-sf-required_validation="required"
+                                                                                     styleClass="form-control requiredInput"
+                                                                                     id="Title"
+                                                                                     value="{!primaryContactLead.Parent_Title__c}"
+                                                                                     required="false"/>
+                                                                    <div class="help-block with-errors"></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                <div class="form-group">
+                                                                    <apex:outputLabel for="relationToApplicant">Relation to
+                                                                        Applicant<abbr class="sf-required" title="required">*</abbr>
+                                                                    </apex:outputLabel>
+                                                                    <apex:inputField styleClass="form-control requiredInput"
+                                                                                     id="relationToApplicant"
+                                                                                     value="{!primaryContactLead.Relation_to_student__c}"
+                                                                                     required="false"/>
+                                                                    <div class="help-block with-errors"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-lg-12 col-md-12">
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                <div class="form-group">
+                                                                    <apex:outputLabel for="fisrtName">First Name<abbr
+                                                                            class="sf-required" title="required">*</abbr>
+                                                                    </apex:outputLabel>
+                                                                    <apex:inputField styleClass="form-control requiredInput"
+                                                                                     id="firstName"
+                                                                                     value="{!primaryContactLead.Parent_First_Name__c}"
+                                                                                     required="false"/>
+                                                                    <div class="help-block with-errors"></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                <div class="form-group">
+                                                                    <apex:outputLabel for="lastName">Last Name<abbr
+                                                                            class="sf-required" title="required">*</abbr>
+                                                                    </apex:outputLabel>
+                                                                    <apex:inputField styleClass="form-control requiredInput"
+                                                                                     id="lastName"
+                                                                                     value="{!primaryContactLead.Parent_Last_Name__c}"
+                                                                                     required="false"/>
+                                                                    <div class="help-block with-errors"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-lg-12 col-md-12">
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                <!--<div class="form-group">-->
+                                                                <!--<apex:outputLabel for="relationToApplicant">Relation to-->
+                                                                <!--Applicant<abbr class="sf-required" title="required">*</abbr>-->
+                                                                <!--</apex:outputLabel>-->
+                                                                <!--<apex:inputField styleClass="form-control requiredInput"-->
+                                                                <!--id="relationToApplicant"-->
+                                                                <!--value="{!primaryContactLead.Relation_to_student__c}"-->
+                                                                <!--required="false"/>-->
+                                                                <!--<div class="help-block with-errors"></div>-->
+                                                                <!--</div>-->
+                                                                <div class="form-group">
+                                                                    <apex:outputLabel for="email">Email<abbr
+                                                                            class="sf-required" title="required">*</abbr>
+                                                                    </apex:outputLabel>
+                                                                    <apex:inputField type="email"
+                                                                                     styleClass="form-control requiredInput"
+                                                                                     id="email"
+                                                                                     value="{!primaryContactLead.Email}"
+                                                                                     html-autocomplete="off"
+                                                                                     required="false"/>
+                                                                    <div class="help-block with-errors"></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                <div class="form-group">
+                                                                    <apex:outputLabel for="mobile">Mobile<abbr
+                                                                            class="sf-required" title="required">*</abbr>
+                                                                    </apex:outputLabel>
+                                                                    <apex:inputField styleClass="form-control requiredInput phone"
+                                                                                     id="mobile" value="{!primaryContactLead.mobilePhone}"
+                                                                                     html-data-phone="" required="false"/>
+                                                                    <!--html-pattern="[+971][0-9]{10}"-->
+                                                                    <div class="help-block with-errors"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-lg-12 col-md-12">
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                <div class="form-group">
+                                                                    <apex:outputLabel for="company">Company<abbr
+                                                                            class="sf-required" title="required">*</abbr>
+                                                                    </apex:outputLabel>
+                                                                    <apex:inputField styleClass="form-control requiredInput"
+                                                                                     id="company"
+                                                                                     html-data-company_other="other"
+                                                                                     value="{!primaryContactLead.Parent_Company__c}"
+                                                                                     required="false">
+                                                                        <!-- <apex:actionSupport event="onchange" reRender="parentDetailsPBS" status="pleasewait"/> -->
+                                                                    </apex:inputField>
+
+                                                                    <div class="help-block with-errors"></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                <div class="form-group">
+                                                                    <apex:outputLabel styleClass="highlight-text"
+                                                                                      for="otherCompany">If you choose
+                                                                        other, please specify the company
+                                                                    </apex:outputLabel>
+                                                                    <apex:inputText styleClass="form-control"
+                                                                                    id="otherCompany"
+                                                                                    html-data-error="Please specify the other company."
+                                                                                    value="{!primaryContactLead.Parent_Other_Company__c}"/>
+                                                                    <!-- disabled="{!primaryContactLead.Parent_Company__c != '151'}" -->
+                                                                    <div class="help-block with-errors"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                                <apex:outputPanel id="siblingDetails" styleClass="row"  layout="block">
+                                                    <div class="row">
+                                                        <div class="col-lg-12 col-md-12">
+                                                            <div class="form-group checkbox">
+                                                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                    <apex:outputLabel for="hasSiblingStudyingInGEMS">Does the
+                                                                        applicant currently have one or more sibling studying in
+                                                                        GEMS school?
+                                                                    </apex:outputLabel>
+                                                                </div>
+
+                                                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                    <apex:inputCheckbox styleClass="form-control"
+                                                                                        onClick="onSiblingBeforeRender(this);"
+                                                                                        id="hasSiblingStudyingInGEMS"
+                                                                                        value="{!hasSibling}">
+                                                                        <apex:actionSupport event="onchange"
+                                                                                            action="{!resetSiblingDetails}"
+                                                                                            rerender="siblingDetails,errormsg"
+                                                                                            status="pleasewait"
+                                                                                            onComplete="initDatePicker();onSiblingAfterRender();re_init_form_validation();"/>
+                                                                    </apex:inputCheckbox>
+                                                                    <apex:outputLabel for="hasSiblingStudyingInGEMS">
+                                                                        <span class="icon-checkbox-selected"><span class="path1"></span><span class="path2"></span></span>
+                                                                        <span class="icon-checkbox-unselected"></span>
+                                                                    </apex:outputLabel>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <apex:outputPanel id="hasMoreSiblingsPanel"
+                                                                      html-data-val="{!hasSibling}">
+                                                        <apex:outputPanel id="siblingInformation"
+                                                                          rendered="{!hasSibling}">
+
+                                                            <div class="row" style="margin-top: 20px;">
+                                                                <div class="col-lg-12 col-md-12"
+                                                                     style="overflow:hidden;">
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >Sibling Full Name</apex:outputLabel>
+                                                                            <apex:inputText id="siblingName"
+                                                                                            styleClass="form-control"
+                                                                                            required="false"
+                                                                                            value="{!siblingInfo.siblingName}"/>
+                                                                            <div class="help-block with-errors"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group ">
+                                                                            <apex:outputLabel >Sibling Fee ID</apex:outputLabel>
+                                                                            <apex:inputText id="siblingFeeId"
+                                                                                            styleClass="form-control"
+                                                                                            required="false"
+                                                                                            value="{!siblingInfo.siblingFeeID}"/>
+                                                                            <div class="help-block with-errors"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-12 col-md-12"
+                                                                     style="overflow:hidden;">
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >Sibling Date of
+                                                                                Birth
+                                                                            </apex:outputLabel>
+                                                                            <apex:outputPanel styleClass="dateInput">
+                                                                                <!--<apex:outputField id="siblingDOB" styleClass="form-control requiredInput" value="{!leadObj.Sibling_Date_of_Birth__c}" />-->
+                                                                                <apex:inputField id="siblingDOB" html-autocomplete="false"
+                                                                                                 styleClass="form-control"
+                                                                                                 value="{!primaryContactLead.Sibling_Date_of_Birth__c}" required="false"/>
+                                                                                <!--<apex:inputText styleClass="form-control requiredInput" html-data-date_of_birth="validate" value="{!siblingInfo.siblingDOB}" />-->
+
+                                                                                <div class="help-block with-errors"></div>
+                                                                            </apex:outputPanel>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >Sibling School</apex:outputLabel>
+                                                                            <apex:outputPanel styleClass="dateInput">
+                                                                                <apex:selectList id="siblingSchool"
+                                                                                                 value="{!siblingInfo.siblingSchool}"
+                                                                                                 styleClass="form-control"
+                                                                                                 multiSelect="false"
+                                                                                                 size="1">
+                                                                                    <apex:selectOptions value="{!siblingSchools}"/>
+                                                                                </apex:selectList>
+                                                                                <div class="help-block with-errors"></div>
+                                                                            </apex:outputPanel>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                </apex:outputPanel>
+                                            </div>
+                                        </apex:outputPanel>
+
+                                        <!--<apex:pagemessages id="errormsg" />-->
+                                        <apex:outputPanel id="applicantDetailsPanel"
+                                                          html-data-totalapplicants="{!Lead_list.size}"
+                                                          styleClass="panel panel-default">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title pull-left">Child Details</h3>
+                                            <span class="pull-right">
+                                                <abbr class="sf-required" title="required">*</abbr> = Required Information
+                                            </span>
+                                            </div>
+                                            <div class="panel-body" style="padding: 15px 0 0;">
+                                                <!-- Siblings - Add child-->
+                                                <apex:outputPanel styleClass="row" rendered="{!!leadEditFlag}"
+                                                                  layout="block" style="margin: 0;">
+                                                    <div class="col-lg-12 col-md-12" style="margin-bottom: 10px;padding: 0">
+                                                        <!--<h5>-->
+                                                        <!--Would you like to add another child?-->
+                                                        <!--</h5>-->
+                                                        <!--<apex:commandButton styleClass="btn primary-command" value="Add Child" action="{!addLead}" disabled="{!leadEditFlag}" status="pleasewait" reRender="EnquiryDetailsPanel" onComplete="initDatePicker(); apply_form_validation();" />-->
+                                                    </div>
+                                                </apex:outputPanel>
+
+                                                <!-- Sibling Information table -->
+                                                <apex:outputPanel styleClass="siblings-list"
+                                                                  rendered="{!Lead_list.size > 0}">
+                                                    <div class="table-responsive">
+                                                        <table class="table grey-headed-bg table-bordered">
+                                                            <thead>
+                                                            <tr>
+                                                                <th class="text-center" width="5%"
+                                                                    style="min-width: 50px;"></th>
+                                                                <th class="text-left" width="30%">Student Name</th>
+                                                                <th class="text-center" width="15">Gender</th>
+                                                                <th class="text-center" width="20%">Academic Year</th>
+                                                                <th class="text-center" width="20%">Date of Birth</th>
+                                                                <th class="text-center" width="10%">Grade</th>
+                                                            </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            <apex:variable value="{!1}" var="rowsCounter"/>
+                                                            <apex:repeat value="{!Lead_list}" var="sibling">
+                                                                <tr>
+                                                                    <td class="text-center">{!rowsCounter}</td>
+                                                                    <td class="text-left">{!sibling.Name}</td>
+                                                                    <td class="text-center">{!sibling.Gender__c}</td>
+                                                                    <td class="text-center">{!sibling.Academic_Year_Display__c}</td>
+                                                                    <td class="text-center">
+                                                                        <apex:outputText value="{0, date, MM'/'dd'/'yyyy}">
+                                                                            <apex:param value="{!sibling.Date_of_Birth__c}"/>
+                                                                        </apex:outputText>
+                                                                    </td>
+                                                                    <td class="text-center">{!sibling.Grade_Display__c}</td>
+                                                                </tr>
+                                                                <apex:variable value="{!rowsCounter + 1}"
+                                                                               var="rowsCounter"/>
+                                                            </apex:repeat>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </apex:outputPanel>
+                                                <!-- Sibling Information table -->
+
+                                                <!-- Add Child -->
+                                                <apex:outputPanel id="NewSiblingFormPanel">
+                                                    <apex:outputPanel id="newLeadPBS" rendered="{!leadEditflag}"
+                                                                      layout="block" styleClass="sub-panel-section">
+                                                        <!--<div class="panel-heading">-->
+                                                        <!--<h3 class="panel-title">Applicant Details</h3>-->
+                                                        <!--</div>-->
+                                                        <div class="panel-body" style="padding: 0;">
+
+                                                            <div class="row">
+                                                                <div class="col-lg-12 col-md-12">
+
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >School Name</apex:outputLabel>
+                                                                            <apex:inputText disabled="true" styleClass="form-control disabled"
+                                                                                            value="{!School.Name}"/>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-lg-12 col-md-12">
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >First Name<abbr
+                                                                                    class="sf-required"
+                                                                                    title="required">*</abbr>
+                                                                            </apex:outputLabel>
+                                                                            <apex:inputField styleClass="form-control requiredInput"
+                                                                                             value="{!leadObj.FirstName}"/>
+                                                                            <div class="help-block with-errors"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >Last Name<abbr
+                                                                                    class="sf-required"
+                                                                                    title="required">*</abbr>
+                                                                            </apex:outputLabel>
+                                                                            <apex:inputField styleClass="form-control requiredInput"
+                                                                                             value="{!leadObj.LastName}"
+                                                                                             required="false"/>
+                                                                            <div class="help-block with-errors"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-lg-12 col-md-12">
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >Gender<abbr
+                                                                                    class="sf-required"
+                                                                                    title="required">*</abbr>
+                                                                            </apex:outputLabel>
+                                                                            <!--  <apex:inputField styleClass="form-control requiredInput" value="{!leadObj.Gender__c}" /> -->
+                                                                            <apex:selectList styleClass="form-control requiredInput"
+                                                                                             id="gendersForSchool" required="false"
+                                                                                             value="{!leadObj.Gender__c}"
+                                                                                             multiselect="false" label="" size="1">
+                                                                                <apex:selectOptions value="{!genderList}"/>
+                                                                            </apex:selectList>
+                                                                            <div class="help-block with-errors"></div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >Date of Birth<abbr
+                                                                                    class="sf-required"
+                                                                                    title="required">*</abbr>
+                                                                            </apex:outputLabel>
+                                                                            <apex:inputField id="dateOfBirth" html-autocomplete="off" styleClass="form-control requiredInput dateofbirth"
+                                                                                             html-data-date_of_birth="validate"
+                                                                                             value="{!leadObj.Date_of_Birth__c}"/>
+                                                                            <div class="help-block with-errors"></div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-lg-12 col-md-12">
+
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <!--<div class="form-group">-->
+                                                                        <!--<apex:outputLabel >School Name</apex:outputLabel>-->
+                                                                        <!--<apex:outputText styleClass="form-control"-->
+                                                                        <!--value="{!School.Name}"/>-->
+                                                                        <!--</div>-->
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-lg-12 col-md-12">
+
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >Academic Year<abbr
+                                                                                    class="sf-required"
+                                                                                    title="required">*</abbr>
+                                                                            </apex:outputLabel>
+                                                                            <!--<apex:inputField styleClass="form-control" value="{!leadObj.Academic_Year__c}" />-->
+                                                                            <apex:selectList styleClass="form-control requiredInput"
+                                                                                             id="academicYear" required="false"
+                                                                                             value="{!leadObj.Academic_Year__c}"
+                                                                                             multiselect="false" size="1">
+                                                                                <apex:selectOptions value="{!academicYearList}"/>
+                                                                                <apex:actionSupport event="onchange"
+                                                                                                    reRender="gradesForSchool,curriculumStreamPanel,errormsg"
+                                                                                                    status="pleasewait"
+                                                                                                    action="{!getCurriculumsForSchool}"/>
+                                                                            </apex:selectList>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >{!IF(school.TeachesBritishCurriculum__c, 'Year', 'Grade')}<abbr
+                                                                                    class="sf-required"
+                                                                                    title="required">*</abbr>
+                                                                            </apex:outputLabel>
+
+                                                                            <apex:selectList styleClass="form-control requiredInput"
+                                                                                             id="gradesForSchool" required="false"
+                                                                                             value="{!leadObj.GradeLookup__c}"
+                                                                                             multiselect="false" label="" size="1">
+                                                                                <apex:selectOptions value="{!gradeList}"/>
+                                                                                <apex:actionSupport event="onchange"
+                                                                                                    reRender="curriculumStreamPanel,errormsg"
+                                                                                                    status="pleasewait"
+                                                                                                    action="{!getStreamsforSchool}"/>
+                                                                            </apex:selectList>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-lg-12 col-md-12">
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel >Current School Name<abbr
+                                                                                    class="sf-required"
+                                                                                    title="required">*</abbr>
+                                                                            </apex:outputLabel>
+                                                                            <apex:selectList styleClass="form-control requiredInput"
+                                                                                             id="currentSchool" required="false"
+                                                                                             value="{!leadObj.Previous_School__c}"
+                                                                                             html-data-current_school_other="other"
+                                                                                             multiselect="false" size="1">
+                                                                                <apex:selectOptions value="{!currentSchools}"/>
+                                                                            </apex:selectList>
+
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                        <div class="form-group">
+                                                                            <apex:outputLabel styleClass="highlight-text"
+                                                                                              for="otherCurrentSchool">If
+                                                                                you choose other, please specify the current
+                                                                                school name.
+                                                                            </apex:outputLabel>
+                                                                            <apex:inputText styleClass="form-control"
+                                                                                            id="otherCurrentSchool"
+                                                                                            html-data-error="Please specify previous school name."
+                                                                                            value="{!leadObj.Other_Previous_School__c}"/>
+                                                                            <div class="help-block with-errors"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- {!curriculumList} - {!streamList} -->
+                                                            <apex:outputPanel id="curriculumStreamPanel" layout="none">
+                                                                <div class="row">
+                                                                    <div class="col-lg-12 col-md-12">
+                                                                        <apex:outputPanel id="curriculumPanelContainer"
+                                                                                          rendered="{!curriculumList.size > 1}"
+                                                                                          layout="block"
+                                                                                          styleClass="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                            <apex:outputPanel id="curriculumPanel"
+                                                                                              styleClass="form-group">
+                                                                                <apex:outputLabel id="CurriculumLabel">
+                                                                                    Curriculum
+                                                                                </apex:outputLabel>
+                                                                                <apex:selectList styleClass="form-control"
+                                                                                                 id="curriculumsForSchool"
+                                                                                                 required="false"
+                                                                                                 value="{!leadObj.Curriculum__c}"
+                                                                                                 multiselect="false"
+                                                                                                 label="" size="1">
+                                                                                    <apex:selectOptions value="{!curriculumList}"/>
+                                                                                    <apex:actionSupport event="onchange"
+                                                                                                        reRender="gradesForSchool,errormsg"
+                                                                                                        status="pleasewait"
+                                                                                                        action="{!getGradesforSchool}"/>
+                                                                                </apex:selectList>
+                                                                            </apex:outputPanel>
+                                                                        </apex:outputPanel>
+                                                                        <apex:outputPanel id="streamPanelContainer"
+                                                                                          rendered="{!IF(streamList!=null && streamList.size>1,true,false)}"
+                                                                                          layout="block"
+                                                                                          styleClass="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                                            <apex:outputPanel id="streamPanel"
+                                                                                              layout="block"
+                                                                                              styleClass="form-group">
+                                                                                <apex:outputLabel id="streamLabel">Stream
+                                                                                </apex:outputLabel>
+                                                                                <apex:selectList styleClass="form-control"
+                                                                                                 id="streamsForSchool"
+                                                                                                 required="false"
+                                                                                                 value="{!leadObj.Stream__c}"
+                                                                                                 multiselect="false"
+                                                                                                 label="" size="1">
+                                                                                    <apex:selectOptions value="{!streamList}"/>
+                                                                                </apex:selectList>
+                                                                            </apex:outputPanel>
+                                                                        </apex:outputPanel>
+                                                                    </div>
+                                                                </div>
+                                                            </apex:outputPanel>
+
+                                                            <div class="row" id="captcha-container">
+                                                                <div class="col-lg-12 col-md-12">
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"></div>
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 text-left">
+
+                                                                        <apex:outputPanel styleClass="form-group" layout="block" style="margin-top: 20px;"
+                                                                                          rendered="{! NOT(isValidCaptcha) && ISNULL(invalidCaptchaErrorMsg)}">
+                                                                            <apex:outputPanel id="gCaptcha" style="float:right">
+                                                                                <input type="hidden" class="hiddenRecaptcha requiredInput" name="hiddenRecaptcha" id="hiddenRecaptcha"/>
+                                                                                <!--<c:GEMS_GoogleCaptcha/>-->
+                                                                                <apex:outputPanel id="captchaWidget" styleClass="g-recaptcha" html-data-callback="recaptchaCallback" html-data-sitekey="6LepEfwSAAAAADUgZe2xPK8Kmmrn4B0RsCz827oo"></apex:outputPanel>
+                                                                            </apex:outputPanel>
+
+                                                                        </apex:outputPanel>
+
+                                                                        <apex:outputPanel id="captchaPanel" layout="block">
+                                                                            <apex:outputText style="color: red" value="{!invalidCaptchaErrorMsg}"
+                                                                                             rendered="{!NOT(isValidCaptcha) && LEN(invalidCaptchaErrorMsg) > 0 }"/>
+                                                                            <script>
+                                                                                if ('{!isValidCaptcha}' == 'true' &&  '{!invalidCaptchaErrorMsg}'.trim() == '')
+                                                                                    $('.g-recaptcha').remove();
+                                                                                else {
+                                                                                    if(typeof grecaptcha != 'undefined'){
+                                                                                        grecaptcha.render(
+                                                                                                '{!$Component.GEMS_EnquiryDetails_Form.captchaWidget}',
+                                                                                                {'sitekey' : '6LepEfwSAAAAADUgZe2xPK8Kmmrn4B0RsCz827oo'}
+                                                                                        );
+                                                                                    }
+                                                                                    //$(document.getElementById('{!$Component.GEMS_EnquiryDetails_Form}')).validator('update');
+                                                                                    scrollTo(document.getElementById('{!$Component.GEMS_EnquiryDetails_Form.captchaWidget}'));
+                                                                                }
+                                                                            </script>
+                                                                        </apex:outputPanel>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-lg-12 col-md-12">
+                                                                    <!--<apex:commandLink styleClass="btn" value="Cancel" style="float:right;" action="{!cancelLead}" immediate="true" status="pleasewait" reRender="applicantDetailsPanel,EnquiryDetailsPanel" rendered="{!leadEditFlag && (Lead_List.Size > 0)}" html-formnovalidate="formnovalidate" />-->
+                                                                    <!--<apex:commandLink styleClass="btn primary-command" value="Add Child" rendered="{!Lead_list.size > 0}" style="float:right; margin-right: 5px;" action="{!saveLead}" reRender="applicantDetailsPanel,errormsg" status="pleasewait" />-->
+
+                                                                    <apex:commandLink styleClass="btn" value="Cancel"
+                                                                                      style="float:right;"
+                                                                                      action="{!cancelLead}"
+                                                                                      reRender="EnquiryDetailsPanel,errormsg"
+                                                                                      rendered="{!leadEditFlag && (Lead_List.Size > 0)}"
+                                                                                      immediate="true" status="pleasewait"
+                                                                                      html-formnovalidate="formnovalidate"
+                                                                                      onComplete="initDatePicker(); init_form_validation();"/>
+
+                                                                    <apex:outputPanel rendered="{!true || Lead_list.size > 0}">
+                                                                        <button type="submit" onclick="validate_and_AddChild(); return false;" class="btn secondary-command" style="float:right; margin-right: {!IF(leadEditFlag && (Lead_List.Size > 0), '5px', '0')}">
+                                                                            Add Sibling
+                                                                        </button>
+
+                                                                        <!--<apex:commandButton styleClass="btn secondary-command"-->
+                                                                        <!--value="Add Child"-->
+                                                                        <!--style="display: none; float:right; margin-right: 5px;"-->
+                                                                        <!--action="{!saveLead}"-->
+                                                                        <!--rendered="{!true || Lead_list.size > 0}"-->
+                                                                        <!--reRender="applicantDetailsPanel,errormsg,captchaPanel" status="pleasewait"/>-->
+                                                                    </apex:outputPanel>
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </apex:outputPanel>
+
+                                                    <div class="row">
+                                                        <div class="col-lg-12 col-md-12">
+                                                            <apex:commandLink styleClass="btn secondary-command pull-right"
+                                                                              style="float:right; margin: 0 0px 10px 0;"
+                                                                              value="Add Sibling"
+                                                                              action="{!addLead}"
+                                                                              rendered="{!!leadEditFlag}"
+                                                                              status="pleasewait"
+                                                                              reRender="EnquiryDetailsPanel, captchaPanel"
+                                                                              onComplete="initDatePicker(); init_form_validation();"/>
+                                                        </div>
+                                                    </div>
+
+                                                </apex:outputPanel>
+
+                                            </div>
+                                        </apex:outputPanel>
+
+                                    </apex:outputPanel>
+
+                                </apex:outputPanel>
+
+                                <!--<span class="line-break"></span>-->
+
+                                <apex:outputPanel style="margin: 20px 0;" styleClass="row" layout="block">
+
+                                    <div class="col-lg-12 col-md-12 text-right" style="padding:0">
+
+                                        <button type="submit" onclick="proceed_to_pay(); return false;"
+                                                class="btn primary-command commandProceedBtn"
+                                                style="padding-right: 0 !important; float:right;">
+                                            Proceed
+                                        </button>
+
+                                    </div>
+                                </apex:outputPanel>
+
+                                <!--<apex:outputPanel styleClass="row" rendered="{!Lead_list.size > 0}" layout="block">-->
+                                <!--<div class="col-lg-12 col-md-12">-->
+                                <!--<apex:commandButton styleClass="btn next-step" html-leadListSize="{!Lead_List.Size}" value="Proceed" style="float:right;" action="{!proceedToPay}" onClick="re_init_form_validation();" status="pleasewait" />-->
+                                <!--</div>-->
+                                <!--</apex:outputPanel>-->
+
+                                <!--<apex:actionFunction name="saveGuardian" action="{!saveParentGuardian}" rendered="EnquiryDetailsPanel,guardianDetailsForm"></apex:actionFunction>-->
+                                <apex:actionFunction id="saveNewChild" name="saveNewChild" action="{!saveLead}" reRender="GEMS_EnquiryDetails_Form"
+                                                     onComplete="initDatePicker(); init_form_validation();scrollTo('{!$Component.applicantDetailsPanel}');" status="pleasewait">
+                                </apex:actionFunction>
+                                <apex:actionFunction name="proceedToPayScreen" action="{!proceedToPay}"
+                                                     reRender="GEMS_EnquiryDetails_Form" status="pleasewait"></apex:actionFunction>
+
+                                <!--<apex:actionFunction name="proceedToPayScreen" action="{!proceedToPay}"-->
+                                <!--reRender="EnquiryDetailsPanel,errormsg,captchaPanel" status="pleasewait"></apex:actionFunction>-->
+
+                                <script>
+
+                                    var fieldValidations = [];
+                                    <apex:repeat value="{!fieldsValidationErrors}" var="invalidField">
+                                    fieldValidations.push(
+                                            {'name': '{!invalidField["field"]}', 'error': '{!invalidField["error"]}'}
+                                    );
+                                    </apex:repeat>
+
+                                    console.log('Invalid Fields==>' + JSON.stringify(fieldValidations));
+                                    for(var errorIndex = 0; errorIndex < fieldValidations.length ; errorIndex ++){
+                                        showFieldError(fieldValidations[errorIndex]);
+                                    }
+
+                                    function showFieldError(error){
+                                        var field_name = error.name,
+                                                error_message = error.error;
+
+                                        $(field_name).parents('.form-group')
+                                                .addClass('has-error')
+                                                .append('<span class="error help-block">'+error_message+'</span>'
+                                                );
+                                    }
+
+                                    if(fieldValidations.length > 0){
+                                        $(fieldValidations[0].name).focus();
+                                    }
+
+
+                                </script>
+                            </apex:form>
+                        </div>
+                    </section>
+                </div>
+                <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>-->
+                <!--<script src="{!URLFOR($Resource.GEMS,'js/validator/validator.js')}"></script>-->
+                <script src='https://www.google.com/recaptcha/api.js'></script>
+                <script src="{!URLFOR($Resource.GEMS,'js/validator/jquery.validate.js')}"></script>
+                <script src="{!URLFOR($Resource.GEMS,'js/validator/additional-methods.js')}"></script>
+
+                <script>
+
+                    function scrollTo(idSelector) {
+                        var errorContainer = document.getElementById('{!$Component.GEMS_EnquiryDetails_Form.errormsg}');
+                        if(errorContainer && $formValidator){
+                            $formValidator.validate();
+                        }
+                        $('html,body').animate({
+                            scrollTop: $(document.getElementById(idSelector)).offset().top
+                        });
+                    }
+                    function recaptchaCallback() {
+                        var $captch_hidden_field = $('#hiddenRecaptcha');
+                        if($captch_hidden_field && $captch_hidden_field.valid() == false){
+                            $captch_hidden_field.val('success');
+                            $captch_hidden_field.parents('.form-group').removeClass('has-error');
+                            $('#hiddenRecaptcha-error').remove();
+                        }
+                    };
+
+                    function proceed_to_pay(){
+                        var $form = $('form[id$="GEMS_EnquiryDetails_Form"]');
+                        if($form.valid()){
+                            proceedToPayScreen();
+                        }else{
+                            $formValidator.focusInvalid();
+                        }
+
+                        return false;
+                    }
+                    function validate_and_AddChild(){
+                        var $form = $('form[id$="GEMS_EnquiryDetails_Form"]');
+                        if($form.valid()){
+                            saveNewChild();
+                        }else{
+                            $formValidator.focusInvalid();
+                        }
+                    }
+
+                    var $formValidator;
+                    $(function(){
+                        init_form_validation();
+                    })
+
+                    function init_form_validation(){
+                        $.validator.addMethod("cRequired", $.validator.methods.required,
+                                "Please fill in this field.");
+                        $.validator.addClassRules("requiredInput", { cRequired: true});
+
+                        jQuery.validator.addMethod("mobile", function(value, element) {
+                            //console.log('Phone value ==>' + $(element).val());
+                            var countryData = $(element).intlTelInput("getSelectedCountryData");
+                            var isValid = countryData.name && $(element).intlTelInput("isValidNumber");
+                            //console.log('IsValid ==>' + isValid);
+                            //console.log('validation Error ==>' + $(element).intlTelInput("getValidationError"));
+                            return isValid;
+                        }, "Please specify the correct phone number.");
+                        $.validator.addClassRules("phone", { mobile: true});
+
+
+                        $.validator.addMethod("dateOfBirth", function(value, element){
+                            /*
+                            console.log('Selected Date' + value);
+                            var dob_tokens = value.split("/");
+                            var today = new Date();
+
+                            var selected_dob = new Date(dob_tokens[2], dob_tokens[1], dob_tokens[0]),
+                                    today_dob = new Date(today.getFullYear(), today.getMonth(), today.getDay());
+
+                            console.log('d1' + today_dob);
+                            console.log('d2' + selected_dob);
+                            return selected_dob <= today_dob;
+                            */
+
+                            var from = value.split("/");
+
+                            var birthdate = new Date(from[2], from[1] - 1, from[0]);
+
+                            var d = new Date();
+                            var today = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+
+                            //if (birthdate.getTime() > today.getTime())
+                            //    return "Please enter valid date of birth.";
+
+                            return birthdate.getTime() <= today.getTime();
+
+                            /*
+                            //3 years older
+                            var ageDifMs = Date.now() - birthdate.getTime();
+                            var ageDate = new Date(ageDifMs); // miliseconds from epoch
+                            //console.log('Age difference' + Math.abs(ageDate.getUTCFullYear() - 1970));
+                            var ageDiff = Math.abs(ageDate.getUTCFullYear() - 1970);
+
+                            if(ageDiff <= 3){
+                                return "Please enter valid date of birth.";
+                            }*/
+
+                        },'Please enter valid date of birth.');
+                        $.validator.addClassRules('dateofbirth', {dateOfBirth: true});
+
+
+
+                        $formValidator = $('form[id$="GEMS_EnquiryDetails_Form"]').validate({
+                            ignore: [],
+                            rules: {
+                                '{!$Component.GEMS_EnquiryDetails_Form.email}' : {
+                                    required: true,
+                                    email: true
+                                },
+                                hiddenRecaptcha: {
+                                    required: function() {
+                                        var $captch_hidden_field = $('#hiddenRecaptcha');
+                                        try {
+                                            if(($captch_hidden_field && $captch_hidden_field.val() == '') && grecaptcha.getResponse() == '') {
+                                                return true;
+                                            } else {
+                                                return false;
+                                            }
+                                        }catch (e){
+
+                                        }
+                                        return false;
+                                    }
+                                },
+                                '{!$Component.GEMS_EnquiryDetails_Form.otherCompany}': {
+                                    required: function(element) {
+                                        return $(document.getElementById('{!$Component.GEMS_EnquiryDetails_Form.company}')).find('option:selected').text() =="Other";
+                                    }
+                                }
+                            },
+                            messages: {
+                                hiddenRecaptcha: 'Please fill in the captcha.'
+                            },
+                            focusInvalid: true,
+                            errorElement: "span",
+                            errorPlacement: function (error, element) {
+                                // Add the `help-block` class to the error element
+                                error.addClass("help-block");
+
+                                if($(element).parents('.form-group').length > 0){
+                                    $(element).parents('.form-group').append(error);
+                                }
+                                else if (element.prop("type") === "checkbox") {
+                                    error.insertAfter(element.parent("label"));
+                                } else {
+                                    error.insertAfter(element);
+                                }
+                            },
+                            highlight: function (element, errorClass, validClass) {
+                                $(element).parents(".form-group").addClass("has-error");
+                            },
+                            unhighlight: function (element, errorClass, validClass) {
+                                $(element).parents(".form-group").removeClass("has-error");
+                            },
+                            submitHandler: function (form) {
+                                if($(form).valid()){
+                                    //alert('Form is valid!')
+                                    //saveNewChild();
+                                }else {
+                                    //alert('Form is invalid!')
+                                    $formValidator.focusInvalid();
+                                }
+                                //form.submit();
+                                return false;
+                            }
+                        });
+                    }
+                </script>
+            </div>
+        </apex:define>
+    </apex:composition>
+</apex:page>

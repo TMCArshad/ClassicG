@@ -1,0 +1,176 @@
+<!--***********************************************************************************************
+* Name               : TicketManagement                                                           *
+* Description        : This page to manage tickets in the system. Has below functionality.        *
+*                       - Displays all the tickets created in the system.                         *
+*                       - Filter for tickets based on user.                                       *
+*                       - Create new tickets in the system.                                       *
+* Created Date       : 09/01/2017                                                                 * 
+* Created By         : NSI                                                                        *
+* Last Modified Date : 09/01/2017                                                                 *
+* Last Modified By   :                                                                            *
+* ----------------------------------------------------------------------------------------------- *
+* VERSION     AUTHOR      DATE              COMMENTS                                              *
+* 1.0         NSI         09/01/2017        Initial Draft                                         *
+*************************************************************************************************-->
+<apex:page docType="html-5.0" controller="TicketManagementController" tabStyle="Issue__c">
+    <style>
+        .popupBackground {
+            /* Background color */
+            background-color: black;
+            opacity: 0.2;
+            /* Generic for Major browsers */
+            -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)"; 
+            /* IE 5-7 */
+            filter: alpha(opacity = 20);
+            /* Netscape */
+            -moz-opacity: 0.6;
+            /* Safari 1.x */
+            -khtml-opacity: 0.6;
+            /* Dimensions */
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1051;
+            position: fixed;
+        }
+        
+        .overlay {
+            /* Background color */
+            background-color: black;
+            opacity: 0.2;
+            /* Generic for Major browsers */
+            -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)"; 
+            /* IE 5-7 */
+            filter: alpha(opacity = 20);
+            /* Netscape */
+            -moz-opacity: 0.6;
+            /* Safari 1.x */
+            -khtml-opacity: 0.6;
+            /* Dimensions */
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1051;
+            position: fixed;
+        }
+  
+        /* This is for the message DIV */
+        .PopupPanel {
+            /* Background color */
+            /* border: solid 2px #00205B;
+               background-color: white; */
+            /* Dimensions */
+            left: 45%;
+            width: 100px; //
+            margin-left: -100px;
+            top: 50%;
+            height: 100px;
+            z-index: 999;
+            position: fixed;
+        }
+    
+        /* This is for the message DIV */
+        .contentDiv {
+            position: absolute;
+            z-index: 100;
+            width: 50%;
+            background-color: white;
+            border: 1px solid #01426A;
+            border-radius: 5px;
+            margin-left: 12%;
+        }
+    </style>
+    <apex:actionstatus id="status">
+        <apex:facet name="start">
+            <div class="waitingSearchDiv" id="el_loading" style="background-color: #000000; height: 100%;opacity:0.65;width:100%; z-index: 102; zIndex: 102;"> 
+                <div class="waitingHolder" style="width: 150px; border: 1px solid grey; padding: 10px; border-radius: 5px; background-color: #fbfbfb;">
+                    <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                    <span class="waitingDescription">Please Wait...</span>
+                </div>
+            </div>
+        </apex:facet> 
+    </apex:actionstatus>
+    <apex:pageMessages id="errorBlock"/>
+    <apex:form >
+        <apex:pageBlock title="Ticket Manager" tabStyle="Issue__c" id="ticketManager">
+            <apex:pageBlockButtons location="top">
+                <a class="btn" href="/{!objectKeyPrefix}/e?nooverride=1&saveURL={!$CurrentPage.URL}&retURL={!$CurrentPage.URL}" style="float:right;text-decoration:none;" target="_blank">Create New Ticket</a>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" id="ticketsList"> 
+                <apex:pageBlockSectionItem rendered="{!showFilter}">
+                <apex:outputPanel >
+                    <apex:outputLabel value="Filter by user " for="searchOption" styleClass="labelCol"/>
+                        <apex:selectList id="assignedTos" value="{!selectedView}" size="1" required="true" onchange="filterTickets();">
+                            <apex:selectOptions value="{!assignedTos}"/>
+                        </apex:selectList>  
+                      
+                    <apex:outputPanel >                 <Span style='padding: 0 20px; font-weight: bold;'>OR</span></apex:outputPanel>
+                    <apex:outputPanel >
+                        <apex:outputLabel value="Filter by status " for="searchOption" styleClass="labelCol"/>
+                        
+                        <apex:selectList id="issue_status" value="{!selectedStatus}" size="1" required="true" onchange="filteredStatusTickets();">
+                            <apex:selectOptions value="{!AllStatus}"/>
+                        </apex:selectList>  
+                    
+                    </apex:outputPanel> 
+                    <!-- <apex:commandButton style="margin-left: 100px;" value="Refresh" action="{!getFilteredStatusTickets}" status="status" reRender="ticketTable" /> -->
+                                
+                </apex:outputPanel>
+
+                </apex:pageBlockSectionItem>
+                <!--
+                <apex:pageBlockSectionItem html-class="or-section"><apex:outputPanel>                 <Span style='padding: 0 20px; font-weight: bold;'>OR</span></apex:outputPanel></apex:pageBlockSectionItem>
+                 <apex:pageBlockSectionItem  rendered="{!showFilter}">
+
+                 
+                    <apex:outputLabel value="Filter by status " for="searchOption" styleClass="labelCol"/>
+                        
+                        <apex:selectList id="issue_status" value="{!selectedStatus}" size="1" required="true" onchange="filteredStatusTickets();">
+                            <apex:selectOptions value="{!AllStatus}"/>
+                        </apex:selectList>  
+
+                </apex:pageBlockSectionItem>
+               -->
+                <!--
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel layout="block" style="text-align: right;">
+                        <apex:outputLink value="javascript:void(0);" 
+                                         style="vertical-align: super; padding: 6px; text-decoration: none;" 
+                                         styleClass="btn" 
+                                         onClick="window.open('/{!objectKeyPrefix}/e?nooverride=1&saveURL=/apex/TicketManagement&retURL=/apex/TicketManagement');">
+                            <img src="/img/icon/ticket24.png" style="vertical-align: bottom;"/>
+                            New ticket
+                        </apex:outputLink> 
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                -->
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection rendered="{!NOT(showTickets)}" columns="1">
+                <apex:outputPanel layout="block" style="font-weight: bold; color:#353535;">
+                    No tickets available at the moment. To create a new ticket, click the "New Ticket" button.   
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" title="Tickets" collapsible="false" id="ticketTable" rendered="{!showTickets}">
+                <apex:pageBlockTable value="{!bugList}" var="thisTicket"> 
+                    <apex:column >
+                        <apex:facet name="header">Ticket Number</apex:facet>
+                        <apex:outputLink value="javascript:void(0);" onclick="window.open('/apex/TicketDetails?tid={!thisTicket.Id}', '_blank')">
+                            {!thisTicket.Name}  
+                        </apex:outputLink>
+                    </apex:column>
+                    <apex:column value="{!thisTicket.Assigned_To__c}" />
+                    <apex:column value="{!thisTicket.Issue_Summary__c}" />
+                    <apex:column value="{!thisTicket.Issue_Type__c}" />
+                    <apex:column value="{!thisTicket.Severity__c}" />
+                    <apex:column value="{!thisTicket.Status__c}" />
+                    <apex:column value="{!thisTicket.Expected_End_Date__c}" />
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>            
+        </apex:pageBlock>
+        <apex:actionFunction action="{!getFilteredTickets}" name="filterTickets" reRender="ticketTable, errorBlock, ticketManager" status="status"/>
+         <apex:actionFunction action="{!getFilteredStatusTickets}" name="filteredStatusTickets" reRender="ticketTable, errorBlock, ticketManager" status="status"/>
+    </apex:form>    
+</apex:page>

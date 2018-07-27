@@ -1,0 +1,198 @@
+<apex:page cache="false" tabstyle="HexaBPM__Service_Request__c" controller="GEMS_LongFormController" id="Declaration"
+           sidebar="false"
+           showHeader="false" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0">
+
+    <apex:composition template="GEMS_LongFormPageTemplate">
+
+        <apex:define name="header">
+            <title>Long Form Step 4 - Declaration</title>
+
+            <style>
+                .rowWrapper .form-group {
+                    margin: 0;
+                }
+            </style>
+        </apex:define>
+
+        <apex:define name="body">
+            <div class="container-fluid">
+                <c:GEMS_CSS />
+                <div>
+                    <div id="NavigDiv">
+                        <c:GEMS_FlowStepTabs id="MenuComp" curPageId="{!strPageId}" rerender="MainPnl"/>
+                    </div>
+
+                    <apex:form id="frm">
+                        <apex:inputhidden id="hdnActionId" value="{!stringActionId}"/>
+                        <apex:actionfunction name="InvokeAction" action="{!DynamicButtonAction}" status="pleasewait"
+                                             rerender="Msg"/>
+                        <apex:actionfunction name="NavigatePage" action="{!goTopage}" status="pleasewait"
+                                             rerender="hdnCurrentPageId,MenuComp,MainPnl">
+                            <apex:param name="NextPageId" value="" assignTo="{!strNavigatePageId}"/>
+                        </apex:actionfunction>
+                        <apex:actionFunction name="selectType" action="{!selectTypeMethod}" rerender="thePB"
+                                             status="pleasewait"/>
+						
+                        <!--<div class="page-title row" style="margin-left: 0; margin-bottom: 15px;">-->
+                            <!--<div class="medium-9 columns title">-->
+                                <!--<h3 style="display: block; font-size: 18px;">{!pageTitle}</h3>-->
+                                <!--<h5 style="display: block; font-size: 14px;">{!pageDescription}</h5>-->
+                            <!--</div>-->
+                        <!--</div>-->
+                        <div class="row page-info" style="margin-bottom: 30px">
+                            <div class="col-lg-12 col-md-12">
+                                <!--<h2>{!pageTitle}</h2>-->
+                                <p>{!pageDescription}</p>
+                            </div>
+                        </div>
+
+                        <apex:pagemessages id="Msg" escape="false"/>
+                        <apex:outputPanel layout="none" rendered="{!disableSR==false}">
+                        <div id="DyncPnl" class="dyncPanel colLayout1 pageBlockSectionWrapper">
+                            <apex:pageBlock id="thePB">
+                                <apex:pageBlockSection columns="2" id="declarationBlock" collapsible="false">
+                                    <apex:facet name="header">
+                                        <h3 class="panel-title pull-left">Declaration</h3>
+                                        <span class="pull-right">
+                                            <abbr class="sf-required" title="required">*</abbr> = Required Information
+                                        </span>
+                                    </apex:facet>
+
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputPanel styleClass="rowWrapper">
+                                            <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                                <apex:outputLabel value="The application is filled by :"></apex:outputLabel>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel styleClass="fieldWrapper">
+                                                <div class="requiredInput">
+                                                    <div class="requiredBlock"></div>
+                                                    <apex:inputField required="true" styleClass="requiredInput" style="width: auto;"
+                                                                     value="{!objSR.The_application_is_filled_by__c}"
+                                                                     onChange="selectType();"/>
+                                                </div>
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem rendered="{!objSR.The_application_is_filled_by__c=='Relocation Agent'}"
+                                            id="agent1">
+                                        <apex:outputPanel styleClass="rowWrapper">
+                                            <apex:outputPanel styleClass="labelWrapper requiredInput">
+                                                <apex:outputLabel title="required"
+                                                                  value="Agent Name :"></apex:outputLabel>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel styleClass="fieldWrapper">
+                                                <div class="requiredInput">
+                                                    <div class="requiredBlock"></div>
+                                                    <apex:inputField value="{!objSR.Agent_Name__c}"/>
+                                                </div>
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+
+                                    <apex:pageBlockSectionItem rendered="{!objSR.The_application_is_filled_by__c=='Relocation Agent'}"
+                                            id="agent2">
+                                        <apex:outputPanel styleClass="rowWrapper">
+                                            <apex:outputPanel styleClass="labelWrapper requiredInput">
+                                                <apex:outputLabel title="required"
+                                                                  value="Agent Mobile :"></apex:outputLabel>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel styleClass="fieldWrapper">
+                                                <div class="requiredInput">
+                                                    <div class="requiredBlock"></div>
+                                                    <apex:inputField value="{!objSR.Agent_Mobile__c}"/>
+                                                </div>
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+
+                                <apex:pageBlockSection collapsible="false" columns="1">
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputPanel styleClass="rowWrapper">
+                                            <apex:outputPanel styleClass="fieldWrapper">
+                                                <apex:outputText style="font-weight: 500;" escape="false"
+                                                                 value="I declare that the information given above is to the best of my knowledge, true and correct. It may be stored and used in accordance with GEMS registration and selection procedures.<br/><br/>I understand that giving false information will disqualify my application."/>
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputPanel styleClass="rowWrapper">
+                                            <div class="form-group checkbox">
+                                                <apex:inputCheckbox styleClass="form-control" id="promotionPermission"
+                                                                    value="{!objSR.GEMS_has_permission__c}"/>
+                                                <apex:outputLabel for="promotionPermission">
+                                                    <span class="icon-checkbox-selected"><span
+                                                            class="path1"></span><span class="path2"></span></span>
+                                                    <span class="icon-checkbox-unselected"></span>
+                                                    GEMS has permission to include child in publication/promotion/social
+                                                    media photos and videos.
+                                                </apex:outputLabel>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputPanel styleClass="rowWrapper form-group">
+                                            <div class="form-group checkbox">
+                                                <apex:inputCheckbox required="true" styleClass="form-control requiredInput" id="confirmDeclaration"
+                                                                    value="{!objSR.Declaration__c}"/>
+
+                                                <apex:outputLabel for="confirmDeclaration" styleClass="labelWrapper">
+                                                    <span class="icon-checkbox-selected"><span
+                                                            class="path1"></span><span class="path2"></span></span>
+                                                    <span class="icon-checkbox-unselected"></span>
+                                                    Ticking the declaration box (as a substitute for your signature) is
+                                                    to confirm that you agree to the above declaration.
+                                                    <abbr class="sf-required" title="required">*</abbr>
+                                                </apex:outputLabel>
+                                            </div>
+
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:pageBlock>
+
+                            <apex:outputPanel id="recaptch" style="margin-bottom: 40px;" layout="block">
+                                <c:GEMS_GoogleCaptcha />
+                            </apex:outputPanel>
+
+
+                            <apex:dynamicComponent componentValue="{!DyncPgMainPBBottom}"/>
+                        </div>
+                        </apex:outputPanel>
+                        <script>
+                            var hdnMenu = '{!strHiddenPageIds}';
+                            if (hdnMenu != null && hdnMenu != '') {
+                                var hdnsize = hdnMenu.indexOf(",");
+                                if (hdnsize > -1) {
+                                    var hdnPgLst = hdnMenu.split(',');
+                                    for (i = 0; i < hdnPgLst.length; i++) {
+                                        if (document.getElementById(hdnPgLst[i]) != null) {
+                                            document.getElementById(hdnPgLst[i]).style.display = 'none';
+                                        }
+                                    }
+                                } else {
+                                    if (document.getElementById(hdnMenu) != null)
+                                        document.getElementById(hdnMenu).style.display = 'none';
+                                }
+                            }
+                        </script>
+                    </apex:form>
+
+                </div>
+            </div>
+
+            <script>
+                function DoAction(ButtonSectionId, IgnoreReqFlds) {
+                    document.getElementById('{!$Component.frm.hdnActionId}').value = ButtonSectionId;
+                    InvokeAction();
+                }
+                
+                function Navigate_To_Page(NextPG) {
+                    //NavigatePage(NextPG);
+                }
+            </script>
+        </apex:define>
+    </apex:composition>
+</apex:page>

@@ -1,0 +1,160 @@
+<apex:page id="DocumentUploadPage" cache="false" controller="GEMS_uploadDocumentLongForm" sidebar="false"
+           showHeader="false" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0">
+
+    <apex:composition template="GEMS_LongFormPageTemplate">
+        <apex:define name="header">
+            <title>Long Form Step 5 - Document Upload</title>
+            <style>
+		.sidebar-components {
+            /*padding-top:20px;
+            width: 17.5% !important;;*/
+            float:left;
+            /*margin-right: 1.5%;*/
+            background-color: #f6f6f6; 
+            padding-left: 1px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        td.main-row, .sidebar, .dashboard-content{
+        	padding-top: 0px !important;
+            vertical-align: top;
+        }
+        td.main-row {
+            vertical-align: top;
+            width: 230px !important;
+            padding: 0;
+            border: 1px solid #cbcbcb;
+        }
+        body .bPageTitle {padding: 0}
+        .page-title.row h3,.page-title.row h4, 
+        .page-title.row h5{ color: #000;}
+        
+        .dashboard-content {border: none; padding-top:0px; padding-right: 10px;}
+
+        .noSidebarCell > table.row { margin: 0; }  
+        
+        .dyncPanel .bPageBlock .pbHeader .pbTitle{
+            display: none;
+        }
+        .pageTitle {
+            color: #454a50;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 35px;
+            margin-bottom: 13px;
+        }
+        .pageDescription {
+            color: #454a50;
+            line-height: 1.5;
+            margin-bottom: 13px;
+            font-size: 13px;
+        }
+        
+        /*fixing side spacing*/          
+        .noSidebarCell {padding: 0;}
+        .bodyDiv .outerNoSidebar table .sidebarCell {padding-right: 1px;}
+        .bodyDiv .outerNoSidebar table .sidebarCell #NavigDiv {border-left: 1px solid #cbcbcb;}
+        
+        /*html body .bPageBlock.brandSecondaryBrd {border-top-color: #00426A!important;}*/
+        .hd_div {width: 100%;}
+        
+
+        td.pbButton {
+            text-align: left !important;
+        }
+
+        #portalbody #dvDocs #myModal1 {
+        	top: 0 !important;
+            margin-top: 0px !important;
+            overflow: hidden;
+            clear: both;
+            padding: 30px 0 0;
+        }
+        #portalbody #dvDocs .apexp #DocumentUploadPage\:DocUploadComp\:docComponent\:theForm\:docBlock\:popUpPB{
+            padding: 5px 0 0;
+        }
+        #portalbody #dvDocs .apexp .pbBottomButtons {
+            overflow: hidden;
+            clear: both;
+            margin-top: -7px;
+        }
+        #portalbody #dvDocs .apexp .pbBottomButtons table > tbody > tr > td {
+            padding: 0 10px;
+        }
+        #portalbody #dvDocs .hd_div {
+            top: 3px;
+        }
+        #portalbody #dvDocs #pg {
+            margin-top: 0 !important;
+    	}
+	</style>
+        </apex:define>
+        <apex:define name="body">
+            <!--<apex:actionStatus id="pleasewait" stopText="">-->
+                <!--<apex:facet name="start">-->
+                    <!--<div>-->
+                        <!--<div class="popupBackground"></div>-->
+                        <!--<div class="PopupPanel">-->
+                            <!--<img src="{!$Resource.LoadingImage}"/>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</apex:facet>-->
+            <!--</apex:actionStatus>-->
+            <c:GEMS_CSS />
+
+            <div class="container-fluid">
+
+                <div id="NavigDiv">
+                    <apex:outputPanel rendered="{!$CurrentPage.parameters.FlowId != null}" layout="none">
+                        <c:GEMS_FlowStepTabs id="MenuComp" curPageId="{!strPageId}" rerender="MainPnl"/>
+                    </apex:outputPanel>
+                </div>
+
+                <!--<div class="page-title row" style="margin-left: 0; margin-bottom: 30px;">-->
+                    <!--<div class="medium-9 columns title">-->
+                        <!--<h3 style="display: block; font-size: 18px;">{!pageTitle}</h3>-->
+                    <!--</div>-->
+                <!--</div>-->
+                <div class="row page-info" style="margin-bottom: 30px">
+                    <div class="col-lg-12 col-md-12">
+                        <!--<h2>{!pageTitle}</h2>-->
+                        <!--<p>{!pageDescription}</p>-->
+                        <p>
+                            Please note – if documents are not uploaded at this time, they must be sent to the school’s enrolment office as soon as possible.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <apex:pagemessages id="Msg" escape="false"/>
+                </div>
+				<apex:outputPanel layout="none" rendered="{!disableSR==false}">
+                <div id="MainCompDiv">
+                    <c:GEMS_uploadDocumentLongFormVC id="DocUploadComp" ObjectName="HexaBPM__Service_Request__c"/>
+                </div>
+
+                <apex:form id="frm">
+
+                    <apex:inputhidden id="hdnActionId" value="{!strActionId}"/>
+                    <apex:actionfunction name="SaveRecord" action="{!CommitRecord}" status="pleasewait" rerender="Msg"/>
+
+                    <apex:dynamicComponent componentValue="{!DyncPgMainPBBottom}"/>
+                </apex:form>
+                </apex:outputPanel>
+            </div>
+            <script>
+           function DoAction(ButtonSectionId,IgnoreReqFlds){
+                alert('1');
+                document.getElementById('DocumentUploadPage:frm:hdnActionId').value = ButtonSectionId;
+                InvokeAction();
+            }
+            function Navigate_To_Page(NextPG){
+                NavigatePage(NextPG);
+            }
+            function SaveDetails(){
+                SaveRecord();
+            }
+           </script>
+        </apex:define>
+    </apex:composition>
+</apex:page>

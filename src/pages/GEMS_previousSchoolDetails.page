@@ -1,0 +1,367 @@
+<apex:page cache="false" tabstyle="HexaBPM__Service_Request__c" controller="GEMS_LongFormController" id="previousSchool" sidebar="false"
+           showHeader="false" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0">
+    <apex:composition template="GEMS_LongFormPageTemplate">
+        <apex:define name="header">
+            <title>Long Form Step 3 - Other Details</title>
+    <!--<script src="{!URLFOR($Resource.ProcessFlow_resource , 'ProcessFlow/ProcessFlow.js')}"></script>    -->
+    <!--<apex:stylesheet value="{!URLFOR($Resource.ProcessFlow_resource , 'ProcessFlow/ProcessFlow.css')}"/>-->
+
+            <style>
+                #DyncPnl table.detailList > tbody > tr > th,
+                #DyncPnl table.detailList > tbody > tr > td{
+                    width: 50%;
+                }
+                .detailList > tbody > tr > th,
+                .detailList > tbody > tr > td {
+                    border: none !important;
+                }
+                .detailList tr > td:first-child {
+                    padding-left: 0;
+                }
+                .detailList tr > td:last-child {
+                    padding-right: 0;
+                }
+                .labelWrapper {
+                    display: block;
+                }
+
+                div[id$='applicant_information'] table td {
+                    border: 0 !important;
+                }
+                
+            </style>
+        </apex:define>
+
+        <apex:define name="body">
+        <body>
+        <script>
+            function DoAction(ButtonSectionId,IgnoreReqFlds){
+
+
+                if($formValidator != undefined && !($formValidator.valid() && $($formValidator.currentForm).valid())){
+                    $formValidator.focusInvalid();
+                    return;
+                }else{
+                    document.getElementById('previousSchool:GEMS_LongFormPageTemplate:frm:hdnActionId').value = ButtonSectionId;
+                    InvokeAction();
+                }
+            }
+            function Navigate_To_Page(NextPG){
+                NavigatePage(NextPG);
+            }
+        </script>
+        <div class="container-fluid2">
+            <c:GEMS_CSS />
+            <div>
+                <div id="NavigDiv">
+                    <c:GEMS_FlowStepTabs id="MenuComp" curPageId="{!strPageId}" rerender="MainPnl"/>
+                </div>
+                <apex:form id="frm" >
+                    <apex:inputhidden id="hdnActionId" value="{!stringActionId}"/>
+                    <apex:actionfunction name="InvokeAction" action="{!DynamicButtonAction}" status="pleasewait" rerender="Msg"/>
+                    <apex:actionfunction name="NavigatePage" action="{!goTopage}" status="pleasewait" rerender="hdnCurrentPageId,MenuComp,MainPnl">
+                        <apex:param name="NextPageId" value="" assignTo="{!strNavigatePageId}"/>
+                    </apex:actionfunction>
+                    
+                    <apex:actionfunction name="RePrepareFields" action="{!RePrepareSection}" status="pleasewait"
+                                     rerender="previousSchoolComp"/>
+
+                    <div class="row page-info" style="margin-bottom: 30px">
+                        <div class="col-lg-12 col-md-12">
+                            <!--<h2>{!pageTitle}</h2>-->
+                            <p>{!pageDescription}</p>
+                        </div>
+                    </div>
+
+                    <apex:pagemessages id="Msg" escape="false"/>
+					<apex:outputPanel layout="none" rendered="{!disableSR==false}">
+                    <div id="DyncPnl" class="dyncPanel colLayout1 pageBlockSectionWrapper">
+                        <apex:pageBlock id="thePB">
+                            <apex:pageBlockSection columns="2" id="previousSchoolDetails" collapsible="false">
+                                <apex:facet name="header">
+                                    <h3 class="panel-title pull-left">Current /Previous School Details</h3>
+                                    <span class="pull-right">
+                                        <abbr class="sf-required" title="required">*</abbr> = Required Information
+                                    </span>
+                                </apex:facet>
+
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel value="School Name"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+	                                        <apex:selectList styleClass="form-control requiredInput"
+	                                                id="currentSchool" required="false"
+	                                                value="{!objSR.School_Name__c}"
+	                                                html-data-current_school_other="other"
+	                                                multiselect="false" size="1">
+	                                            <apex:selectOptions value="{!currentSchools}"/>
+	                                        </apex:selectList>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSectionItem rendered="{!objSR.School_Name__c=='Other'}">
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel value="If you choose other, please specify the school name."></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+	                                        <apex:inputField styleClass="form-control requiredInput" value="{!objSR.Other_Previous_School__c}" />
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <!--<apex:pageBlockSectionItem >-->
+                                    <!--<apex:outputPanel styleClass="rowWrapper form-group">-->
+                                        <!--<apex:outputPanel styleClass="labelWrapper requiredInputLabel">-->
+                                            <!--<apex:outputLabel title="StudentId" value="Student Id"></apex:outputLabel>-->
+                                        <!--</apex:outputPanel>-->
+                                        <!--<apex:outputPanel styleClass="fieldWrapper">-->
+                                        	<!--<apex:inputField styleClass="form-control requiredInput" value="{!objSR.Student_Id__c}" />-->
+                                        <!--</apex:outputPanel>-->
+                                    <!--</apex:outputPanel>-->
+                                <!--</apex:pageBlockSectionItem>-->
+                                
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="Grade" value="Grade"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                        	<apex:inputField styleClass="form-control requiredInput" value="{!objSR.Grade_Year__c}" />
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="Curriculum" value="Curriculum"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                        	<apex:inputField styleClass="form-control requiredInput" value="{!objSR.Curriculum_Current__c}" />
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="Previous school Country" value="Country"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                        	<apex:inputField styleClass="form-control requiredInput" value="{!objSR.Country_Previous_School__c}" />
+
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+						<apex:outputpanel layout="block" id="previousSchoolComp">
+                        	<apex:dynamicComponent componentValue="{!DyncPgMainPB}"/>
+                        </apex:outputpanel>
+
+                    </div>
+                    </apex:outputPanel>
+                    <script>
+                        var hdnMenu = '{!strHiddenPageIds}';
+                        if(hdnMenu!=null && hdnMenu!=''){
+                            var hdnsize = hdnMenu.indexOf(",");
+                            if(hdnsize>-1){
+                                var hdnPgLst = hdnMenu.split(',');
+                                for(i = 0; i < hdnPgLst.length;i++){
+                                    if(document.getElementById(hdnPgLst[i])!=null){
+                                        document.getElementById(hdnPgLst[i]).style.display = 'none';
+                                    }
+                                }
+                            }else{
+                                if(document.getElementById(hdnMenu)!=null)
+                                    document.getElementById(hdnMenu).style.display = 'none';
+                            }
+                        }
+                        
+                        //re evaluate the condition and re-prepare the sections with new values
+                        function InvokeChangeEvent() {
+                            RePrepareFields();
+                        }
+
+                        var $formValidator;
+                        function init_form_validation(){
+                            $.validator.addMethod("cRequired", $.validator.methods.required,
+                                    "Please fill in this field.");
+                            $.validator.addClassRules("requiredInput", { cRequired: true});
+
+                            jQuery.validator.addMethod("mobile", function(value, element) {
+                                return $(element).intlTelInput("isValidNumber");
+                            }, "Please specify the correct phone number.");
+                            $.validator.addClassRules("phone", { mobile: true});
+
+
+                            //$formValidator = $('form[id$="GEMS_EnquiryDetails_Form"]').validate({
+
+                            $formValidator = $('form[id$="previousSchool:GEMS_LongFormPageTemplate:frm"]').validate({
+                                //debug: true,
+                                ignore: [],
+                                rules: {},
+                                messages: {
+
+                                },
+                                focusInvalid: true,
+                                errorElement: "span",
+                                errorPlacement: function (error, element) {
+                                    // Add the `help-block` class to the error element
+                                    error.addClass("help-block");
+
+                                    if($(element).parents('.form-group').length > 0){
+                                        $(element).parents('.form-group').append(error);
+                                    }
+                                    else if (element.prop("type") === "checkbox") {
+                                        error.insertAfter(element.parent("label"));
+                                    } else {
+                                        error.insertAfter(element);
+                                    }
+                                },
+                                highlight: function (element, errorClass, validClass) {
+                                    $(element).parents(".form-group").addClass("has-error");
+                                },
+                                unhighlight: function (element, errorClass, validClass) {
+                                    $(element).parents(".form-group").removeClass("has-error");
+                                },
+                                submitHandler: function (form) {
+                                    if($(form).valid()){
+                                        //alert('Form is valid!')
+                                        //saveNewChild();
+                                    }else {
+                                        //alert('Form is invalid!')
+                                        $formValidator.focusInvalid();
+                                    }
+                                    //form.submit();
+                                    return false;
+                                }
+                            });
+                        }
+
+                        init_form_validation();
+                        // Health Restriction - Section
+                        $('[id$=":AllergiesNotesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Allergiesc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":DisabilitiesNotesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Disabilitiesc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":SpecialMedicationNotesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":SpecialMedicationc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":PhysicalEducationRestrictionsNotesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":PhysicalEducationRestrictionsc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":Otherinformationrelatedtohealthnotec"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Anyotherinformationrelatedtohealthc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+
+
+                        // Applicant's disciplinary, social, physical or psychological detail - Section
+                        $('[id$=":Learningsupportortherapynotesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Anysortoflearningsupportortherapyc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":SpecialEducationNeedsNotec"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Childhaveanyspecialeducationneedsc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":EnglishSupportNotesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":StudentrequireEnglishsupportc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":IfYeswhichgradec"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Childeverrepeatedfailedagradec"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":Ifyesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Behaviourbeenanycauseforconcernc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+
+
+                        // Gifted and talented - Section
+                        $('[id$=":Specificenrichmentactivitiesnotesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Anyspecificenrichmentactivitiesc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+                        $('[id$=":Musicallyproficientnotesc"]').rules('add', {
+                            required: function(){
+                                if($('[id$=":Isyourchildmusicallyproficientc"]').val() == 'Yes') {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
+
+                        <!--Sfdc.onReady(function(){-->
+                            <!--init_form_validation();-->
+
+                            <!--var rules = [];-->
+
+
+
+
+                        <!--})-->
+                    </script>
+                </apex:form>
+            </div>
+        </div>
+
+        </body>
+    </apex:define>
+    </apex:composition>
+</apex:page>

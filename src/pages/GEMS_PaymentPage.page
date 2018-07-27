@@ -1,0 +1,197 @@
+<apex:page controller="GEMS_PaymentCntlr" cache="false" sidebar="false" showheader="false" id="GEMS_PaymentPage"
+            tabStyle="Account" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0" action="{!init}">
+            
+       <apex:composition template="GEMS_PageTemplate">
+ 
+         <apex:define name="header">
+             <apex:variable var="currentPage" value="payment"/>
+            <title>Short Form - Step 2 : Thank You</title>
+            <style>
+                table > thead > tr > td,
+                table > tbody > tr > td {
+                    <!--border: none !important;-->
+                    vertical-align: middle;
+                }
+                table > tfoot > tr > td{
+                    border-top: 1px solid #ddd;
+                    border-bottom: 1px solid #ddd;
+                }
+                table.table td {
+                    vertical-align: middle !important;
+                }
+                
+            </style>
+        </apex:define>
+        <apex:define name="body">
+            <body class="payment">
+            <c:GEMS_CSS />
+
+            <div class="row page-info">
+                <div class="col-lg-12 col-md-12">
+                    <apex:outputPanel layout="none" rendered="{!AND(enablePayment,NOT(paymentComplete))}">
+                        <p>
+                            To finalise your registration(s), a non-refundable, non-transferable fee of {!school.currency__c}&nbsp;<apex:outputText rendered="{!IF(paymentWrappers[0].SR_PriceItem.HexaBPM__Price__c > 0,true,false)}" style="font-weight: 500" value="{0,number,#,###}"> 
+                            <apex:param value="{!paymentWrappers[0].SR_PriceItem.HexaBPM__Price__c}"/>   
+                            </apex:outputText>
+                            <apex:outputText rendered="{!IF(paymentWrappers[0].SR_PriceItem.HexaBPM__Price__c == 0,true,false)}" style="font-weight: 500"> 
+                           'N/A' 
+                            </apex:outputText>
+
+
+                             is required for each child. Please ensure each child is selected and click "Pay Now" to be forwarded to our payment gateway.
+                        </p>
+                        <p>Once your payment has been completed you will be returned to this page.
+                            Afterwards, please click on "Complete Profile" for each applicant below to upload individual documents and fill a child questionnaire.</p>
+                        <b>Tip:</b>
+                        <ul>
+                            <li>
+                                Once payment is submitted, you will receive an email receipt that also contains a "Complete Profile" link for each applicant. If required, you may use this link later to upload additional documents or complete the questionnaire.
+                            </li>
+                        </ul>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!NOT(AND(enablePayment,NOT(paymentComplete)))}">
+                        <p>
+                            Thank you for completing your registration. Click on "Complete Profile" for each applicant below to upload individual documents and submit a child questionnaire.
+                        </p>
+                        <b>Tip:</b>
+                        <ul>
+                            <li>
+                                You will receive an email confirmation that also contains a "Complete Profile" link for each applicant. If required, you may use this link later to upload additional documents or complete the questionnaire.
+                            </li>
+                        </ul>
+                    </apex:outputPanel>
+
+                </div>
+            </div>
+
+            <!-- Page Body -->
+            <apex:form id="GEMS_PaymentPage_Form">
+            <apex:pagemessages id="errormsg"/>
+            <apex:outputPanel id="PaymentPagePanel">
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><apex:outputtext value="{!IF(enablePayment,'Payment Details','Applicant Details')}"/></h3>
+                    </div>
+                    <div class="panel-body" style="padding: 15px 0;">
+                        <!--<div class="row">-->
+                            <!--<div class="col-lg-12 col-md-12">-->
+                                <!--<apex:outputpanel id="PaymnetDetailsInstructions" layout="block" >-->
+                                        <!--<p>To finalize the registrations a payment of AED {!paymentWrappers[0].SR_PriceItem.HexaBPM__Price__c} [non-refundable] is required. Please select one of the following payment options to complete the process.</p>-->
+                                <!--</apex:outputpanel>-->
+                            <!--</div>-->
+                        <!--</div>-->
+
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12">
+                                <div class="table-responsive">
+                                <apex:dataTable footerClass="payment-footer" styleClass="table table-bordered grey-headed-bg" value="{!paymentWrappers}" var="wrp">
+                                    <apex:column styleClass="action" headerValue="Select" style="width: 50px">
+                                        <!--<apex:inputCheckbox value="{!wrp.isSelected}" disabled="{!IF(wrp.SR.Payment_Status__c == 'Completed',true,false)}">-->
+                                            <!--<apex:actionSupport event="onclick" action="{!calculateTotalPrice}" reRender="PaymentPagePanel" status="pleasewait" />-->
+                                        <!--</apex:inputCheckbox>-->
+
+                                        <div class="form-group checkbox" style="margin: 0;">
+                                            <apex:inputCheckbox styleClass="form-control" id="selectRow" value="{!wrp.isSelected}" disabled="{!IF(OR(wrp.SR_PriceItem.Status__c == 'Paid',wrp.SR_PriceItem.Open_Online_Payment__c != 'Yes'),true,false)}">
+                                                <apex:actionSupport event="onclick" action="{!calculateTotalPrice}" reRender="PaymentPagePanel" onComplete="reloadFooter();" status="pleasewait" />
+                                            </apex:inputCheckbox>
+
+                                            <apex:outputLabel for="selectRow">
+                                                <span class="icon-checkbox-selected"><span class="path1"></span><span class="path2"></span></span>
+                                                <span class="icon-checkbox-unselected"></span>
+                                            </apex:outputLabel>
+                                        </div>
+                                    </apex:column>
+
+                                    <apex:column value="{!wrp.SR.Name}" headerValue="Application Number"/>
+                                    <apex:column value="{!wrp.SR.First_Name__c}" headerValue="First Name"/>
+                                    <apex:column value="{!wrp.SR.Last_Name__c}" headerValue="Last Name"/>
+                                    <apex:column headerValue="Status" rendered="{!enablePayment}" >
+                                    <apex:outputText rendered="{!IF(wrp.SR_PriceItem.Open_Online_Payment__c == 'Yes',true,false)}" >
+                                    {!IF(wrp.SR_PriceItem.Status__c == 'Added','Payment Pending',wrp.SR_PriceItem.Status__c)}
+                                    </apex:outputText>
+                                    <apex:outputText rendered="{!IF(wrp.SR_PriceItem.Open_Online_Payment__c == 'Yes',false,true)}" >No Online Payment</apex:outputText>
+                                    </apex:column>
+                                    <apex:column value="{!wrp.SR_PriceItem.Product__r.Name}" headerValue="Fee Type" rendered="{!enablePayment}"/>
+                                    <apex:column headerValue="Link to File">
+
+
+                                        <apex:outputPanel >
+                                            <!--<apex:outputText rendered="{!wrp.SR.Payment_Status__c == 'Pending' && wrp.SR_PriceItem.Open_Online_Payment__c == 'Yes'}">-->
+                                                <!--Complete file-->
+                                            <!--</apex:outputText>-->
+                                            <apex:outputLink style="font-weight: 500;" disabled="{!OR(AND(wrp.SR_PriceItem.Status__c == 'Added' , wrp.SR_PriceItem.Open_Online_Payment__c == 'Yes'),wrp.SR.Is_SR_Closed__c)}"
+                                                             value="{!wrp.completeFileURL}" > 
+                                                Complete Profile 
+                                            </apex:outputLink>
+                                        </apex:outputPanel>
+
+
+                                    </apex:column>
+                                    <apex:column headerValue="Price" rendered="{!enablePayment && NOT(paymentComplete)}" >
+                                    <apex:outputText value="{0, number,###,###,##0} {!school.Currency__c}">
+                                    <apex:param value="{!IF(wrp.SR_PriceItem.HexaBPM__Price__c != NULL,wrp.SR_PriceItem.HexaBPM__Price__c,0)}" />
+                                    </apex:outputText>
+                                    
+                                    </apex:column>
+
+                                    <apex:facet name="footer" >
+
+                                        <!--<apex:outputPanel layout="block" styleClass="pull-right" rendered="{!IF(OR(AND(enablePayment ,NOT(paymentComplete)),NOT(paymentComplete)),true,false)}">-->
+                                            <!--Total Price : <span style="font-weight: 500;">{!totalPrice}&nbsp;{!school.Currency__c}</span>-->
+                                        <!--</apex:outputPanel>-->
+
+                                        <apex:outputPanel layout="block" styleClass="pull-right" rendered="{!enablePayment && NOT(paymentComplete)}">
+                                            Total Price : <span style="font-weight: 500;">{!totalPrice}&nbsp;{!school.Currency__c}</span>
+                                        </apex:outputPanel>
+
+                                    </apex:facet>
+                                </apex:dataTable>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <!--<apex:commandButton styleClass="btn" value="Back" action="{!goToEnquiryDetailsPage}" style="float:left" status="pleasewait" rerender="nothing"/>-->
+                                <apex:outputPanel rendered="{!enablePayment}">
+                                    <apex:commandButton styleClass="btn next-step" value="Pay Now" action="{!payNow}" style="float:right;margin-left:10px;" disabled="{!IF(OR(totalPrice =='0',paymentComplete),true,false)}" rerender="GEMS_PaymentPage_Form,errormsg"
+                                                        rendered="{!IF(OR(AND(enablePayment ,NOT(paymentComplete)),NOT(paymentComplete)),true,false)}"/>
+                                </apex:outputPanel>
+                               <!--  <apex:commandButton rendered="{!!bNoPay}" styleClass="btn" value="Pay Later" action="{!payLater}" rerender="PaymentPagePanel" status="pleasewait" disabled="{!IF(totalPrice =='0',true,false)}" style="float:right;"/> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </apex:outputPanel>
+            </apex:form>
+            
+            <!-- Page Body -->
+            </body>
+        </apex:define>
+      </apex:composition>           
+     <script>
+
+         function reloadFooter(){
+         console.log('reloadFooter');
+         var ep = '{!IF(OR(AND(enablePayment ,NOT(paymentComplete)),NOT(paymentComplete)),true,false)}';
+            console.log('==>'+ep);
+             if(ep == 'false'){
+                 $('td.payment-footer').css('display', 'none');
+             }else{
+                 $('td.payment-footer').attr('colspan', '1');
+                 $('<td colspan="7"></td>').insertBefore($('td.payment-footer'));
+             }
+             /*
+             if('{!IF(OR(AND(enablePayment ,NOT(paymentComplete)),NOT(paymentComplete)),true,false)}' == 'false'){
+                 $('td.payment-footer').css('display', 'none');
+             }else{
+                 $('td.payment-footer').attr('colspan', '1');
+                 $('<td colspan="7"></td>').insertBefore($('td.payment-footer'));
+             }*/
+         }
+         reloadFooter();
+     
+     </script>       
+
+</apex:page>

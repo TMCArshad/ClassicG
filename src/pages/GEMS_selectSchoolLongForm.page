@@ -1,0 +1,426 @@
+<apex:page cache="false" tabstyle="HexaBPM__Service_Request__c" controller="GEMS_LongFormController" id="Declaration" sidebar="false"
+           showHeader="false" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0">
+    <apex:composition template="GEMS_LongFormPageTemplate">
+        <apex:define name="header">
+            <title>Long Form Step 1 - Applicant Details</title>
+    <!--<script src="{!URLFOR($Resource.ProcessFlow_resource , 'ProcessFlow/ProcessFlow.js')}"></script>    -->
+    <!--<apex:stylesheet value="{!URLFOR($Resource.ProcessFlow_resource , 'ProcessFlow/ProcessFlow.css')}"/>-->
+
+            <style>
+                #DyncPnl table.detailList > tbody > tr > th,
+                #DyncPnl table.detailList > tbody > tr > td{
+                    width: 50%;
+                }
+                .detailList > tbody > tr > th,
+                .detailList > tbody > tr > td {
+                    border: none !important;
+                }
+                .detailList tr > td:first-child {
+                    padding-left: 0;
+                }
+                .detailList tr > td:last-child {
+                    padding-right: 0;
+                }
+                .labelWrapper {
+                    display: block;
+                }
+
+                div[id$='applicant_information'] table td {
+                    border: 0 !important;
+                }
+                
+            </style>
+        </apex:define>
+
+        <apex:define name="body">
+        <script>
+            function DoAction(ButtonSectionId,IgnoreReqFlds){
+                if($formValidator != undefined && !($formValidator.valid() && $($formValidator.currentForm).valid())){
+                    $formValidator.focusInvalid();
+                    return;
+                }else{
+                    document.getElementById('Declaration:GEMS_LongFormPageTemplate:frm:hdnActionId').value = ButtonSectionId;
+                    InvokeAction();
+                }
+
+            }
+            function Navigate_To_Page(NextPG){
+                NavigatePage(NextPG);
+            }
+        </script>
+        <div class="container-fluid2">
+            <!--<apex:actionStatus id="pleasewait" stopText="">-->
+                <!--<apex:facet name="start">-->
+                    <!--<div>-->
+                        <!--<div class="popupBackground"></div>-->
+                        <!--<div class="PopupPanel">-->
+                            <!--<img src="{!$Resource.LoadingImage}"/>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</apex:facet>-->
+            <!--</apex:actionStatus>-->
+            <c:GEMS_CSS />
+            <div>
+                <div id="NavigDiv">
+                    <c:GEMS_FlowStepTabs id="MenuComp" curPageId="{!strPageId}" rerender="MainPnl"/>
+                </div>
+                <apex:form id="frm" >
+                    <apex:inputhidden id="hdnActionId" value="{!stringActionId}"/>
+                    <apex:actionfunction name="InvokeAction" action="{!DynamicButtonAction}" status="pleasewait" rerender="Msg" onComplete="InvokeChangeEventComplete();"/>
+                    <apex:actionfunction name="NavigatePage" action="{!goTopage}" status="pleasewait" rerender="hdnCurrentPageId,MenuComp,MainPnl">
+                        <apex:param name="NextPageId" value="" assignTo="{!strNavigatePageId}"/>
+                    </apex:actionfunction>
+                    
+                    <apex:actionfunction name="RePrepareFields" action="{!RePrepareSection}" status="pleasewait"
+                                     rerender="selectSchoolComp" onComplete="InvokeChangeEventComplete();"/>
+					
+					<apex:actionfunction name="clearFields" action="{!RePrepareSection}" status="pleasewait"
+                                     rerender="MainPnl"/>
+                    <!--<div class="page-title row" style="margin-left: 0; margin-bottom: 15px;">-->
+                        <!--<div class="medium-9 columns title">-->
+                            <!--<h3 style="display: block; font-size: 18px;">{!pageTitle}</h3>-->
+                            <!--<h5 style="display: block; font-size: 14px;">{!pageDescription}</h5>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                    <div class="row page-info" style="margin-bottom: 30px">
+                        <div class="col-lg-12 col-md-12">
+                            <!--<h2>{!pageTitle}</h2>-->
+                            <p>{!pageDescription}</p>
+                        </div>
+                    </div>
+
+                    <apex:pagemessages id="Msg" escape="false"/>
+					<apex:outputPanel layout="none" rendered="{!disableSR==false}" id="panel">
+                    <div id="DyncPnl" class="dyncPanel colLayout1 pageBlockSectionWrapper">
+                        <apex:pageBlock id="thePB">
+                            <apex:pageBlockSection columns="2" id="declarationBlock" collapsible="false">
+                                <apex:facet name="header">
+                                    <h3 class="pull-left">Select School</h3>
+                                    <span class="pull-right">
+                                        <abbr class="sf-required" title="required">*</abbr> = Required Information
+                                    </span>
+                                </apex:facet>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper">
+                                            <apex:outputLabel value="School"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+
+                                            <apex:outputPanel styleClass="input">
+                                                <apex:outPutText value="{!objSchool.name}" />
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Academic Year"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:selectList styleClass="requiredInput" id="academicYear" required="false" value="{!objSR.Academic_Year__c}" multiselect="false"  size="1">
+                                                    <apex:selectOptions value="{!academicYearList}" />
+                                                    <apex:actionSupport event="onchange" reRender="panel" status="pleasewait"  action="{!getCurriculumsforSchool}" onComplete="initDatePicker();" />
+                                                </apex:selectList>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Tentative Joining Date"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:inputField styleClass="requiredInput" value="{!objSR.Tentative_Joining_Date__c}" />
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+
+                                <apex:pageBlockSectionItem rendered="{!showCurriculum=true}">
+                                    <apex:outputPanel styleClass="rowWrapper form-group" >
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel value="Curriculum"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:selectList styleClass="requiredInput"  id="curriculumsForSchool" required="false" value="{!objSR.Curriculum__c}" multiselect="false"  size="1">
+                                                    <apex:selectOptions value="{!curriculumList}" />
+                                                    <apex:actionSupport event="onchange" reRender="gradesForSchool,curriculumsForSchool,streamForSchool" status="pleasewait"  action="{!getGradesforSchool}" onComplete="initDatePicker();" />
+                                                </apex:selectList>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Grade"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:selectList styleClass="requiredInput" id="gradesForSchool" required="false" value="{!objSR.GradeLookup__c}" multiselect="false"  size="1">
+                                                    <apex:selectOptions value="{!gradeList}" />
+                                                    <apex:actionSupport event="onchange" reRender="panel" status="pleasewait"  action="{!getStreamsforSchool}" onComplete="initDatePicker();" />
+                                                </apex:selectList>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+
+                                <apex:pageBlockSectionItem id="streamForSchool">
+                                    <apex:outputPanel styleClass="rowWrapper form-group" rendered="{!showStream=true}">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Stream"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:selectList styleClass="requiredInput"  required="false" value="{!objSR.Stream__c}" multiselect="false"  size="1">
+                                                    <apex:selectOptions value="{!streamList}" />
+                                                </apex:selectList>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="2" id="applicantInfoBlock" collapsible="false">
+                                <apex:facet name="header">
+                                    <h3 class="pull-left">Applicant Info</h3>
+                                    <span class="pull-right">
+                                        <abbr class="sf-required" title="required">*</abbr> = Required Information
+                                    </span>
+                                </apex:facet>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="First Name"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:inputField styleClass="requiredInput" value="{!objSR.First_Name__c}" />
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Last Name"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:inputField styleClass="requiredInput" value="{!objSR.Last_Name__c}" />
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!objSchool.Gender__c == 'Both'}">    
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Gender"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:inputField styleClass="requiredInput" value="{!objSR.Gender__c}" />
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!objSchool.Gender__c != 'Both'}">    
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper">
+                                            <apex:outputLabel value="Gender"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+
+                                            <apex:outputPanel styleClass="input">
+                                                <apex:outPutText value="{!objSR.Gender__c}" />
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >   
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Religion"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:inputField styleClass="requiredInput" value="{!objSR.Religion__c}" />
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Date Of Birth"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:inputField styleClass="requiredInput" value="{!objSR.Date_Of_Birth__c}" />
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Nationality"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <div class="requiredInput">
+                                                <div class="requiredBlock"></div>
+                                                <apex:inputField styleClass="requiredInput" value="{!objSR.Nationality__c}" />
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >   
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Emergency Contact Number"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <!--<div class="requiredBlock"></div>-->
+                                            <apex:inputField styleClass="requiredInput phone" value="{!objSR.Emergency_Contact_Number__c}" />
+                                            <!--<div class="requiredInput">-->
+                                            <!--</div>-->
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem> 
+                                <apex:pageBlockSectionItem >   
+                                    <apex:outputPanel styleClass="rowWrapper form-group">
+                                        <apex:outputPanel styleClass="labelWrapper requiredInputLabel">
+                                            <apex:outputLabel title="required" value="Primary Email Address"></apex:outputLabel>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel styleClass="fieldWrapper">
+                                            <!--<div class="requiredBlock"></div>-->
+                                            <apex:inputField styleClass="requiredInput email" value="{!objSR.HexaBPM__Email__c}" />
+                                            <!--<div class="requiredInput">-->
+                                            <!--</div>-->
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>  
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+						<apex:outputpanel layout="block" id="selectSchoolComp">
+                        	<apex:dynamicComponent componentValue="{!DyncPgMainPB}"/>
+                        </apex:outputpanel>
+
+                    </div>
+                    </apex:outputPanel>
+                    <script>
+                        var hdnMenu = '{!strHiddenPageIds}';
+                        if(hdnMenu!=null && hdnMenu!=''){
+                            var hdnsize = hdnMenu.indexOf(",");
+                            if(hdnsize>-1){
+                                var hdnPgLst = hdnMenu.split(',');
+                                for(i = 0; i < hdnPgLst.length;i++){
+                                    if(document.getElementById(hdnPgLst[i])!=null){
+                                        document.getElementById(hdnPgLst[i]).style.display = 'none';
+                                    }
+                                }
+                            }else{
+                                if(document.getElementById(hdnMenu)!=null)
+                                    document.getElementById(hdnMenu).style.display = 'none';
+                            }
+                        }
+                        
+                        //re evaluate the condition and re-prepare the sections with new values
+
+                        function InvokeChangeEvent() {
+                            RePrepareFields();
+                        }
+                        function InvokeChangeEventComplete(){
+                            reinit_fields();
+                        }
+						
+						function InvokeFieldChange() {
+                            clearFields();
+                        }
+
+                        var $formValidator;
+                        function init_form_validation(){
+                            $.validator.addMethod("cRequired", $.validator.methods.required,
+                                    "Please fill in this field.");
+                            $.validator.addClassRules("requiredInput", { cRequired: true});
+
+                            jQuery.validator.addMethod("mobile", function(value, element) {
+                                return $(element).intlTelInput("isValidNumber");
+                            }, "Please specify the correct phone number.");
+                            $.validator.addClassRules("phone", { mobile: true});
+
+
+                            //$formValidator = $('form[id$="GEMS_EnquiryDetails_Form"]').validate({
+                            $formValidator = $('form[id$="Declaration:GEMS_LongFormPageTemplate:frm"]').validate({
+                                ignore: [],
+                                rules: {
+
+                                },
+                                messages: {
+                                    
+                                },
+                                focusInvalid: true,
+                                errorElement: "span",
+                                errorPlacement: function (error, element) {
+                                    // Add the `help-block` class to the error element
+                                    error.addClass("help-block");
+
+                                    if($(element).parents('.form-group').length > 0){
+                                        $(element).parents('.form-group').append(error);
+                                    }
+                                    else if (element.prop("type") === "checkbox") {
+                                        error.insertAfter(element.parent("label"));
+                                    } else {
+                                        error.insertAfter(element);
+                                    }
+                                },
+                                highlight: function (element, errorClass, validClass) {
+                                    $(element).parents(".form-group").addClass("has-error");
+                                },
+                                unhighlight: function (element, errorClass, validClass) {
+                                    $(element).parents(".form-group").removeClass("has-error");
+                                },
+                                submitHandler: function (form) {
+                                    if($(form).valid()){
+                                        //alert('Form is valid!')
+                                        //saveNewChild();
+                                    }else {
+                                        //alert('Form is invalid!')
+                                        $formValidator.focusInvalid();
+                                    }
+                                    //form.submit();
+                                    return false;
+                                }
+                            });
+                        }
+
+                        Sfdc.onReady(function(){
+                            init_form_validation();
+                        })
+
+                    </script>
+                </apex:form>
+            </div>
+        </div>
+
+    </apex:define>
+    </apex:composition>
+</apex:page>

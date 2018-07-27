@@ -1,0 +1,86 @@
+<apex:component controller="DPFSideBarComponentController" id="SideBarComp">
+    <apex:attribute name="curPageId" type="string" description="current page id" required="false"  />
+    <apex:attribute name="status" type="string" description="ID of action status" required="false"  />
+    <apex:attribute name="rerender"  type="string" description="Output panel id to rerender on page change" required="false"  />
+
+    <apex:variable value="#cacaca" var="stepColor"/>
+    <apex:variable value="#8C8C8C" var="activeStepColor"/>
+    <style>
+
+        .pageNavItem,
+        .pageNavItemUnclick {
+            position: relative;
+
+            /*padding: 10px 14px;*/
+            padding: 10px 8px;
+            background-color: white;
+            color: #000;
+            font-weight: bold;
+            border: 1px solid {!stepColor};
+            /*border-bottom: 1px solid #cbcbcb;*/
+            box-sizing: border-box;
+            margin: 5px;
+        }
+
+        .pageNavItem{
+            cursor:pointer;
+        }
+        .pageNavItemUnclick{
+            cursor: auto;
+        }
+        .pageNavItem.current,
+        .pageNavItemUnclick.current{
+            background-color: {!activeStepColor};
+            color: white;
+        }
+
+        .TickMarkCls{
+            width: 12px;
+            height: 10px;
+            margin-right:5px;
+            vertical-align: middle;
+            position: absolute;
+            float: right;
+            right: 5px;
+        }
+        .NavLabel{
+            vertical-align: middle;
+            /*margin-left: 5px;*/
+            cursor:pointer;
+        }
+        .NoNavLabel{
+            vertical-align: middle;
+            /*margin-left: 5px;*/
+        }
+        .ReqSubmitted{
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            z-index: 998;
+        }
+        .StepTasksDisabled{
+            opacity: 0.60;
+            filter: alpha(opacity = 20);
+            z-index: 998;
+        }
+    </style>
+    <apex:form id="SideBarForm">
+        <apex:inputhidden id="CurrentPageId" value="{!strPageId}"/>
+        <apex:outputpanel layout="block" id="PageLstPnl">
+            <apex:repeat value="{!LstPageWrap}" var="pg" id="PagesPBT">
+                <apex:outputpanel layout="block" rendered="{!!pg.NoQuickNavigation}">
+                    <div id="{!pg.pageId}" Class="{!IF(pg.pageId==strPageId,'pageNavItem current','pageNavItem')}" onclick="Navigate_To_Page('{!pg.pageId}');return false;">
+                        <apex:outputlabel value="{!pg.pageName}" styleclass="NavLabel"/>&nbsp;
+                        <apex:image rendered="{!pg.isPageFilled && pg.pageOrder!=1}" value="{!URLFOR($Resource.Tickmarks,IF(pg.pageId!=strPageId,'Tick_Green.png','Tick_White.png'))}" styleclass="TickMarkCls"/>
+                    </div>
+                </apex:outputpanel>
+                <apex:outputpanel layout="block" rendered="{!pg.NoQuickNavigation}">
+                    <div id="{!pg.pageId}" Class="{!IF(pg.pageId==strPageId,'pageNavItemUnclick current','pageNavItemUnclick')}">
+                        <apex:outputlabel value="{!pg.pageName}" styleclass="{!IF(isSubmitted,'NoNavLabel ReqSubmitted','NoNavLabel')}"/>&nbsp;
+                        <apex:image rendered="{!IF(isSubmitted,false,pg.isPageFilled)}" value="{!URLFOR($Resource.Tickmarks,'Tick_Green.png')}" styleclass="TickMarkCls"/>
+                        <apex:image rendered="{!isSubmitted && pg.pageOrder!=1}" value="{!URLFOR($Resource.Tickmarks,'Tick_Green_Faded.png')}" styleclass="TickMarkCls"/>
+                    </div>
+                </apex:outputpanel>
+            </apex:repeat>
+        </apex:outputpanel>
+    </apex:form>
+</apex:component>

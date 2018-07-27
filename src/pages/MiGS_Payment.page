@@ -1,0 +1,6 @@
+<apex:page controller="MiGS_Payment">
+<apex:form >
+ <apex:commandButton action="{!payNow}" value="Pay Now" />
+</apex:form>
+  <c:GEMS_PaymentComponent leadReferenceNumberVal="507484395300d2f78007720c7cd7d53b" BSUIDVal="126008"></c:GEMS_PaymentComponent>
+</apex:page>

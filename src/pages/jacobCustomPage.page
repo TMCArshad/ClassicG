@@ -1,0 +1,14 @@
+<apex:page sidebar="False">
+  <apex:form >
+  <apex:page title="Testing Page">
+  <apex:pageblock >
+  <apex:pageBlockSection title="Page Section1">
+  <apex:outputText value="df">
+   
+  </apex:outputText> 
+    
+  <apex:pageblockSectionItem >
+  </apex:pageblockSectionItem>
+  </apex:pageBlockSection>
+  </apex:pageblock> </apex:page> </apex:form>
+</apex:page>

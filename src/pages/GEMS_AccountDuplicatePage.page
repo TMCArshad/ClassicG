@@ -1,0 +1,40 @@
+<apex:page standardController="Lead" showHeader="false" sidebar="false" extensions="GEMS_LeadDuplicateCntlr">
+    
+
+    <apex:pageBlock title="Duplicate Accounts">
+     <apex:outputText rendered="{!duplicateAccountList.size <= 0}" > No records to display.</apex:outputText>
+       <apex:pageBlockTable value="{!duplicateAccountList}" var="acc" rendered="{!duplicateAccountList.Size >0}">
+            <apex:column headerValue="Action">
+            <apex:outputLink target="_blank" value="{!URLFOR($Action.Account.View, acc.id)}">View</apex:outputLink>
+            </apex:column>
+            <apex:column value="{!acc.FirstName}" headerValue="First Name" />
+            <apex:column value="{!acc.lastName}" headerValue="Last Name" />
+            <apex:column value="{!acc.Gender__c}" headerValue="Gender" />
+            <apex:column value="{!acc.PersonEmail}" headerValue="Email" />
+            <apex:column value="{!acc.Date_Of_Birth__c}" headerValue="DOB" />
+            <apex:column value="{!acc.School__c}" headerValue="School" />
+            <apex:column value="{!acc.Passport_No__c}" headerValue="Passport Number" />
+            <apex:column value="{!acc.PersonMobilePhone}" headerValue="Mobile" />
+            
+    
+       </apex:pageBlockTable>
+    
+    </apex:pageBlock>
+     <apex:pageBlock title="Duplicate Enquiries">
+        <apex:outputText rendered="{!duplicateLeadList.size <= 0}" >No records to display.</apex:outputText>
+        <apex:pageBlockTable value="{!duplicateLeadList}" var="lead" rendered="{!duplicateLeadList.Size >0}">
+        <apex:column headerValue="Action">
+        <apex:outputLink target="_blank" value="{!URLFOR($Action.Lead.View, lead.id)}">View</apex:outputLink>
+        </apex:column>
+        <apex:column value="{!lead.FirstName}" headerValue="First Name" />
+        <apex:column value="{!lead.LastName}" headerValue="Last Name" />
+        <apex:column value="{!lead.Gender__c}" headerValue="Gender" />
+        <apex:column value="{!lead.Email}" headerValue="Email" />
+        <apex:column value="{!lead.Date_of_Birth__c}" headerValue="DOB" />
+        <apex:column value="{!lead.SchoolLookup__c}" headerValue="School" />
+        <apex:column value="{!lead.Passport_Number__c}" headerValue="Passport Number" />
+         <apex:column value="{!lead.status}" headerValue="Status" />
+        
+        </apex:pageBlockTable> 
+    </apex:pageBlock> 
+</apex:page>

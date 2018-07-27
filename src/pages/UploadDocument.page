@@ -1,0 +1,32 @@
+<apex:page id="DocumentUploadPage" controller="DocumentViewer" sidebar="false" tabstyle="HexaBPM__Service_Request__c">
+    <table class="row" style="width: 100%;">
+        <tbody>
+            <tr>
+                <td>
+                    <div id="MainCompDiv">
+                        <div class="bPageTitle" style="padding: 5px 5px 0 !important;">
+                            <div class="ptBody">
+                                <div class="content">
+                                    <img src="{!$Resource.HexaBPM__UploadDocument}" alt="Upload Documents" style="float:left;" title="Upload Documents"/>
+                                    <h1 class="pageType" style="margin-top:5px;">Documents<span class="titleSeparatingColon">:</span></h1>
+                                    <h2 class="pageDescription">Upload Required Documents</h2>
+                                    <div class="blank">&nbsp;</div>
+                                </div>
+                            </div>
+                        </div>            
+                        <c:DocumentViewerVC id="DocUploadComp" ObjectName="HexaBPM__Service_Request__c"/>
+                    </div>
+                 </td>
+             </tr>
+         </tbody>
+     </table>
+     <script>
+        Sfdc.onReady(function() {
+            $("table.list, table.newgrid").each(function () {
+                $(this).find("tr.headerRow").children(":nth-child(n+4)").attr("data-hide", "phone");
+                $(this).find("tr.headerRow").children(":nth-child(n+5)").attr("data-hide", "phone,tablet");
+                $(this).footable();
+            })
+        });
+    </script>
+</apex:page>

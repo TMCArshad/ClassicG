@@ -1,0 +1,186 @@
+<apex:page showheader="false" sidebar="false" standardStylesheets="false" >
+
+
+<html lang="en">
+<head>
+  <title>GEMS Web to Lead Form</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<style>
+
+  /* style all input elements with a required attribute */
+input:required {
+  border: 1px solid red;
+  outline: none;
+}
+
+/**
+ * style input elements that have a required
+ * attribute and a focus state
+ */
+input:required:focus {
+  border: 1px solid red;
+  outline: none;
+}
+
+/**
+ * style input elements that have a required
+ * attribute and a hover state
+ */
+input:required:hover {
+  opacity: 1;
+}
+</style>
+<body>
+<META HTTP-EQUIV="Content-type" CONTENT="text/html; charset=UTF-8" />
+
+<!--  ----------------------------------------------------------------------  -->
+<!--  NOTE: Please add the following <FORM> element to your page.             -->
+<!--  ----------------------------------------------------------------------  -->
+<div class="container" style="margin-left:500px;">
+        <form action="https://test.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8" method="POST" class="form-horizontal">
+ 
+        <input type="hidden" name="oid" value="00D9E000000Cvus" /> <!--value="00D90000000qlFO"> -->
+        <input type="hidden" name="retURL" value="http://enquiry.gemsmetropoleschool-dubai.com/gems-metropole-apply-now-thank-you/" />
+
+        <!--  ----------------------------------------------------------------------  -->
+        <!--  NOTE: These fields are optional debugging elements. Please uncomment    -->
+        <!--  these lines if you wish to test in debug mode.                          -->
+        <!--  <input type="hidden" name="debug" value=1>                              -->
+        <!--  <input type="hidden" name="debugEmail"                                  -->
+        <!--  value="keerthan@nsiglobal.com">                                         -->
+        <!--  ----------------------------------------------------------------------  -->
+                <div class="form-group">
+                <img src="https://c.cs88.content.force.com/servlet/servlet.ImageServer?id=0159E0000009DKv&oid=00D9E000000Cvus&lastMod=1488177708000" />
+                 <h3>Please fill in below information</h3>
+                <label for="title" class="control-label col-sm-2">First Name</label>
+                 <div class="col-sm-10">
+                  <input  id="first_name" maxlength="40" name="first_name" size="20" type="text" />
+                 </div>
+                </div>
+                <div class="form-group">
+                <label for="first_name" class="control-label col-sm-2">Last Name</label>
+                 <div class="col-sm-10">
+                  <input  id="last_name" maxlength="80" name="last_name" size="20" type="text" required="true" />
+                 </div>
+                </div>
+                <div class="form-group">
+                <label for="email" class="control-label col-sm-2">Mobile</label>
+                 <div class="col-sm-10">
+                  <input  id="mobile" maxlength="40" name="mobile" size="20" type="text" />
+                 </div>
+                </div>
+                <div class="form-group">
+                    <label for="description" class="control-label col-sm-2">School</label>
+                 <div class="col-sm-10">
+                    <select  id="00N9E000000ivmo" name="00N9E000000ivmo" title="School">
+                        <option value="">--None--</option>
+                            <option value="Gems United Indian School Llc - Abu Dhabi">Gems United Indian School Llc - Abu Dhabi</option>
+                            <option value="Gems American Academy - Abu Dhabi">Gems American Academy - Abu Dhabi</option>
+                            <option value="Gems World Academy - Abu Dhabi">Gems World Academy - Abu Dhabi</option>
+                            <option value="The Cambridge High School - Abu Dhabi">The Cambridge High School - Abu Dhabi</option>
+                            <option value="Gems Cambridge International School - Abu Dhabi">Gems Cambridge International School - Abu Dhabi</option>
+                            <option value="Gems Winchester School L.L.C. - Abu Dhabi">Gems Winchester School L.L.C. - Abu Dhabi</option>
+                            <option value="The Kindergarten Starters - Dubai">The Kindergarten Starters - Dubai</option>
+                            <option value="Gems Our Own Indian School - Dubai">Gems Our Own Indian School - Dubai</option>
+                            <option value="Gems Our Own English High School - Dubai">Gems Our Own English High School - Dubai</option>
+                            <option value="Our Own High School - Al Warqaa">Our Own High School - Al Warqaa</option>
+                            <option value="Gems Heritage Indian School - Dubai">Gems Heritage Indian School - Dubai</option>
+                            <option value="Gems Modern Academy">Gems Modern Academy</option>
+                            <option value="The Millennium School - Dubai">The Millennium School - Dubai</option>
+                            <option value="Gems New Millennium School- Dubai">Gems New Millennium School- Dubai</option>
+                            <option value="Gems Dubai American Academy">Gems Dubai American Academy</option>
+                            <option value="Gems Nations Academy - Dubai">Gems Nations Academy - Dubai</option>
+                            <option value="Jumeirah College - Dubai">Jumeirah College - Dubai</option>
+                            <option value="Gems Jumeirah Primary School - Dubai">Gems Jumeirah Primary School - Dubai</option>
+                            <option value="Gems Wellington Primary School - Dubai">Gems Wellington Primary School - Dubai</option>
+                            <option value="Cambridge International School - Dubai">Cambridge International School - Dubai</option>
+                            <option value="The Westminster School - Dubai">The Westminster School - Dubai</option>
+                            <option value="The Winchester School - Dubai">The Winchester School - Dubai</option>
+                            <option value="Gems Winchester School - Dubai">Gems Winchester School - Dubai</option>
+                            <option value="Gems Wellington International School - Dubai">Gems Wellington International School - Dubai</option>
+                            <option value="Gems Royal Dubai School - Dubai">Gems Royal Dubai School - Dubai</option>
+                            <option value="Gems World Academy- Dubai">Gems World Academy- Dubai</option>
+                            <option value="Gems Wellington Academy - Silicon Oasis">Gems Wellington Academy - Silicon Oasis</option>
+                            <option value="Gems International School - Al Khail">Gems International School - Al Khail</option>
+                            <option value="Gems Sports Academy(Unit Of Bradenton Preparatory Academy)">Gems Sports Academy(Unit Of Bradenton Preparatory Academy)</option>
+                            <option value="Gems Founders School - Dubai">Gems Founders School - Dubai</option>
+                            <option value="Gems Wellington Academy - Al Khail">Gems Wellington Academy - Al Khail</option>
+                            <option value="Gems Metropole School - Motor City">Gems Metropole School - Motor City</option>
+                            <option value="Gems Firstpoint School - The Villa - Dubai">Gems Firstpoint School - The Villa - Dubai</option>
+                            <option value="Gems National School-Al Barsha">Gems National School-Al Barsha</option>
+                            <option value="Al Khaleej National School - Dubai">Al Khaleej National School - Dubai</option>
+                            <option value="Little Learners Nursery">Little Learners Nursery</option>
+                            <option value="Our Own English High School - Sharjah">Our Own English High School - Sharjah</option>
+                            <option value="Our Own English High School - Sharjah -Boys Branch">Our Own English High School - Sharjah -Boys Branch</option>
+                            <option value="Gems Millennium School - Sharjah">Gems Millennium School - Sharjah</option>
+                            <option value="Gems Westminster School Sharjah">Gems Westminster School Sharjah</option>
+                            <option value="Our Own English High School - Al Ain">Our Own English High School - Al Ain</option>
+                            <option value="Our Own English High School - Fujairah">Our Own English High School - Fujairah</option>
+                            <option value="Gems Winchester School - Fujairah">Gems Winchester School - Fujairah</option>
+                            <option value="Gems Westminster School - Rak">Gems Westminster School - Rak</option>
+                            <option value="Gems International School-Palam Vihar, Gurgaon,India">Gems International School-Palam Vihar, Gurgaon,India</option>
+                            <option value="Gems International School Of Pearl City - Penang">Gems International School Of Pearl City - Penang</option>
+                            <option value="Gems Cambridge International School - Nairobi">Gems Cambridge International School - Nairobi</option>
+                            <option value="Gems Cambridge International School - Kampala">Gems Cambridge International School - Kampala</option>
+                            <option value="Bradenton Preparatory Academy Dubai">Bradenton Preparatory Academy Dubai</option>
+                            <option value="The World Academy- King Abdullah Economic City">The World Academy- King Abdullah Economic City</option>
+                            <option value="Gems Wellington School, Al Wakair -Doha">Gems Wellington School, Al Wakair -Doha</option>
+                            <option value="Gems American Academy, Qatar">Gems American Academy, Qatar</option>
+                            <option value="Gems World Academy Switzerland">Gems World Academy Switzerland</option>
+                            <option value="Gems World Academy (Singapore) Pte Limited">Gems World Academy (Singapore) Pte Limited</option>
+                     </select>
+                 </div>
+                </div>
+                <div class="form-group">
+                    <label for="phone" class="control-label col-sm-2">Previous School</label>
+                 <div class="col-sm-10">
+                  <input  id="00N9E000000Y6hE" maxlength="255" name="00N9E000000Y6hE" size="20" type="text" />
+                 </div>
+                </div>
+                <div class="form-group">
+                    <label for="description" class="control-label col-sm-2">Email</label>
+                 <div class="col-sm-10">
+                 <input  id="email" maxlength="80" name="email" size="20" type="text" required="true" />
+                 </div>
+                </div>
+                
+                <div class="form-group" style="display:none">
+                <label for="lead_source" class="control-label col-sm-2">Lead Source</label>
+                <div class="col-sm-10">
+                        <select  id="lead_source" name="lead_source" >
+                        <option value="">--None--</option>
+                        <option value="Advertisement">Advertisement</option>
+                        <option value="Customer Event">Customer Event</option>
+                        <option value="Employee Referral">Employee Referral</option>
+                        <option value="Google AdWords">Google AdWords</option>
+                        <option value="Other">Other</option>
+                        <option value="Partner">Partner</option>
+                        <option value="Purchased List">Purchased List</option>
+                        <option value="Trade Show">Trade Show</option>
+                        <option value="Webinar">Webinar</option>
+                        <option value="Website">Website</option>
+                        <option selected="true" value="Digital">Digital</option>
+                        <option value="Short Form">Short Form</option>
+                         <option value="Long Form">Long Form</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="Email">Email</option>
+                        </select><br/>
+                    </div>    
+                </div>
+                
+               
+                
+                
+                <input type="submit" class="btn btn-primary" name="submit" value="Submit"></input>
+
+
+        </form>
+</div>
+</body>
+</html>
+</apex:page>

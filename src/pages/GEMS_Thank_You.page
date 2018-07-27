@@ -1,0 +1,126 @@
+<apex:page sidebar="false" showheader="false" tabStyle="Account" cache="false"
+           showHeader="false" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0">
+    <apex:composition template="GEMS_LongFormPageTemplate">
+        <apex:define name="header">
+            <!--<title>Long Form Step 6 - Thank You</title>-->
+            <title>{!IF(serviceType == 'Enrollment Short Form', 'Short Form Step 4 -', 'Long Form Step 6 -')} Thank You</title>
+
+            <style>
+                .detailList > tbody > tr td {
+                    width: auto !important;
+                }
+                .detailList .list .headerRow th {
+                    border-bottom-width: 1px !important;
+                }
+
+                form.thankyou-form .pbSubsection, form.thankyou-form table.detailList td.first.last{
+                    padding: 0 !important;
+                }
+
+                .labelCol label {
+                    margin: 0;
+                }
+
+                p {
+                    font-weight: 500;
+                    padding: 10px 0;
+                    line-height: 2.5rem;
+                }
+                
+				.columnWidth{
+					width : 80px;
+				}
+				
+		        .loader {
+		            position: absolute; 
+		            top: 35%;
+		            left: 45%; 
+		            margin-left: -60px; 
+		            filter: Alpha(Opacity =70);  
+		            opacity: 0.70;
+		            -moz-opacity: 0.70;
+		         }
+		         /* This is for the full screen DIV */
+		         .popupBackground {
+		             /* Background color */
+		             background-color:black;
+		             opacity: 0.20;
+		             filter: alpha(opacity = 20);
+		          
+		             /* Dimensions */
+		             width: 100%;
+		             height: 100%;
+		             top: 0;
+		             left: 0;
+		             z-index: 998;
+		             position: absolute;
+		         }
+		      
+		         /* This is for the message DIV */
+		         .PopupPanel {
+		             /* Background color */
+		             /*border: solid 2px #00205B;
+		             background-color: white;
+		            */
+		             /* Dimensions */
+		             left: 50%;
+		             width: 100px;
+		             margin-left: -100px;
+		             border-radius: 15px
+		             top: 20%;
+		             height: 100px;
+		             margin-top: 60px;
+		             z-index: 999;
+		             position: fixed;
+		         }
+
+            </style>
+        </apex:define>
+        <apex:define name="body">
+            <apex:form id="thankYouFrm" styleClass="thankyou-form">
+	            <apex:actionStatus id="pleasewait" stopText="">
+		        	<apex:facet name="start">
+		            	<div>
+		                	<div class="popupBackground"></div>
+		                   	<div class="PopupPanel">
+		                    	<img src="{!$Resource.LoadingImage}"/>
+		                   	</div>
+		               	</div>
+		           	</apex:facet>
+		       	</apex:actionStatus>
+                <!-- Component to render if registration is for short form -->
+				<c:GEMS_shortFormRegistration />
+				
+				<!-- Component to render if registration is for long form -->
+				<c:GEMS_longFormRegistration />
+				
+				<!-- Component to render if Enrollment is for short form -->
+				<c:GEMS_shortFormEnrollment />
+				
+				<!-- Component to render if Enrollment is for long form -->
+				<c:GEMS_longFormEnrollment />
+
+            </apex:form>
+            <!--<script src="//cdnjs.cloudflare.com/ajax/libs/iframe-resizer/3.5.13/iframeResizer.contentWindow.min.js"></script>-->
+            <script>
+				/*
+				$(function(){
+                    try {
+                        if (parent){
+                            parent.postMessage('formSubmit', parentDomain);
+                        }
+
+                    } catch(e) {
+                        // Something went wrong...
+                        window.console && window.console.log(e);
+                    }
+				})*/
+
+                //$('table').addClass('table table-bordered');
+                $(document.getElementById('{!$Component.thankYouFrm.mainBlock.registrationSection}')).find('table').addClass('table table-bordered table-striped');
+                $(document.getElementById('{!$Component.thankYouFrm.mainBlock.parentSection}')).find('table').addClass('table table-bordered table-striped');
+                //$(document.getElementById('{!$Component.thankYouFrm.mainBlock.paymentSection}')).find('table').addClass('table table-bordered');
+			</script>
+        </apex:define>
+	</apex:composition>
+</apex:page>

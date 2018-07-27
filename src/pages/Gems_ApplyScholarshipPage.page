@@ -1,0 +1,1000 @@
+<!--
+ - Created by Rajil Ravindran
+ - Date: 21-03-2018  
+-->
+<apex:page id="Gems_ApplyScholarshipPage"  Controller="Gems_ApplyScholarshipCntrl" sidebar="false" showheader="false" cache="false" tabStyle="Account" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" docType="html-5.0" >
+    
+   
+    <apex:stylesheet value="{!$Resource.HexaBPM__DocumentCSS}/popup/reveal.css"/>
+    <apex:includeScript value="{!$Resource.HexaBPM__DocumentCSS}/popup/jquery.min.js"/>
+    <apex:includeScript value="{!$Resource.HexaBPM__DocumentCSS}/popup/jquery.reveal.js"/>
+    
+    <apex:composition template="GEMS_PageTemplate" >
+        <apex:define name="header">
+            <title>Apply Scholarship </title>
+            <apex:variable var="currentPage" value="ApplyScholarship" />
+            <style>
+                .btn {
+                    display: inline-block !important;
+                    margin-bottom: 0px !important;
+                    text-align: center !important;
+                    touch-action: manipulation !important;
+                    cursor: pointer !important;
+                    font-size: 16px !important;
+                    line-height: 1.42857 !important;
+                    user-select: none !important; 
+                }
+                
+                
+                .additionaldocs .accordion {
+                    background-color: #eee;
+                    color: #444;
+                    cursor: pointer;
+                    padding: 18px;
+                    width: 100%;
+                    text-align: left;
+                    border: none;
+                    outline: none;
+                    transition: 0.4s;
+                }
+                
+                /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+               .additionaldocs .active, .accordion:hover {
+                    background-color: #ccc;
+                }
+                
+                /* Style the accordion panel. Note: hidden by default */
+               .additionaldocs .panel {
+                    
+                    background-color: white;
+                    display: none;
+                    overflow: hidden;
+                }
+                
+                .reveal-modal .bPageBlock {
+                    margin-bottom: 0 !important;
+                }
+                .reveal-modal table{
+                        width:100%!important;
+                    }
+                .reveal-modal .pbBottomButtons .pbTitle{
+                    display: none !important;
+                }
+                .reveal-modal .pbBody table td{
+                    padding-bottom: 15px !important;
+                }
+                .reveal-modal  .pbBody table td:not(:last-child){
+                    padding-right: 15px !important;
+                }
+        
+                .reveal-modal .hd_div {
+                    width: inherit !important;
+                }
+                
+                .intl-tel-input .selected-flag {
+                    height:36px !important;
+                }
+                .rem-left-space{
+                    margin-left: -15px;
+                }
+                .bold{
+                    font-weight:700;
+                }
+                .left{
+                    float:left
+                }
+            </style>
+        </apex:define>
+        
+        <apex:define name="body" >
+                <script>
+  window.iFrameResizer = {
+    targetOrigin: '*'
+  }
+</script>
+
+            <c:GEMS_CSS />
+            <apex:form id="GEMS_ApplyScholarship_Form" html-data-toggle="validator" html-role="form">
+                <apex:outputPanel rendered="{!AND(isSaveSuccess==false,isScholarshipEnabled==false,isScholarshipActive==false)}" id="notEnabled">
+                     <div class="profile">
+                        <div class="row page-info" style="margin-bottom: 20px;">
+                            <div class="col-lg-12 col-md-12">
+                                <div style="margin: 20px 0 10px 0">
+                                    <ul class="list-inline">
+                                        <li>We're sorry the school is currently not offering any scholarships.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!AND(isSaveSuccess==false,isScholarshipEnabled==true,isScholarshipActive==false)}" id="notActive">
+                     <div class="profile">
+                        <div class="row page-info" style="margin-bottom: 20px;">
+                            <div class="col-lg-12 col-md-12">
+                                <div style="margin: 20px 0 10px 0">
+                                    <ul class="list-inline">
+                                        <li>We're sorry the school is currently not accepting applications for scholarships. Please check back with the school website for more information.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!AND(isSaveSuccess==false,AND(isScholarshipEnabled,isScholarshipActive))}" id="outerPanel">
+                    
+                    <div class="row">
+                        <section class="parent-details">
+                            <div class="col-lg-12">
+                                <apex:pagemessages id="errormsg"  escape="false"/>
+                                <apex:outputPanel id="MainPanel" layout="block" style="overflow:hidden;">
+                                    <!-- Student Details Section -->
+                                    <apex:outputPanel id="studentDetailsPBS">
+                                        
+                                        <div class="panel panel-default">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title pull-left">Student Details</h3>
+                                                <span class="pull-right"> <abbr class="sf-required" title="required">*</abbr> = Required Information </span>
+                                            </div>
+                                        </div>
+                                        <div class="panel-body" style="padding: 0;">
+                                            <div class="row">
+                                                <div class="col-lg-12 col-md-12">
+                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                        <div class="form-group">
+                                                            <apex:outputLabel >Before we begin your application process - please confirm if you are a student currently studying at a GEMS Education school. <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                            <apex:actionRegion >
+                                                                <apex:selectList styleClass="form-control requiredInput" id="isStudentList" required="false" value="{!isStudentVal}" multiselect="false" size="1">
+                                                                    <apex:selectOptions value="{!isStudentList}" />
+                                                                    <apex:actionSupport event="onchange" reRender="outerPanel,errormsg" status="pleasewait" action="{!clearValues}"/>
+                                                                </apex:selectList>
+                                                            </apex:actionRegion>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <apex:actionRegion >
+                                            <apex:actionFunction action="{!validateScholarship}" name="checkScholarshipAction" rerender="outerPanel,errormsg" status="pleasewait">
+                                                <apex:param name="exStudentNameParam" value="" />
+                                                <apex:param name="exDOBParam" value="" />
+                                            </apex:actionFunction>
+                                        </apex:actionRegion>
+                                        <apex:outputPanel id="gems_student_panel" rendered="{!isStudentVal == 'Yes'}"  layout="none">
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel >Student Id <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                        <apex:inputText id="studentid" value="{!existStudentId}" styleClass="form-control requiredInput" onchange="checkScholarship('Student')"  />
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="form-group datepicker">
+                                                        <apex:outputLabel >Date of Birth <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                        <apex:inputField id="dob2" html-autocomplete="off" value="{!scholarshipSR.Date_Of_Birth__c}" styleClass="form-control requiredInput"  onchange="checkScholarship('Student')" />                                                
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel >First Name <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                        <apex:inputText value="{!scholarshipSR.First_Name__c}" styleClass="form-control requiredInput" disabled="{!IF(ISNULL(scholarshipSR.First_Name__c),false,true)}" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel >Last Name <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                        <apex:inputText value="{!scholarshipSR.Last_Name__c}" styleClass="form-control requiredInput" disabled="{!IF(ISNULL(scholarshipSR.Last_Name__c),false,true)}" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </apex:outputPanel> <!-- Is GEMS Student -->
+                                        
+                                        <apex:outputPanel rendered="{!isStudentVal == 'No'}" layout="none"> <!-- Is not a GEMS Student --->
+                                            <div class="panel-body" style="padding: 0;">
+                                                <div class="row">
+                                                    <div class="col-lg-12 col-md-12">
+                                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Are you currently in the process of enrolling in a GEMS school? <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:selectList styleClass="form-control requiredInput" id="isEnrolledList" required="false" value="{!isEnrolled}" multiselect="false" size="1">
+                                                                    <apex:selectOptions value="{!isStudentList}" />
+                                                                    <apex:actionSupport event="onchange" reRender="errormsg,outerPanel" status="pleasewait" action="{!clearValues}"/>
+                                                                </apex:selectList>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                        <apex:outputPanel rendered="{!isEnrolled == 'Yes' && isStudentVal == 'No'}" layout="none"> <!-- If the student is enrolled in GEMS -->
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel >SR No <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                        <apex:inputText id="srnumber" styleClass="form-control requiredInput" value="{!existSRNumber}" onchange="checkScholarship('SR')"/>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="form-group datepicker">
+                                                        <apex:outputLabel >Date of Birth <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                         <apex:inputField id="dateofbirth1" value="{!scholarshipSR.Date_Of_Birth__c}"  html-autocomplete="off" styleClass="form-control requiredInput" onchange="checkScholarship('SR')" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel id="firstname" >First Name <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                        <apex:inputText value="{!scholarshipSR.First_Name__c}" styleClass="form-control requiredInput" disabled="{!IF(ISNULL(scholarshipSR.First_Name__c),false,true)}" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel id="lastname">Last Name <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                        <apex:inputText value="{!scholarshipSR.Last_Name__c}" styleClass="form-control requiredInput" disabled="{!IF(ISNULL(scholarshipSR.Last_Name__c),false,true)}" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                        <apex:outputPanel rendered="{!isEnrolled == 'No' && isStudentVal == 'No'}" layout="none"> <!-- If the student is not enrolled in GEMS -->
+                                            <div class="row">
+                                                <div class="col-sm-12">
+                                                    <label>
+                                                        You must be enrolled at a GEMS school in order to be considered for a scholarship.
+                                                         Please enroll at the school you are applying for a scholarship by&nbsp; <apex:outputLink target="_blank" value="{!enrolOnlineURL}" styleclass="bold">clicking here</apex:outputLink>.
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </apex:outputPanel><!-- If the student is not enrolled in GEMS [panel ends here] -->
+                                        <script>
+                                            function checkScholarship(from){
+                                                var sr = '';
+                                                var dob = '';
+                                                if(from == 'Student'){
+                                                    sr = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:studentid').value;
+                                                    dob = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:dob2').value;
+                                                }else if(from == 'SR'){
+                                                    sr = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:srnumber').value;
+                                                    dob = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:dateofbirth1').value;
+                                                }
+                                                
+                                                if(sr!='' && dob!=''){
+                                                    checkScholarshipAction(sr,dob);
+                                                }
+                                            }
+                                          
+                                            $( ".dateInput input").each(function(index, dateInput){
+                                                console.log($(dateInput));
+                                                $(dateInput).attr('placeholder', 'dd/mm/yyyy');
+                                                $(dateInput).prop('autocomplete', false);
+                                                //http://regexr.com/346hf
+                                                $(dateInput).attr('pattern', '^(?:(?:31(\\/)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)(\\/)(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/)0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/)(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$');
+                                                $(dateInput).attr('data-pattern-error', 'Please match the requested date format of dd/mm/yyyy.');
+                    
+                    
+                                                $(dateInput).datepicker({
+                                                    changeMonth: true,
+                                                    changeYear: true,
+                                                    dateFormat: 'dd/mm/yy',
+                                                    yearRange: "-18:+5"
+                                                    });
+                                                });
+                                        </script>
+                                            
+                                    </apex:outputPanel>   
+                                    
+                                    
+                                    <apex:outputPanel rendered="{!ifDetailsExist}" layout="none" id="gems_scholarship_panel">
+                                            
+                                        <div class="panel panel-default">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title pull-left">Scholarship Details</h3>
+                                                <span class="pull-right"><abbr class="sf-required" title="required">*</abbr> = Required Information </span>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="panel-body" style="padding: 0;">
+                                            <div class="row">
+                                                <div class="col-lg-12 col-md-12">
+                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                        <div class="form-group">
+                                                            <apex:outputLabel >Please select the scholarship category you wished to be considered for. <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                            <apex:actionRegion >
+                                                                <apex:inputField id="selectScholarshipCategory" value="{!scholarshipSR.Scholarship_Category__c}" styleClass="form-control requiredInput">
+                                                                    <apex:actionSupport event="onchange" reRender="errormsg,GEMS_ApplyScholarship_Form" status="pleasewait"/>
+                                                                </apex:inputField>
+                                                            </apex:actionRegion>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </apex:outputPanel>
+                                            
+                                                                                
+                                    <apex:outputPanel id="gems_academics_panel" rendered="{!scholarshipSR.Scholarship_Category__c == 'Academics'}" layout="none"> <!--academics-->
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group">
+                                                    <apex:outputLabel >
+                                                        You are a student who has consistently placed at the top of your class in all your subjects for atleast the last three years. If you have appeared for any international exams, you have placed in the top 95<sup>th</sup> percentile (Please note you will need to provide evidence of any claims) and have the passion and commitment to continue improving your grades.
+                                                        Please choose your five core subjects and put in the grades for the last examination taken. <a href="http://www.gemseducation.com/choosing-a-school/scholarships/" class="bold" target="_blank" > Click here for detailed eligibility criteria</a>
+                                                    </apex:outputLabel>
+                                                </div>
+                                            </div>  
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group">
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 1 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                 <apex:inputField styleClass="form-control requiredInput"  value="{!scholarshipSR.Subject_1__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 1<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField value="{!scholarshipSR.Grade_Score_for_Subject_1__c}"  styleClass="form-control requiredInput" />
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 2 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                 <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_2__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 2<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField value="{!scholarshipSR.Grade_Score_for_Subject_2__c}"  styleClass="form-control requiredInput" />
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 3 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                 <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_3__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >
+                                                                    Grade/Score for Subject 3<abbr class="sf-required" title="required">*</abbr>
+                                                                </apex:outputLabel>
+                                                                <apex:inputField value="{!scholarshipSR.Grade_Score_for_Subject_3__c}"  styleClass="form-control requiredInput" />
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 4 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                 <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_4__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 4 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField value="{!scholarshipSR.Grade_Score_for_Subject_4__c}"  styleClass="form-control requiredInput" />
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 5 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_5__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 5 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField value="{!scholarshipSR.Grade_Score_for_Subject_5__c}"  styleClass="form-control requiredInput" />
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>  
+                                        </div>                                                      
+                                    </apex:outputPanel> <!--arabicstudies-->
+                                        
+                                    <apex:outputPanel id="gems_arabicstudies_panel" rendered="{!scholarshipSR.Scholarship_Category__c == 'Arabic Studies'}" layout="none" >
+                                        <script>        
+                                            document.getElementById("{!$Component.arabicsub1}").options.selectedIndex = 1;
+                                            document.getElementById("{!$Component.arabicsub1}").style.userSelect = 'none';
+                                            document.getElementById("{!$Component.arabicsub1}").style.pointerEvents = 'none';           
+                                        </script> 
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group">
+                                                    <apex:outputLabel > You are a student who has consistently placed at the top of your class in all your subjects for atleast the last three years. If you have appeared for any international exams, you have placed in the top 95th percentile (Please note you will need to provide evidence of any claims) and have the passion and commitment to continue improving your grades.  <a href="http://www.gemseducation.com/choosing-a-school/scholarships/" class="bold" target="_blank" > Click here for detailed eligibility criteria</a></apex:outputLabel><br/>
+                                                </div>
+                                            </div>      
+                                        </div>          
+                                                        
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="margin-left: -14px;">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel >Are either of your parents native Arabic speakers ? <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                        <apex:inputField id="arabicSpeaking" value="{!scholarshipSR.Both_Parents_Speak_Arabic__c}" styleClass="form-control requiredInput"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div><br/>
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group">            
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Please choose your five core subjects and put in the grades for the last examination taken. </apex:outputLabel>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 1 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                <apex:inputField id="arabicsub1" label="Arabic Studies" styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_1__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 1<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Grade_Score_for_Subject_1__c}" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 2 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_2__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 2<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Grade_Score_for_Subject_2__c}" />
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 3 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                 <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_3__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 3<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Grade_Score_for_Subject_3__c}" />
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 4 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                 <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_4__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 4<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Grade_Score_for_Subject_4__c}" />
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel >Subject 5 <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>                                                                            
+                                                                <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Subject_5__c}" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <apex:outputLabel > Grade/Score for Subject 5<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>
+                                                                <apex:inputField styleClass="form-control requiredInput" value="{!scholarshipSR.Grade_Score_for_Subject_5__c}" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                        
+                                            </div>
+                                        </div>
+                                    </apex:outputPanel> <!--sports-->
+                                        
+                                    <apex:outputPanel id="gems_sports_panel" rendered="{!scholarshipSR.Scholarship_Category__c == 'Sports'}" layout="none">
+                                        <script>
+                                           var currentlink2 = 2;
+                                           var links2 = 5;
+                                           function addLinks2(){
+                                                if(currentlink2 == links2){
+                                                    $('.row2'+currentlink2).css('display','block');
+                                                    $('.addmorelinks').appendTo('.row2'+currentlink2+' .col-sm-2');
+     
+                                                    $('.addmorelinks').css('display','none');
+                                                        
+                                                    }
+                                                else {
+                                                    $('.row2'+currentlink2).css('display','block');
+                                                    $('.addmorelinks').appendTo('.row2'+currentlink2+' .col-sm-2');
+                                                    currentlink2++;
+                                                }
+                                            }
+                                        </script>       
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group">
+                                                    <apex:outputLabel > You are a committed student with grades that place you in the top 70<sup>th</sup> percentile in your class and have consistently placed your sport for the last 3-5 years, competing in a) Regional or b) international level tournaments  <a href="http://www.gemseducation.com/choosing-a-school/scholarships/" class="bold" target="_blank" > Click here for detailed eligibility criteria</a></apex:outputLabel>
+                                                </div>
+                                            </div>
+                                        </div>
+                                       <div class="panel-body" style="padding:0px;"> 
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel > Please confirm the level at which you have represented your chosen specialism<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>  
+                                                        <apex:inputField value="{!scholarshipSR.Specialism_Representation_Level__c}" styleClass="form-control requiredInput"/>   
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                       </div>
+                                    </apex:outputPanel> <!--creative arts-->
+                                    
+                                    <apex:outputPanel id="gems_creativearts_panel" rendered="{!scholarshipSR.Scholarship_Category__c == 'Creative & Performing Arts'}" layout="none">
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group">
+                                                    <apex:outputLabel > You are a passionate artiste and performer with grades that place you in the top 70<sup>th</sup> percentile in your class and have consistently played your sport for the last 3-5 years, competing in a) Regional or b) International level tournaments.  <a href="http://www.gemseducation.com/choosing-a-school/scholarships/" class="bold" target="_blank" > Click here for detailed eligibility criteria</a></apex:outputLabel>
+                                                </div>
+                                            </div>
+                                        </div>
+                                       <div class ="panel-body" style="padding:0px;">
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel > Please confirm the level at which you have represented your chosen specialism<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>  
+                                                        <apex:inputField value="{!scholarshipSR.Specialism_Representation_Level__c}" styleClass="form-control requiredInput"/>   
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                       </div>
+                                    </apex:outputPanel> <!--innovation-->
+                                    
+                                    <apex:outputPanel id="gems_innovation_panel" rendered="{!scholarshipSR.Scholarship_Category__c == 'Innovation and Digital Technology'}" layout="none">
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group">
+                                                    <apex:outputLabel > You are a student who has consistently placed at the top of your class in all your subjects for at least the last three years. You have used your initiative and innovation to solve a real-world problem and are able to substantiate with a comprehensive presentation on the project. Please ensure your application is supported by a document that briefly explains the project and it’s objectives.  <a href="http://www.gemseducation.com/choosing-a-school/scholarships/" class="bold" target="_blank" > Click here for detailed eligibility criteria</a></apex:outputLabel>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--<div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                    <div class="form-group">
+                                                        <apex:outputLabel > Please confirm the level at which you have represented your chosen specialism<abbr class="sf-required" title="required">*</abbr> </apex:outputLabel>  
+                                                        <apex:inputField value="{!scholarshipSR.Innovation_Category__c}" styleClass="form-control requiredInput"/>   
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>-->
+                                    </apex:outputPanel> <!--end-->
+                                    
+                                </apex:outputPanel>
+                                
+                                
+                                <apex:outputPanel id="GEMS_DocumentUpload" rendered="{!ifDetailsExist==true && scholarshipSR.Scholarship_Category__c != ''}" layout="none">
+                                        
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title pull-left">The documents requested below are mandatory in order for your application to be processed</h3>
+                                        </div>
+                                        <div class="panel">
+                                            <apex:dataTable id="fileList" styleClass="table" value="{!lstDoc}" var="Doc" rendered="{!IF(lstDoc!=null && lstDoc.size>0,true,false)}">
+                                                <apex:column > <apex:outputLabel styleClass="left">{!Doc.Name}</apex:outputLabel><a style="padding-left:10px;" class="{!IF(Doc.Name == 'Cover Letter','show left','hide')}" href ="http://www.gemseducation.com/choosing-a-school/scholarships/cover-letter-guidance/" target= "_blank">(Click here for guidance)</a> </apex:column>
+                                                <apex:column > <apex:outputLabel >{!Doc.HexaBPM__Status__c}</apex:outputLabel> </apex:column>
+                                                <apex:column styleClass="actionCol text-right">
+                                                    <a data-reveal-id="myModal1" data-document-name="{!HTMLENCODE(Doc.Name)}" id="lnkUpload" data-animation="fade" class="actionLink"
+                                                       style="text-decoration:none;" onClick="onModalReveal(this);$('#myModal1').css('display','block');">
+                                                        <apex:outputlabel id="btnUpload" value="{!IF(Doc.HexaBPM__Status__c!='Uploaded','Upload','Replace')}" style="cursor:pointer;font-weight: 700;"
+                                                                          styleClass="btn pull-right actionLink" onclick="passValues('{!Doc.id}','{!Doc.Name}');"/>
+                                                    </a>
+                                                </apex:column>
+                                            </apex:dataTable>
+                                        </div>
+                                    </div>
+                                    <apex:inputhidden id="SRDocID" value="{!SRDocID}"/>
+                                    <apex:inputhidden id="SRDocName" value="{!SRDocName}"/>
+                                    <div id="myModal1" class="reveal-modal" >
+                                        <a class="close-reveal-modal">&#215;</a>
+                                        <apex:outputpanel layout="block" style="display:block" id="NewDocPopUp">
+                                            <div class="hd_div">Upload Required Document</div>
+                                            <div style="margin-top:20px;"  id="pg">
+                                                <apex:pageBlock mode="maindetail" id="popUpPB">
+                                                    <div id="dvNewDoc" style="display:block">
+                                                        <apex:actionStatus id="NewDocStatus">
+                                                            <apex:facet name="start">
+                                                                <img src="/img/loading32.gif" style="vertical-align:middle;" class="loader"/> 
+                                                            </apex:facet>
+                                                        </apex:actionStatus>
+                                                        <table cellspacing="8" cellpadding="0" border="0">
+                                                            <tr>
+                                                                <td style="font-weight:bold;text-align:right" valign="middle"> File to upload </td>
+                                                                <td align="left" > 
+                                                                    <div class="requiredInput">
+                                                                        <div class="requiredBlock"> </div>
+                                                                        <apex:inputFile id="file" value="{!document.body}" contentType="{!selectedContentType}" filename="{!FileName}" accept=".doc,.docx,application/pdf,image/jpeg,image/pjpeg,image/jpeg,image/png,image/gif,image/bmp"/>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight:bold;text-align:right" valign="middle"> Document Name </td>
+                                                                <td align="left"> <apex:outputtext value="" id="DocumentName" style="font-weight:bold;"/> </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-weight:bold;text-align:right;vertical-align:top;" valign="middle"> Comments </td>
+                                                                <td align="left"> <apex:inputTextarea value="{!document.Description}" id="ExternalComments" style="width:300px;resize:none;"/> </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                    <apex:pageBlockButtons id="popup1btn" dir="RTL" location="bottom" styleClass="pbButtonb">
+                                                            <apex:commandButton id="cmdSave" styleClass="btn pull-right close-reveal-modal" value="Save" action="{!null}" style="margin-left: 5px;position:inherit" onclick="uploadRequired(); return false;" />
+                                                            <apex:commandButton style="position:inherit" id="cmdCancel" styleClass="btn pull-right close-reveal-modal" action="{!Cancel}" value="Cancel" />
+                                                    </apex:pageBlockButtons>
+                                                </apex:pageBlock>
+                                            </div>
+                                        </apex:outputpanel>
+                                    </div>
+                                    <script>
+                                        function passValues(docID,docName){
+                                            $('[id$="Gems_ApplyScholarshipPage\\:j_id3\\:GEMS_ApplyScholarship_Form\\:SRDocID"]').val(docID);
+                                            $('[id$="Gems_ApplyScholarshipPage\\:j_id3\\:GEMS_ApplyScholarship_Form\\:SRDocName"]').val(docName);
+                                            $('[id$="Gems_ApplyScholarshipPage\\:j_id3\\:GEMS_ApplyScholarship_Form\\:popUpPB\\:DocumentName"]').html(docName);
+                                        }
+                                        
+                                        function uploadRequired(){
+                                            
+                                            var reader = new FileReader();
+                                            var file = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB:file').files[0];
+                                            var fileDescription = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB:ExternalComments').value;
+                                            var docID = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:SRDocID').value;
+                                            var filesize = file.size;
+                                            var fileName = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB:file').files[0].name;
+                                            
+                                            if(filesize > 1048576){
+                                                alert('Please upload a small file. File size can\'t be greater than 1 MB.');
+                                                document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB:file').value = '';
+                                            }else{
+                                                
+                                                var reader = new FileReader();
+                                                reader.readAsDataURL(file);
+                                                
+                                                var filestring;
+                                                reader.onload = function(e) {
+                                                    uploadRequiredMethod(e.target.result.split(',')[1],fileDescription,docID,fileName);
+                                                }
+                                            }
+                                        }
+                                                                
+                                        function onModalReveal(sender){
+                                            window.parentIFrame.scrollTo(0,600);
+                                            $("#myModal1 [id$='DocumentName']").html($(sender).data('document-name'));
+                                        }
+                                    </script>
+                                    
+                                    <apex:actionRegion >
+                                       <apex:actionFunction action="{!upload}" name="uploadRequiredMethod" rerender="GEMS_DocumentUpload,fileList,errormsg" status="pleasewait">
+                                           <apex:param name="fileBody" value="" />
+                                           <apex:param name="fileDescription" value="" />
+                                           <apex:param name="srDocId" value="" />
+                                           <apex:param name="fileName" value="" />
+                                       </apex:actionFunction>
+                                   </apex:actionRegion>
+                                </apex:outputPanel>
+                                
+                                <apex:outputPanel id="GEMS_additionalUpload" rendered="{!ifDetailsExist==true && scholarshipSR.Scholarship_Category__c != ''}" layout="none">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title pull-left">Additional references to support your application</h3>
+                                        </div><br/>
+                                        <div class="panel">
+                                            <div class="row">
+                                                <div class="col-lg-12 col-md-12">
+                                                    <!--<div class="form-group checkbox">
+                                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">-->
+                                                            <div style="margin-bottom:10px">
+                                                                <label>Please upload relevant videos on youtube or vimeo and provide the URLs below for reference.</label>
+                                                            </div>
+                                                            <apex:outputLabel styleClass="rem-left-spacer"> Do you wish to upload more documents for reference? </apex:outputLabel>
+                                                            
+                                                            <a data-reveal-id="myModal2" data-animation="fade" class="actionLink" onClick="onModalReveal(this);$('#myModal2').css('display','block');">
+                                                                <apex:outputlabel id="btnUpload" value="Upload" style="cursor:pointer;font-weight: 700;" styleClass="btn pull-right actionLink" />
+                                                            </a>
+                                                    <!--    </div>
+                                                    </div>-->
+                                                </div>
+                                            </div><br/>
+                                        </div>
+                                            
+                                        <div id="myModal2" class="reveal-modal" >
+                                            <a class="close-reveal-modal">&#215;</a>
+                                            <apex:outputpanel layout="block" style="display:block" id="NewDocPopUp1">
+                                                <div class="hd_div">Upload Required Document</div>
+                                                <div style="margin-top:20px;"  id="pg1">
+                                                    <apex:pageBlock mode="maindetail" id="popUpPB1">
+                                                        <div id="dvNewDoc" style="display:block">
+                                                            <apex:actionStatus id="NewDocStatus1">
+                                                                <apex:facet name="start">
+                                                                    <img src="/img/loading32.gif" style="vertical-align:middle;" class="loader"/>
+                                                                </apex:facet>
+                                                            </apex:actionStatus>
+                                                            <table cellspacing="8" cellpadding="0" border="0">
+                                                                <tr>
+                                                                    <td style="font-weight:bold;text-align:right" valign="middle"> File to upload </td>
+                                                                    <td align="left" > 
+                                                                        <div class="requiredInput">
+                                                                            <div class="requiredBlock"> </div>
+                                                                            <apex:inputFile id="file1" value="{!document.body}" contentType="{!selectedContentType}" filename="{!FileName}"/>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="font-weight:bold;text-align:right" valign="middle"> Document Name<abbr class="sf-required" title="required">*</abbr> </td>
+                                                                    <td align="left"> <apex:inputtext value="{!fileName}" id="fileName" style="font-weight:bold;"/> </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="font-weight:bold;text-align:right;vertical-align:top;" valign="middle"> Comments </td>
+                                                                    <td align="left"> <apex:inputTextarea value="{!fileDescription}" id="fileDescription" style="width:300px;resize:none;"/> </td>
+                                                                </tr>
+                                                            </table>
+                                                        </div>
+                                                            
+                                                        <apex:pageBlockButtons id="popup1btn" dir="RTL" location="bottom" styleClass="pbButtonb">
+                                                            <apex:commandButton id="cmdSave" styleClass="btn pull-right close-reveal-modal" value="Save" action="{!null}" style="margin-left: 5px;position:inherit" onclick="uploadAdditional(); return false;"/>
+                                                            <apex:commandButton id="cmdCancel" styleClass="btn pull-right close-reveal-modal" action="{!Cancel}" value="Cancel" style="position:inherit" />
+                                                        </apex:pageBlockButtons>
+                                                    </apex:pageBlock>
+                                                        
+                                                    <script>
+                                                        function uploadAdditional(){
+                                                            var reader = new FileReader();
+                                                            var file = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:file1').files[0];
+                                                            var fileDescription = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:fileDescription').value;
+                                                            var docName = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:fileName').value;
+                                                            
+                                                            if(fileName == ''){
+                                                                alert('Please enter a document name');
+                                                                document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:file1').value = '';
+                                                                document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:fileName').value = '';
+                                                                document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:fileDescription').value = '';
+                                                            }else{
+                                                                if(typeof(file) == 'undefined'){
+                                                                    alert('Please select a document to upload');
+                                                                    document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:file1').value = '';
+                                                                    document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:fileName').value = '';
+                                                                    document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:fileDescription').value = '';
+                                                                }else if(file.size > 1048576){
+                                                                    alert('Please upload a small file. File size can\'t be greater than 1 MB.');
+                                                                    document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:file1').value = '';
+                                                                    document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:fileName').value = '';
+                                                                    document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:fileDescription').value = '';
+                                                                }
+                                                                else{
+                                                                    var reader = new FileReader();
+                                                                    reader.readAsDataURL(file);
+                                                                    var fileName = document.getElementById('Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:popUpPB1:file1').files[0].name;
+                                                                    var filestring;
+                                                                    reader.onload = function(e) {
+                                                                        uploadAdditionalMethod(e.target.result,fileName,fileDescription,docName);
+                                                                    }
+                                                                }
+                                                            }
+                                                        
+                                                        }
+                                                    
+                                                        function onModalReveal(sender){
+                                                            window.parentIFrame.scrollTo(0,600);
+                                                            $("#myModal2 [id$='DocumentName']").html($(sender).data('document-name'));
+                                                        }
+                                                        
+                                                    </script>
+                                                </div>
+                                                    
+                                                <apex:actionRegion >
+                                                    <apex:actionFunction action="{!uploadadditional}" name="uploadAdditionalMethod" rerender="GEMS_DocumentUpload,fileList,errormsg" status="pleasewait">
+                                                        <apex:param name="fileBody" value="" />
+                                                        <apex:param name="fileName" value="" />
+                                                        <apex:param name="fileDescription" value="" />
+                                                        <apex:param name="docName" value="" />
+                                                    </apex:actionFunction>
+                                                </apex:actionRegion>
+                                            </apex:outputpanel>
+                                        </div>
+                                        <div class="panel">
+                                            <div class="row row1">
+                                                <div class="col-sm-12">
+                                                    <div class="form-group">                                                                          
+                                                        <apex:outputLabel styleClass="link1" >Link 1 </apex:outputLabel>
+                                                        <apex:outputLabel styleClass="link2" style="position:relative;left:48.5%;display:none" >Link 2 </apex:outputLabel>     
+                                                        <div class="row">
+                                                            <div class="col-sm-6"> <apex:inputField type="url" styleClass="form-control" value="{!scholarshipSR.Link_1__c}" /> </div>
+                                                            <div class="col-sm-6"> <button class="addmorelinks btn pull-right actionLink" type="button" onClick="addLinks()">Add More Links</button><apex:inputField type="url" styleClass="form-control link2" value="{!scholarshipSR.Link_2__c}" style="display:none"/> </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row row2" style="display:none">
+                                                <div class="col-sm-12">
+                                                    <div class="form-group">                                                                          
+                                                        <apex:outputLabel styleClass="link3" style="display:none" >Link 3  </apex:outputLabel>   
+                                                        <apex:outputLabel styleClass="link4" style="position:relative;left:48.5%;display:none" >Link 4 </apex:outputLabel>       
+                                                        <div class="row">
+                                                            <div class="col-sm-6 rowlink3"> <apex:inputField type="url" styleClass="form-control link3" style="display:none" value="{!scholarshipSR.Link_3__c}" /> </div>
+                                                            <div class="col-sm-6 rowlink4"> <apex:inputField type="url" styleClass="form-control link4" style="display:none" value="{!scholarshipSR.Link_4__c}" /> </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row row3" style="display:none">
+                                                <div class="col-sm-12">
+                                                    <div class="form-group">                                                                          
+                                                        <apex:outputLabel styleClass="link5" style="display:none" >Link 5 </apex:outputLabel>     
+                                                        <div class="row">
+                                                            <div class="col-sm-6 rowlink5"> <apex:inputField type="url" styleClass="form-control link5" style="display:none" value="{!scholarshipSR.Link_5__c}" /> </div>
+                                                            <div class="col-sm-6 rowlink6"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                                
+                                        </div>
+                                    </div>
+                                        
+                                    <script >
+                                        var currentrow = 1;
+                                        var currentlink = 1;
+                                        var totallinks = 5;
+                                        var totalrows = 3
+                                        function addLinks(){
+                                            if(currentlink == 1){
+                                                currentlink++;
+                                                $('.row2').css('display','block');
+                                                $('.addmorelinks').appendTo('.rowlink4');
+                                                document.getElementsByClassName('link2')[0].style.display = 'inline';
+                                                document.getElementsByClassName('link2')[1].style.display = 'inline';
+                                            }
+                                            else if(currentlink == 2){
+                                                currentlink++;
+                                                document.getElementsByClassName('link3')[0].style.display = 'inline';
+                                                document.getElementsByClassName('link3')[1].style.display = 'inline';
+                                            }
+                                            else if(currentlink == 3){
+                                                currentlink++;
+                                                $('.row3').css('display','block');
+                                                $('.addmorelinks').appendTo('.rowlink6');
+                                                document.getElementsByClassName('link4')[0].style.display = 'inline';
+                                                document.getElementsByClassName('link4')[1].style.display = 'inline';
+                                            }
+                                            else if(currentlink == 4){
+                                                $('.addmorelinks').css('display','none');
+                                                 document.getElementsByClassName('link5')[0].style.display = 'inline';
+                                                document.getElementsByClassName('link5')[1].style.display = 'inline';                                                        
+                                            }
+                                            else {}
+                                        }
+                                    </script>
+                                </apex:outputPanel>
+                                
+                                
+                                
+                                <apex:outputPanel id="GEMS_Declaration" rendered="{!ifDetailsExist==true && scholarshipSR.Scholarship_Category__c != ''}" layout="none">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title pull-left">Declaration</h3>
+                                        </div>
+                                            
+                                       
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group checkbox">
+                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                        <apex:outputLabel >This is to confirm we (applicants family) have the financial means for the chosen school in the absence of a scholarship subsidy. <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel> 
+                                                    </div>
+                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                        <apex:actionRegion >
+                                                            <apex:inputCheckbox styleClass="form-control requiredInput" value="{!isFinancialStable}" id="isFinancialStable"> 
+                                                                <apex:actionSupport event="onchange" reRender="errormsg,submitButton" status="pleasewait"/>
+                                                            </apex:inputCheckbox>
+                                                        </apex:actionRegion>
+                                                        <apex:outputLabel for="isFinancialStable">
+                                                            <span class="icon-checkbox-selected"><span class="path1"></span><span class="path2"></span></span>
+                                                            <span class="icon-checkbox-unselected"></span>
+                                                        </apex:outputLabel>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div><br/>
+                                            
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <div class="form-group checkbox">
+                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                        <apex:outputLabel >We (Parent or legal guardian, on behalf of the applicant) agree with the  <a class="bold" href="http://media.gemseducation.com/media/41017/gemsscholarshipstermsconditions.pdf" target="_blank">terms and conditions</a> of the GEMS scholarship programme <abbr class="sf-required" title="required">*</abbr> </apex:outputLabel> 
+                                                    </div>
+                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                       <apex:actionRegion > 
+                                                            <apex:inputCheckbox id="isTerms"  styleClass="form-control requiredInput" value="{!isTerms}"> 
+                                                                <apex:actionSupport event="onchange" reRender="errormsg,submitButton" status="pleasewait"/>
+                                                            </apex:inputCheckbox>
+                                                        </apex:actionRegion>
+                                                        <apex:outputLabel for="isTerms">
+                                                            <span class="icon-checkbox-selected"><span class="path1"></span><span class="path2"></span></span>
+                                                            <span class="icon-checkbox-unselected"></span>
+                                                        </apex:outputLabel>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div><br/>
+                                            
+                                        <div class="row">
+                                            <div class="col-lg-12 col-md-12">
+                                                <apex:commandButton action="{!submitScholarship}" status="pleasewait" value="SUBMIT" id="submitButton" styleClass="btn primary-command commandProceedBtn" disabled="{!NOT(AND(isFinancialStable,isTerms))}" style="float:right"/>
+                                            </div>
+                                        </div>
+                                    </div> 
+                                </apex:outputPanel>
+                                <!--Scripts in the MainPanel -->
+                                <script>
+                                    init();
+                                    function init(){
+                                        var scholarShipCategoryField = document.getElementById("Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:selectScholarshipCategory");
+                                        if(scholarShipCategoryField && scholarShipCategoryField.value.toLowerCase() == "arabic studies"){
+                                            document.getElementById("Gems_ApplyScholarshipPage:j_id3:GEMS_ApplyScholarship_Form:arabicsub1").value = scholarShipCategoryField.value;
+                                        }
+                                    }
+                                </script>
+                                
+                            </div>
+                        </section>
+                    </div>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!isSaveSuccess==true}" id="saveSuccess">
+                    <script>window.parentIFrame.scrollTo(0,210)</script>
+                
+                    <div class="row page-info" style="margin-bottom: 20px;">
+                        <div class="col-lg-12 col-md-12">
+                            <div style="margin: 20px 0 10px 0">
+                                <ul class="list-inline"> <li>Thank you for your application. We will get back to you shortly.</li> </ul>
+                            </div>
+                        </div>
+                     </div>
+               </apex:outputPanel>  <!--postsave-->
+            </apex:form>
+        </apex:define>
+    </apex:composition>
+
+</apex:page>

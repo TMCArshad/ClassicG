@@ -1,0 +1,128 @@
+<apex:component Controller="GEMS_ThankYouCntlrExt" allowDML="true">
+    <apex:pageBlock id="mainBlock" rendered="{!objSR.Service_Type__c=='Enrollment Short Form'  && stage=='Enrollment'}">
+    
+    <apex:outputPanel layout="none" rendered="{!objSR.Accept_Offer__c!='No'}">
+	    <div class="row page-info">
+	        <div class="col-lg-12 col-md-12">
+	            <h3>Offer Letter for {!studentName}</h3>
+	            <p>Details for admissions in {!objSR.school__r.name}, following the {!curriculum} curriculum for the academic year {!academicYear}.</p>
+	        </div>
+	    </div>
+    </apex:outputPanel>
+    
+    <apex:outputPanel layout="none" rendered="{!offerRejected==true}">
+	    <div class="row page-info">
+	        <div class="col-lg-12 col-md-12">
+	            <h3>Offer Cancelled Successfully</h3>
+	            <p>Offer details for admissions in {!objSR.school__r.name}, following the {!curriculum} curriculum for the academic year {!academicYear}.</p>
+	        </div>
+	    </div>
+    </apex:outputPanel>
+    
+    <apex:outputPanel layout="none" rendered="{!offerAccepted==true}">
+	    <div class="row page-info">
+	        <div class="col-lg-12 col-md-12">
+	            <h3>Offer accepted Successfully</h3>
+	            <p>Offer details for admissions in {!objSR.school__r.name}, following the {!curriculum} curriculum for the academic year {!academicYear}.</p>
+	        </div>
+	    </div>
+    </apex:outputPanel>
+    
+    <apex:pageBlockButtons location="bottom" dir="RTL" >
+        <apex:commandButton value="Pay Now" styleClass="btn btn pull-right next-step" action="{!PayNow}" rendered="{!priceItem[0].Open_Online_Payment__c == 'Yes' && priceItem[0].Status__c=='Added' && (objSR.Accept_Offer__c=='Yes' || cancelOfferLetterValue == 'Yes') && objSR.school__r.Country__c != '97' && objSR.Fee_Exclusion_Reason__c!='Paid By Company'}"/>
+        <apex:commandButton value="Pay Now" styleClass="btn btn pull-right next-step" action="{!PayNow}" rendered="{!priceItem[0].Open_Online_Payment__c == 'Yes' && priceItem[0].Status__c=='Added' && (objSR.Accept_Offer__c=='Yes' || cancelOfferLetterValue == 'Yes') && objSR.school__r.Country__c == '97' && objSR.Emirates_ID__c!='' && objSR.Fee_Exclusion_Reason__c!='Paid By Company'}"/>
+        <apex:commandButton value="Cancel Offer" rerender="mainBlock" styleClass="btn btn pull-right next-step" action="{!cancelEnrollment}" rendered="{!cancelOfferLetterValue=='No' && (priceItem!=null && priceItem.size>0 || noPayment==true)}"/>
+        <apex:commandButton value="Accept Offer" rerender="mainBlock" styleClass="btn btn pull-right next-step" action="{!acceptOffer}" rendered="{!noPayment == true  && cancelOfferLetterValue=='Yes'}"/>
+    </apex:pageBlockButtons>
+    
+    <apex:pageBlockSection id="registrationSection" title="Student Details" columns="1" collapsible="false">
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Application Number"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Name}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Name"></apex:outputLabel>
+            <apex:outputText value="{!studentName}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Grade"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Grade_Display__c}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Date of Birth"></apex:outputLabel>
+            <apex:outputField value="{!objSR.Date_Of_Birth__c}" />
+        </apex:pageBlockSectionItem>
+        
+         <apex:pageBlockSectionItem rendered="{!objSR.Siblings_studying_in_a_GEMS_school__c == true}"
+                                    labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Sibling Name and Student Id:"></apex:outputLabel>
+            <apex:outputText value="{!siblingDetails}" /> 
+        </apex:pageBlockSectionItem>
+        
+    </apex:pageBlockSection>
+    <!-- 
+    <apex:pageBlockSection id="parentSection" title="Parent Details" columns="1" collapsible="false">
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Name"></apex:outputLabel>
+            <apex:outputText value="{!parentName}" /> 
+        </apex:pageBlockSectionItem>
+        
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="City/State"></apex:outputLabel>
+            <apex:outputText value="{!ParentCity}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Country"></apex:outputLabel>
+            <apex:outputText value="{!ParentCountry}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Phone"></apex:outputLabel>
+            <apex:outputText value="{!parentPhone}" />
+        </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+            <apex:outputLabel value="Email"></apex:outputLabel>
+            <apex:outputText value="{!parentEmail}" />
+        </apex:pageBlockSectionItem>
+        
+    </apex:pageBlockSection>-->
+    <apex:pageBlockSection columns="1" title="Offer Conditions" collapsible="false" rendered="{!objSR.Conditions__c!=''}">
+            <apex:pageBlockSectionItem >
+                <apex:outputField value="{!objSR.Conditions__c}" />
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+    
+    <apex:outputPanel layout="none" rendered="{!objSR.Accept_Offer__c=='--None--' || objSR.Accept_Offer__c==''}">
+	    <apex:pageBlockSection columns="1" id="paymentConfirmation" title="Offer Confirmation" collapsible="false">
+	    	<apex:pageBlockSectionItem labelStyle="width: 50%" dataStyle="width:50%">
+	    		<apex:outputLabel value="Do you wish to accept the offer"></apex:outputLabel>
+	            <apex:selectList size="1" value="{!cancelOfferLetterValue}">
+                    <apex:selectOptions value="{!cancelOfferLetter }" />
+                    <apex:actionSupport event="onchange" reRender="mainBlock" />
+                </apex:selectList>
+	    	</apex:pageBlockSectionItem>
+	    </apex:pageBlockSection>
+    </apex:outputPanel>
+   
+    <apex:pageBlockSection columns="1" id="paymentSection" title="Payment Details (Please note this fee is non-refundable and non-transferable.)" collapsible="false" rendered="{!(objSR.Accept_Offer__c=='Yes' || cancelOfferLetterValue == 'Yes') && priceItem!=NULL && priceItem.size>0}">
+        <apex:pageBlockTable styleClass="table table-bordered grey-headed-bg" value="{!priceItem}" var="objPrice">
+            <apex:column value="{!objPrice.name}"/>
+            <apex:column headerValue="Fee Type">
+            	<apex:outputText value="{!objPrice.Product__r.name}"/>
+            </apex:column>
+            <apex:column value="{!objPrice.Status__c}"/>
+            <apex:column headerValue="Price" >
+	            <apex:outputText value="{0, number,###,###,##0} AED">
+	            <apex:param value="{!objPrice.HexaBPM__Price__c}" />
+	            </apex:outputText>
+            </apex:column>
+        </apex:pageBlockTable>
+    </apex:pageBlockSection>
+
+    </apex:pageBlock>
+</apex:component>

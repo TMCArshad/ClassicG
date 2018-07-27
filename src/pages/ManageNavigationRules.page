@@ -1,0 +1,282 @@
+<apex:page controller="ManageNavigationRules" id="NvgRules" sidebar="false">
+    <style>
+        /* This is for the full screen DIV */
+         .popupBackground {
+             /* Background color */
+             background-color:black;
+             opacity: 0.20;
+             filter: alpha(opacity = 20);
+          
+             /* Dimensions */
+             width: 100%;
+             height: 100%;
+             top: 0;
+             left: 0;
+             z-index: 998;
+             position: absolute;
+         }
+      
+         /* This is for the message DIV */
+         .PopupPanel {
+             /* Background color */
+             /*border: solid 2px #00205B;
+             background-color: white;
+            */
+             /* Dimensions */
+             left: 50%;
+             width: 100px;
+             //margin-left: -100px;
+             border-radius: 15px
+             top: 50%;
+             height: 100px;
+             margin-top: 200px;
+             z-index: 999;
+             position: fixed;
+         }
+    </style>
+    <apex:actionStatus id="pleasewait" stopText="">
+        <apex:facet name="start">
+            <div>
+                <div class="popupBackground"></div>
+                <div class="PopupPanel">
+                        <img src="{!$Resource.LoadingImage}"/>
+                </div>
+            </div>
+        </apex:facet>
+    </apex:actionStatus>
+    <apex:form id="RulesFrm">
+        <apex:actionfunction status="pleasewait" name="AddRuleFunc" action="{!AddRule}" rerender="RulesPB,btnsPnl,RelListPnl"/>
+        <apex:actionfunction status="pleasewait" name="SaveConditionsActions" action="{!SaveCondition}" rerender="RulesPB,btnsPnl,RelListPnl" oncomplete="EnableButtons();"/>
+        <apex:actionfunction status="pleasewait" name="DelCond" action="{!RemoveCondition}" rerender="RulesPB,btnsPnl,RelListPnl" oncomplete="EnableButtons();"/>
+        <apex:inputhidden value="{!CondRowIndex}" id="hdnCondIndex"/>
+        <apex:pageblock title="Navigation Rules" id="RulesPB">
+            <apex:pageblockbuttons id="btnsPnl" location="top">
+                 <apex:commandbutton id="btnAddLine" value="Add Navigation Rule" onclick="ClickOnAddline('{!lstNavRules.size}');return false;"/>
+                 <apex:commandbutton id="backButton" value="Back to Section Detail" action="{!Back_to_SectionDetail}" status="pleasewait"/>
+            </apex:pageblockbuttons>
+            <apex:pageblocktable value="{!lstNavRules}" var="rule" id="RulesTbl">
+                <apex:column headervalue="Action" id="ActCol" style="width:110px;background:{!IF(strNavigRuleId==rule.objRule.Id,'#C2F5F3','')};">
+                    <apex:outputpanel layout="block" rendered="{!!rule.isEdit}">
+                        <apex:commandlink value="Edit" id="editlnk" action="{!EditPGRule}" status="pleasewait" rerender="RulesPB,btnsPnl,RelListPnl">
+                            <apex:param name="hdnEditRowIndex" value="{!rule.RuleIndex}" assignTo="{!RuleIndex}"/>
+                        </apex:commandlink>
+                        <apex:outputLabel id="EditDelLbl">&nbsp;|&nbsp;</apex:outputLabel>
+                        <apex:commandlink value="Del" action="{!DelPGRule}" status="pleasewait" rerender="RulesPB,btnsPnl,RelListPnl">
+                            <apex:param name="hdnDelRowIndex" value="{!rule.objRule.Id}" assignTo="{!strNavigRuleId}"/>
+                        </apex:commandlink>
+                        <apex:outputLabel id="ManageLbl">&nbsp;|&nbsp;</apex:outputLabel>
+                        <apex:commandlink value="Manage" action="{!ManagePGRule}" status="pleasewait" rerender="RulesPB,btnsPnl,RelListPnl">
+                            <apex:param name="RuleId" value="{!rule.objRule.Id}" assignTo="{!strNavigRuleId}"/>
+                        </apex:commandlink>
+                    </apex:outputpanel>
+                    <apex:outputpanel id="SavePnl" layout="block" rendered="{!rule.isEdit}">
+                        <apex:commandlink value="Save" id="savelnk" action="{!SavePGRule}" status="pleasewait" rerender="RulesPB,btnsPnl,RelListPnl">
+                            <apex:param name="hdnSaveRowIndex" value="{!rule.RuleIndex}" assignTo="{!RuleIndex}"/>
+                        </apex:commandlink>
+                        <apex:outputLabel id="SaveCanclLbl">&nbsp;|&nbsp;</apex:outputLabel>
+                        <apex:commandlink value="Cancel" action="{!CancelPGRule}" status="pleasewait" rerender="RulesPB,btnsPnl,RelListPnl">
+                            <apex:param name="hdnCnclRowIndex" value="{!rule.RuleIndex}" assignTo="{!RuleIndex}"/>
+                        </apex:commandlink>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column headerValue="Rule Name" style="background:{!IF(strNavigRuleId==rule.objRule.Id,'#C2F5F3','')};width:200px;">
+                    <apex:inputfield value="{!rule.objRule.Rule_Name__c}" rendered="{!rule.isEdit}" style="width:95%;"/>
+                    <apex:outputfield value="{!rule.objRule.Rule_Name__c}" rendered="{!!rule.isEdit}" style="width:95%;"/>
+                </apex:column>
+                <apex:column headervalue="Rule Description" style="background:{!IF(strNavigRuleId==rule.objRule.Id,'#C2F5F3','')};width:375px;">
+                     <apex:inputfield value="{!rule.objRule.Rule_Description__c}" rendered="{!rule.isEdit}" style="width:95%;resize: none;"/>
+                     <apex:outputfield value="{!rule.objRule.Rule_Description__c}" rendered="{!!rule.isEdit}" style="width:95%;"/>
+                </apex:column>
+                <apex:column headervalue="Rule Condition" style="background:{!IF(strNavigRuleId==rule.objRule.Id,'#C2F5F3','')};width:450px;">
+                    <!--<apex:inputfield value="{!rule.objRule.Rule_Condition__c}" rendered="{!rule.isEdit}" style="width:95%;"/> -->
+                    <apex:outputfield value="{!rule.objRule.Rule_Condition__c}" style="width:95%;"/>
+                </apex:column>
+            </apex:pageblocktable>
+        </apex:pageblock>
+        
+        <apex:outputpanel id="RelListPnl">
+            <apex:pagemessages id="Msg"/>
+            <apex:pageblock id="RelListCondPB" title="Navigation Rule Conditions" rendered="{!IF(lstPgCond!=null && lstPgCond.size>0,true,false)}">
+                <apex:pageblockbuttons location="top" id="ConActBtns">
+                    <apex:commandbutton id="AddCond" value="Add Navigation Condition" action="{!AddCondition}" status="pleasewait" rerender="RelListPnl" onclick="DisableButtons();" oncomplete="EnableButtons();"/>
+                    <apex:commandbutton id="SaveCond" value="Save Conditions & Action" onclick="saveConActns();return false;"/>
+                    <apex:commandbutton id="CondCancel" value="Cancel" status="pleasewait" action="{!CancelCondActions}" rerender="RulesPB,btnsPnl,RelListPnl"/>
+                </apex:pageblockbuttons>
+                <apex:pageblocktable value="{!lstPgCond}" var="Con" id="Conds">
+                    <apex:column headervalue="Object Name">
+                        <apex:inputfield value="{!Con.Object_Name__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Field Name">
+                        <apex:inputfield value="{!Con.Field_Name__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Operator">
+                        <apex:inputfield value="{!Con.Operator__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Value">
+                        <apex:inputfield value="{!Con.Value__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Action" id="ActConCol">
+                        <apex:commandlink value="Remove" id="RemoveLnk" onclick="RemoveCond(document.getElementById('{!$Component.ActConCol}').parentNode.rowIndex);return false;"/>
+                    </apex:column>
+                </apex:pageblocktable>
+            </apex:pageblock>
+            <apex:pageblock id="RelListActPB" title="Navigation Rule Action" rendered="{!IF(lstPgActns!=null && lstPgActns.size>0,true,false)}">
+                <apex:pageblocktable value="{!lstPgActns}" var="Act">
+                    <apex:column headervalue="Navigation Rule">
+                        <apex:outputfield value="{!Act.Page_Navigation_Rule__c}"/>
+                    </apex:column>
+                    <apex:column headervalue="Page Name">
+                        <apex:inputfield value="{!Act.Page__c}"/>
+                    </apex:column>
+                </apex:pageblocktable>
+            </apex:pageblock>
+            <apex:outputPanel layout="block" id="formulapnl" rendered="{!IF(lstPgCond!=null && lstPgCond.size>0,true,false)}">
+                <apex:outputLabel value="Filter Logic " style="font-weight:bold;"/> 
+                <apex:inputText id="formulatxt" value="{!objNavigRule.Rule_Condition__c}" onblur="checkFormula(this.value);" style="min-width: 400px;"/>
+                <a id="clearlogic" onclick="ClearFilterLogic();" style="cursor:pointer;text-decoration:underline;">Clear Filter Logic</a>&nbsp;
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" id="errorpnl" style="margin-left: 70px;" rendered="{!IF(lstPgCond!=null && lstPgCond.size>0,true,false)}">
+                <apex:outputLabel id="errorlbl" value="Error: Your filter is imprecise or incorrect. Please see the help for tips on filter logic." style="color:#d74c3b;display:none;"/>
+                <a id="hlplnk" style="display:none;" href="javascript:openPopupFocusEscapePounds(%27https://help.salesforce.com/apex/htdoor?loc=help&target=working_with_advanced_filter_conditions_in_reports_and_list_views.htm&section=Reports&language=en_US&release=186.12.14&instance=CS17%27, %27Help%27, 1024, 768, %27width=1024,height=768,resizable=yes,toolbar=yes,status=yes,scrollbars=yes,menubar=yes,directories=no,location=yes,dependant=no%27, false, false);" class="tipsLink" title="Tips (New Window)"><span class="helpLink brandTertiaryFgr">Tips</span> &nbsp; <img src="/s.gif" alt="Help" class="helpIcon" title="Help"/></a>
+            </apex:outputPanel>
+        </apex:outputpanel>
+        
+        <script>
+            function ClickOnAddline(listsize){
+                var isRowOpened = CheckOpenRow(listsize);
+                if(isRowOpened==-1){
+                    AddRuleFunc();
+                }else{
+                    alert('Please Save / Cancel the edited rule.');
+                }
+            }
+            function saveConActns(){
+                var Formulaval = document.getElementById('NvgRules:RulesFrm:formulatxt').value;
+                Formulaval = Formulaval.trim();
+                var flag;
+                if(Formulaval!=null && Formulaval!=''){
+                    flag = isValidLogicalStatement(Formulaval);
+                }
+                if(flag!=false){
+                    document.getElementById('NvgRules:RulesFrm:errorlbl').style.display='none';
+                    document.getElementById('hlplnk').style.display='none';
+                    DisableButtons();
+                    SaveConditionsActions();
+                }
+            }
+            function RemoveCond(rowIndex){
+                document.getElementById('NvgRules:RulesFrm:hdnCondIndex').value = rowIndex-1;
+                DelCond();
+            }
+            
+            function CheckOpenRow(size){
+                for(var i=0;i<size;i++){
+                    if(document.getElementById('NvgRules:RulesFrm:RulesPB:RulesTbl:'+i+':SavePnl')!=null){
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            function ClearFilterLogic(){
+                if(document.getElementById('NvgRules:RulesFrm:formulatxt')!=null)
+                    document.getElementById('NvgRules:RulesFrm:formulatxt').value='';
+                document.getElementById('NvgRules:RulesFrm:errorlbl').style.display='none';
+                document.getElementById('hlplnk').style.display='none';
+            }
+            function checkFormula(txt){
+                txt = txt.trim();
+                if(txt != null && txt != ''){
+                    document.getElementById('NvgRules:RulesFrm:formulatxt').value = txt;
+                    var flag = isValidLogicalStatement(txt);
+                }else{
+                    document.getElementById('NvgRules:RulesFrm:errorlbl').style.display='none';
+                    document.getElementById('hlplnk').style.display='none';
+                }
+            }
+            function DisableButtons(){
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:SaveCond').value='Processing..';
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:AddCond').value='Processing..';
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:CondCancel').value='Processing..';
+                
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:SaveCond').className='btnDisabled';
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:AddCond').className='btnDisabled';
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:CondCancel').className='btnDisabled';
+            }
+            function EnableButtons(){
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:SaveCond').value='Save Conditions & Action';
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:AddCond').value='Add Navigation Condition';
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:CondCancel').value='Cancel';
+                
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:SaveCond').className='btn';
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:AddCond').className='btn';
+                document.getElementById('NvgRules:RulesFrm:RelListCondPB:ConActBtns:CondCancel').className='btn';
+            }
+            function isValidLogicalStatement(text) {
+                var RowCount;
+                var indexExceed; 
+                var matchedcount=0; 
+                var allConIncluded = true;
+                if(document.getElementById('NvgRules:RulesFrm:RelListCondPB:Conds')!=null)
+                    RowCount = document.getElementById('NvgRules:RulesFrm:RelListCondPB:Conds').rows.length;
+                var rowsmap = {};
+                if(RowCount!=null && RowCount>0 && text!=null && text.length>0){
+                    RowCount = RowCount-1;
+                    var numbr = /\d+/;
+                    for(var i=0;i<text.length;i++){
+                        if(text[i].match(numbr)){
+                            var rnum = eval(text[i]);
+                            rowsmap[rnum] = {
+                                         Seq : rnum
+                                         };
+                            if(eval(text[i])>RowCount){
+                                indexExceed = eval(text[i]);
+                            }else if(eval(text[i])==0){
+                                indexExceed = 0;
+                            }
+                        }
+                    }
+                    var flConCount=0;
+                    for(var r=1;r<=RowCount;r++){
+                        if(rowsmap!=null && rowsmap[r]!=null){
+                            //console.log('json===>'+rowsmap[r].Seq);
+                            flConCount = flConCount+1;
+                        }
+                    }
+                    if(flConCount==RowCount){
+                        allConIncluded = true;
+                    }else{
+                        allConIncluded = false;
+                    }
+                    
+                        
+                }
+                var re_paren = /\(\s*[+-]?\d+(?:(?:\s+AND\s+[+-]?\d+)+|(?:\s+OR\s+[+-]?\d+)+)\s*\)/ig;
+                var re_valid =  /^\s*[+-]?\d+(?:(?:\s+AND\s+[+-]?\d+)+|(?:\s+OR\s+[+-]?\d+)+)\s*$/ig;
+                // Iterate from the inside out.
+                while (text.search(re_paren) !== -1) {
+                    // Replace innermost parenthesized units with integer.
+                    text = text.replace(re_paren, "0");
+                }
+                if (text.search(re_valid) === 0 && indexExceed==null && allConIncluded==true){
+                    document.getElementById('NvgRules:RulesFrm:errorlbl').style.display='none';
+                    document.getElementById('hlplnk').style.display='none';
+                    return true;
+                }else{
+                    if(indexExceed!=null){
+                        document.getElementById('NvgRules:RulesFrm:errorlbl').innerHTML = 'Error: The filter logic references an undefined filter: '+indexExceed+'.';
+                    }else if(allConIncluded==false){
+                        document.getElementById('NvgRules:RulesFrm:errorlbl').innerHTML = 'Error: Some filter conditions are defined but not referenced in your filter logic.';
+                    }else{
+                        //document.getElementById('NvgRules:RulesFrm:errorlbl').innerHTML = 'Error: Your filter is imprecise or incorrect. Please see the help for tips on filter logic.';
+                         document.getElementById('NvgRules:RulesFrm:errorlbl').style.display='none';
+                         document.getElementById('hlplnk').style.display='none';
+                         return true;
+                    }
+                    document.getElementById('NvgRules:RulesFrm:errorlbl').style.display='';
+                    document.getElementById('hlplnk').style.display='';
+                    return false;
+                }
+            }
+        </script>
+    </apex:form>
+</apex:page>

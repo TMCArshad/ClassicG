@@ -1,0 +1,217 @@
+<apex:page controller="GEMS_lotteryManagementCtlr" cache="false" tabstyle="School__c" id="lotManage" sidebar="true" showHeader="true"> 
+	<style>
+        .columnWidth{
+            width : 80px;
+        }
+        
+        .loader {
+            position: absolute; 
+            top: 35%;
+            left: 45%; 
+            margin-left: -60px; 
+            filter: Alpha(Opacity =70);  
+            opacity: 0.70;
+            -moz-opacity: 0.70;
+         }
+         /* This is for the full screen DIV */
+         .popupBackground {
+             /* Background color */
+             background-color:black;
+             opacity: 0.20;
+             filter: alpha(opacity = 20);
+          
+             /* Dimensions */
+             width: 100%;
+             height: 100%;
+             top: 0;
+             left: 0;
+             z-index: 998;
+             position: absolute;
+         }
+      
+         /* This is for the message DIV */
+         .PopupPanel {
+             /* Background color */
+             /*border: solid 2px #00205B;
+             background-color: white;
+            */
+             /* Dimensions */
+             left: 50%;
+             width: 100px;
+             margin-left: -100px;
+             border-radius: 15px
+             top: 20%;
+             height: 100px;
+             margin-top: 60px;
+             z-index: 999;
+             position: fixed;
+         }
+
+        #lotManage\:lotForm\:Msg {
+            display: block;
+            clear: right;
+		}
+		.logo-container {
+            display: block;
+			padding: 10px 5px;
+			text-align: right;
+		}
+		.logo-container img {
+			max-height: 60px;
+		}
+        body .bodyDiv .outer .oRight, body .bodyDiv .outerNoSidebar {
+            background-color: #f8f8f8;
+        }
+
+    </style>
+
+    <apex:form id="lotForm">
+		<apex:outputLink styleClass="logo-container" id="schoolLogo" value="/{!objSchool.id}" >
+			<apex:outputText value="{!objSchool.Logo__c}" escape="false"/>
+		</apex:outputLink>
+        <apex:pagemessages id="Msg"/>
+        <apex:actionStatus id="pleasewait" stopText="">
+            <apex:facet name="start">
+                <div>
+                    <div class="popupBackground"></div>
+                    <div class="PopupPanel">
+                        <img src="{!$Resource.LoadingImage}"/>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+		<apex:pageBlock title="Lot Allotment" >
+			<apex:outputPanel id="existingLot" >
+				<apex:variable var="rowcount1" value="{!1}" />
+				<apex:pageBlockSection title="Existing Lot for {!objSchool.name}" rendered="{!existingLot!=NULL && existingLot.size>0}" columns="1">
+					<apex:pageBlockTable value="{!existingLot}" var="obj" style="width: 100%;">
+						<apex:column headerValue="Lot No">
+							{!rowcount1} <apex:variable var="rowcount1" value="{!rowcount1+1}" />
+						</apex:column>
+                        <apex:column headerValue="Lot Date" >
+                            <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+                                <apex:param value="{!obj.CreatedDate}" /> 
+                            </apex:outputText>
+                        </apex:column>
+						<apex:column value="{!obj.Academic_Year__r.Academic_Year__c}" headerValue="Academic Year" />
+						<apex:column value="{!obj.Grade__r.Grade_Display__c}" headerValue="Grade" />
+						<apex:column value="{!obj.Lot_Allocation__c}" headerValue="Lot Allocation For" />
+						<apex:column value="{!obj.Lot_Capacity__c}" headerValue="Lot Capacity" />
+						<apex:column headerValue="View Lot">
+							<apex:outputLink value="/{!obj.id}" target="_blank">View</apex:outputLink>
+						</apex:column>
+						<apex:column headerValue="Print Lot">
+							<apex:outputLink value="{!obj.Report_URL__c}" target="_blank">Print</apex:outputLink>
+						</apex:column>
+						
+						<!-- 
+						<apex:column headerValue="Delete Lot">
+							<apex:commandlink action="{!deleteLot}" rerender="msg,existingLot" status="pleasewait" >
+		                        <img src="/img/func_icons/remove12_on.gif" title="/img/func_icons/remove12_on.gif"/>
+		                        <apex:param name="deleteLot" value="{!obj.id}" AssignTo="{!deleteLot}"/>
+		                    </apex:commandlink>
+						</apex:column> -->
+					</apex:pageBlockTable>		
+				</apex:pageBlockSection>
+			</apex:outputPanel>
+			<apex:pageBlockSection columns="2" title="Lot Allotment Criteria">
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Academic Year"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="academicYear" required="false" value="{!objLot.Academic_Year__c}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!academicYearList}" />
+	                        <apex:actionSupport event="onchange" rerender="msg,grade" status="pleasewait"  action="{!getGradesforSchool}" />
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Grade"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="grade" required="false" value="{!objLot.Grade__c}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!gradeList}" />
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Enquiry Stage"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:selectList id="grade" required="false" value="{!stage}" multiselect="false"  size="1">
+	                        <apex:selectOptions value="{!stageList}" />
+	                    </apex:selectList>
+                    </apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Lot Allocation For"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!objLot.Lot_Allocation__c}"/>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Gender"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!objLot.Gender__c}"/>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Lot Date"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!objLot.Lottery_Date__c}"/>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<!-- <apex:pageBlockSectionItem >
+					<apex:outputLabel value="Lot Type"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!objLot.Lottery_Type__c}"/>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>-->
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="Lot Capacity"/>
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+                    	<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!objLot.Lot_Capacity__c}"/>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+			</apex:pageBlockSection>
+			
+			<apex:pageBlockButtons location="Bottom">
+				<apex:commandButton action="{!generateLot}" status="pleasewait" value="Generate Lot" rerender="msg,enquiryTable,lotForm"/>
+			</apex:pageBlockButtons>
+		</apex:pageBlock>
+		
+		<apex:outputPanel id="enquiryTable">
+			<apex:pageBlock rendered="{!listOfSR!=NULL && listOfSR.size>0}">
+				<apex:variable var="rowcount" value="{!1}" />
+				<apex:pageBlockSection >
+					<apex:pageBlockTable value="{!listOfSR}" var="obj" style="width: 260%;">
+						<apex:column headerValue="SR No">
+							{!rowcount} <apex:variable var="rowcount" value="{!rowcount+1}" />
+						</apex:column>
+						<apex:column value="{!obj.name}" headerValue="Enquiry No" />
+						<apex:column value="{!obj.Passport_No__c}" headerValue="Passport No" />
+						<apex:column value="{!obj.First_Name__c} {!obj.Last_Name__c}" headerValue="Applicant Name" />
+						<apex:column HeaderValue="Enquiry Date">
+		        			<apex:outputText value="{0,date,dd/MM/YYYY}">
+	                        <apex:param value="{!Obj.createdDate}"/>
+	                    </apex:outputText>
+                    	</apex:column>
+					</apex:pageBlockTable>
+				</apex:pageBlockSection>
+				<apex:pageBlockButtons location="Bottom">
+					<apex:commandButton action="{!saveLot}" status="pleasewait" value="Save Lot" rerender="msg,enquiryTable, existingLot,lotForm"/>
+					<apex:commandButton action="{!cancelLot}" status="pleasewait" value="Cancel Lot" rerender="msg,enquiryTable, existingLot, lotForm"/>
+				</apex:pageBlockButtons>
+			</apex:pageBlock> 
+		</apex:outputPanel>
+		
+		<script>
+		  function setFocusOnLoad() {}
+		</script>
+	</apex:form>
+</apex:page>

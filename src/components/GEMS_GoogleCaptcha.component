@@ -1,0 +1,34 @@
+<apex:component >
+		<!-- reCAPTCHA verification 
+                     Source: https://developers.google.com/recaptcha/docs/display -->
+
+    <style>
+        .recaptchatable * {
+            overflow: hidden;
+        }
+    </style>
+    <!-- Old Captcha
+                <script>
+                    var RecaptchaOptions = {
+                        theme : 'clean'
+                    };
+                </script>
+
+                <script type="text/javascript"
+                    src="https://www.google.com/recaptcha/api/challenge?k=6LeLLxgUAAAAALEyb6OXDNPyRsGiv9dgw_F0CacC">
+                </script>
+                <noscript>
+                    <iframe src="https://www.google.com/recaptcha/api/noscript?k=6LeLLxgUAAAAALEyb6OXDNPyRsGiv9dgw_F0CacC"></iframe>
+                    <textarea name="recaptcha_challenge_field" ></textarea>
+                    <input type="hidden" name="recaptcha_response_field" value="manual_challenge"/>
+                </noscript>
+-->
+
+                <script src='https://www.google.com/recaptcha/api.js'></script>
+                <div class="g-recaptcha" data-sitekey="6LepEfwSAAAAADUgZe2xPK8Kmmrn4B0RsCz827oo"></div>
+
+
+                <!-- end reCAPTCHA verification -->
+               <!--  <apex:commandButton action="{!verify}" 
+                        value="Check If I'm Human" rendered="{! NOT(verified)}"/>-->
+</apex:component>
